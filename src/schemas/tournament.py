@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel
 
-from src.models.enums import TournamentFormat
+from src.models.enums import TournamentFormat, Stage
 from src.schemas.match import MatchListResponse
 
 
@@ -13,6 +13,7 @@ class TournamentListResponse(BaseModel):
     start_date: datetime
     end_date: datetime
     prize_pool: int
+    current_stage: Stage
     director_id: UUID
 
 class TournamentDetailResponse(TournamentListResponse):
@@ -31,4 +32,5 @@ class TournamentUpdate(BaseModel):
    start_date: datetime | None = None
    end_date: datetime | None = None
    prize_pool: int | None = None
+   current_round: Stage | None = None
 
