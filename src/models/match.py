@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Enum, DateTime, Integer, UUID, ForeignKey, Boolean
+from sqlalchemy import Column, Enum, DateTime, Integer, UUID, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from src.models.base import Base, BaseMixin

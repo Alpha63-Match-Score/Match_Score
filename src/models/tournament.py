@@ -22,5 +22,6 @@ class Tournament(Base, BaseMixin):
     director = relationship("User", back_populates="tournaments")
 
     matches = relationship("Match", back_populates="tournament")
+    prize_cuts = relationship("PrizeCut", back_populates="tournament")
 
 
