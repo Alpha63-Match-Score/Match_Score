@@ -4,9 +4,10 @@ from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from src.models.team import Team
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
 from src.models import Tournament
-from src.models.enums import Stage
+from src.models.enums import Stage, Role
 from src.models.match import Match
 from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
 
@@ -47,30 +48,34 @@ def get_match(
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
     if not db_match:
-        raise HTTPException(status_code=404, detail="Match not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Match not found")
 
     return _convert_db_to_match_response(db_match)
 
 
 def create_match(
         db: Session,
-        match: MatchCreate
+        match: MatchCreate,
+        current_user
 ) -> MatchDetailResponse:
+
+    if current_user.role != Role.ADMIN or current_user.role != Role.DIRECTOR:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is not authorized to create a match")
 
     tournament = db.query(Tournament).filter(Tournament.id == match.tournament_id).first()
     if tournament is None:
-        raise HTTPException(status_code=404, detail="Tournament not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Tournament not found")
 
     if match.team1_id == match.team2_id:
-        raise HTTPException(status_code=400, detail="Teams should be different")
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Teams should be different")
 
     team1 = db.query(Team).filter(Team.id == match.team1_id).first()
     if team1 is None:
-        raise HTTPException(status_code=404, detail="Team 1 not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Team 1 not found")
 
     team2 = db.query(Team).filter(Team.id == match.team2_id).first()
     if team2 is None:
-        raise HTTPException(status_code=404, detail="Team 2 not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Team 2 not found")
 
     db_match = Match(**match.model_dump())
 
@@ -84,13 +89,17 @@ def create_match(
 def update_match(
         db: Session,
         match_id: UUID,
-        match: MatchUpdate
+        match: MatchUpdate,
+        current_user
 ) -> MatchDetailResponse:
+
+    if current_user.role != Role.ADMIN or current_user.role != Role.DIRECTOR:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is not authorized to create a match")
 
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
     if not db_match:
-        raise HTTPException(status_code=404, detail="Match not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Match not found")
 
     if match.stage is not None:
         db_match.stage = match.stage

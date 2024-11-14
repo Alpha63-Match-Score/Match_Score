@@ -3,8 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from src.api.deps import get_db
-from src.crud import match
+from src.api.deps import get_db, get_current_user
+from src.crud import match as match_crud
 from src.models.enums import Stage
 from src.schemas.match import MatchCreate, MatchUpdate, MatchListResponse, MatchDetailResponse
 
@@ -20,7 +20,7 @@ def read_matches(
         team_id: UUID | None = None
 ):
 
-    return match.get_all_matches(db, tournament_id, stage, is_finished, team_id)
+    return match_crud.get_all_matches(db, tournament_id, stage, is_finished, team_id)
 
 
 @router.get("/{match_id}", response_model=MatchDetailResponse)
@@ -29,23 +29,25 @@ def read_match(
         db: Session = Depends(get_db)
 ):
 
-    return match.get_match(db, match_id)
+    return match_crud.get_match(db, match_id)
 
 
 @router.post("/", response_model=MatchDetailResponse, status_code=status.HTTP_201_CREATED)
 def create_match(
         match: MatchCreate,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_user)
 ):
 
-        return match.create_match(db, match)
+        return match_crud.create_match(db, match, current_user)
 
 
 @router.put("/{match_id}", response_model=MatchDetailResponse)
 def update_match(
         match_id: UUID,
         match: MatchUpdate,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_user)
 ):
 
-    return match.update_match(db, match_id, match)
+    return match_crud.update_match(db, match_id, match, current_user)
