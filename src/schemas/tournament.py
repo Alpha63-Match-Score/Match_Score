@@ -5,19 +5,20 @@ from pydantic import BaseModel
 from src.models.enums import TournamentFormat, Stage
 from src.schemas.match import MatchListResponse
 from src.schemas.prize_cut import PrizeCutResponse
+from src.schemas.team import TeamListResponse
 
 
 class TournamentListResponse(BaseModel):
     id: UUID
-    match_format: TournamentFormat
+    tournament_format: TournamentFormat
     start_date: datetime
     end_date: datetime
-    prize_pool: int
     current_stage: Stage
-    director_id: UUID
+    number_of_participants: int
 
 class TournamentDetailResponse(TournamentListResponse):
     matches: list[MatchListResponse]
+    participants: list[TeamListResponse]
     prizes: list[PrizeCutResponse]
 
 class TournamentCreate(BaseModel):
