@@ -7,6 +7,7 @@ from src.schemas.tournament import TournamentListResponse, TournamentDetailRespo
 
 router = APIRouter()
 
+# filter by author of tournament
 @router.get("/", response_model=list[TournamentListResponse])
 def read_tournaments(db: Session = Depends(get_db)):
     pass
