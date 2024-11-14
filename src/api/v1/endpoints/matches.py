@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, status
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db
 from src.crud import match
 from src.models.enums import Stage
 from src.schemas.match import MatchCreate, MatchUpdate, MatchListResponse, MatchDetailResponse
-
 
 router = APIRouter()
 
@@ -42,10 +42,10 @@ def create_match(
 
 
 @router.put("/{match_id}", response_model=MatchDetailResponse)
-def update_match(match_id: UUID,
-                 match: MatchUpdate,
-                 db: Session = Depends(get_db)):
-    pass
+def update_match(
+        match_id: UUID,
+        match: MatchUpdate,
+        db: Session = Depends(get_db)
+):
 
-
-
+    return match.update_match(db, match_id, match)

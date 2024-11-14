@@ -3,12 +3,12 @@ from typing import Type
 from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
+from src.models.team import Team
 
 from src.models import Tournament
-from src.models.team import Team
 from src.models.enums import Stage
 from src.models.match import Match
-from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate
+from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
 
 
 def get_all_matches(
@@ -79,6 +79,35 @@ def create_match(
     db.refresh(db_match)
 
     return _convert_db_to_match_response(db_match)
+
+
+def update_match(
+        db: Session,
+        match_id: UUID,
+        match: MatchUpdate
+) -> MatchDetailResponse:
+
+    db_match = db.query(Match).filter(Match.id == match_id).first()
+
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    if match.stage is not None:
+        db_match.stage = match.stage
+    if match.start_time is not None:
+        db_match.start_time = match.start_time
+    if match.is_finished is not None:
+        db_match.is_finished = match.is_finished
+    if match.team1_score is not None:
+        db_match.team1_score = match.team1_score
+    if match.team2_score is not None:
+        db_match.team2_score = match.team2_score
+
+    db.commit()
+    db.refresh(db_match)
+
+    return _convert_db_to_match_response(db_match)
+
 
 def _convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
     return MatchDetailResponse(
