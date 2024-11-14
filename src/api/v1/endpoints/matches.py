@@ -10,6 +10,7 @@ from src.schemas.match import MatchCreate, MatchUpdate, MatchListResponse, Match
 
 router = APIRouter()
 
+
 @router.get("/", response_model=list[MatchListResponse])
 def read_matches(
         db: Session = Depends(get_db),
@@ -18,13 +19,18 @@ def read_matches(
         is_finished: bool | None = None,
         team_id: UUID | None = None
 ):
-    # hardcode sort
+
     return match.get_all_matches(db, tournament_id, stage, is_finished, team_id)
 
+
 @router.get("/{match_id}", response_model=MatchDetailResponse)
-def read_match(match_id: UUID,
-               db: Session = Depends(get_db)):
-    pass
+def read_match(
+        match_id: UUID,
+        db: Session = Depends(get_db)
+):
+
+    return match.get_match(db, match_id)
+
 
 @router.post("/", response_model=MatchDetailResponse, status_code=status.HTTP_201_CREATED)
 def create_match(match: MatchCreate,
