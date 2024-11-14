@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import UUID
+from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db
