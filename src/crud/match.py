@@ -1,9 +1,14 @@
+from typing import Type
+
+from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 
+from src.models import Tournament
+from src.models.team import Team
 from src.models.enums import Stage
 from src.models.match import Match
-from src.schemas.match import MatchListResponse, MatchDetailResponse
+from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate
 
 
 def get_all_matches(
@@ -31,20 +36,8 @@ def get_all_matches(
 
     db_matches = query.all()
 
-    return [MatchListResponse(
-        id=match.id,
-        match_format=match.match_format,
-        start_time=match.start_time,
-        is_finished=match.is_finished,
-        stage=match.stage,
-        team1_id=match.team1_id,
-        team2_id=match.team2_id,
-        team1_score=match.team1_score,
-        team2_score=match.team2_score,
-        tournament_id=match.tournament_id
-    )
-        for match in db_matches
-    ]
+    return [_convert_db_to_match_list_response(db_match) for db_match in db_matches]
+
 
 def get_match(
         db: Session,
@@ -53,6 +46,41 @@ def get_match(
 
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    return _convert_db_to_match_response(db_match)
+
+
+def create_match(
+        db: Session,
+        match: MatchCreate
+) -> MatchDetailResponse:
+
+    tournament = db.query(Tournament).filter(Tournament.id == match.tournament_id).first()
+    if tournament is None:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+
+    if match.team1_id == match.team2_id:
+        raise HTTPException(status_code=400, detail="Teams should be different")
+
+    team1 = db.query(Team).filter(Team.id == match.team1_id).first()
+    if team1 is None:
+        raise HTTPException(status_code=404, detail="Team 1 not found")
+
+    team2 = db.query(Team).filter(Team.id == match.team2_id).first()
+    if team2 is None:
+        raise HTTPException(status_code=404, detail="Team 2 not found")
+
+    db_match = Match(**match.model_dump())
+
+    db.add(db_match)
+    db.commit()
+    db.refresh(db_match)
+
+    return _convert_db_to_match_response(db_match)
+
+def _convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
     return MatchDetailResponse(
         id=db_match.id,
         match_format=db_match.match_format,
@@ -69,5 +97,19 @@ def get_match(
         team1_logo=db_match.team1.logo,
         team2_logo=db_match.team2.logo,
         tournament_title=db_match.tournament.title
-)
+    )
 
+
+def _convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchListResponse:
+    return MatchListResponse(
+        id=db_match.id,
+        match_format=db_match.match_format,
+        start_time=db_match.start_time,
+        is_finished=db_match.is_finished,
+        stage=db_match.stage,
+        team1_id=db_match.team1_id,
+        team2_id=db_match.team2_id,
+        team1_score=db_match.team1_score,
+        team2_score=db_match.team2_score,
+        tournament_id=db_match.tournament_id
+    )
