@@ -1,5 +1,8 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Enum, DateTime, ForeignKey, UUID
+from sqlalchemy.orm import relationship
+
 from src.models.base import Base, BaseMixin
+from src.models.enums import Role
 
 
 class User(Base, BaseMixin):
@@ -8,5 +11,17 @@ class User(Base, BaseMixin):
     UUID and table name are inherited from BaseMixin.
     """
 
-    username = Column(String)
-    password = Column(String)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(Enum(Role), nullable=False)
+    created_at = Column(DateTime, nullable=False)
+
+    player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=False)
+
+    requests_user = relationship("Request", back_populates="user", foreign_keys='[Request.user_id]')
+    requests_admin = relationship("Request", back_populates="admin", foreign_keys='[Request.admin_id]')
+
+    tournaments = relationship("Tournament", back_populates="director")
+    player = relationship("Player", back_populates="user")
+
+
