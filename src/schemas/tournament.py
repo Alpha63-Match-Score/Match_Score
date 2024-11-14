@@ -8,8 +8,7 @@ from src.schemas.match import MatchListResponse
 
 class TournamentListResponse(BaseModel):
     id: UUID
-    title: str
-    tournament_format: TournamentFormat
+    match_format: TournamentFormat
     start_date: datetime
     end_date: datetime
     prize_pool: int

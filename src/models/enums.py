@@ -10,9 +10,9 @@ class MatchFormat(str, Enum):
    MR12 = "MR12"
 
 class Stage(str, Enum):
-   GROUP_STAGE = "group stage"  # For Round Robin
-   ROUND_OF_16 = "round of 16"  # For Single Elimination
-   QUARTER_FINAL = "quarter final"  # For Single Elimination
-   SEMI_FINAL = "semi final"  # For Single Elimination
-   FINAL = "final"  # For both
+   GROUP_STAGE = "group stage"  # For Round Robin - MR12
+   ROUND_OF_16 = "round of 16"  # For Single Elimination - MR15
+   QUARTER_FINAL = "quarter final"  # For Single Elimination - MR15
+   SEMI_FINAL = "semi final"  # For Single Elimination - MR15
+   FINAL = "final"  # For both - MR15
 
