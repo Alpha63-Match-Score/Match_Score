@@ -4,7 +4,7 @@ from src.models.base import Base, BaseMixin
 
 class User(Base, BaseMixin):
     """
-    Database model representing "users" table in the database.
+    Database model representing "user" table in the database.
     UUID and table name are inherited from BaseMixin.
     """
 
