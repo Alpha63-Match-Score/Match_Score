@@ -15,7 +15,7 @@ class PrizeCut(Base, BaseMixin):
     tournament_id = Column(UUID(as_uuid=True), ForeignKey("tournament.id"), nullable=False)
     tournament = relationship("Tournament", back_populates="prize_cuts")
 
-    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=False)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True, default=None)
     team = relationship("Team", back_populates="prize_cuts")
 
     # Unique constraint to prevent multiple prize cuts for the same place in the same tournament.

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from src.models.enums import TournamentFormat, Stage
 from src.schemas.match import MatchListResponse
+from src.schemas.prize_cut import PrizeCutResponse
 
 
 class TournamentListResponse(BaseModel):
@@ -17,6 +18,7 @@ class TournamentListResponse(BaseModel):
 
 class TournamentDetailResponse(TournamentListResponse):
     matches: list[MatchListResponse]
+    prizes: list[PrizeCutResponse]
 
 class TournamentCreate(BaseModel):
    title: str
