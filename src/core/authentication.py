@@ -9,19 +9,19 @@ from src.models.user import User
 
 
 def authenticate_user(db: Session,
-        username: str,
+        email: str,
         password: str):
 
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.email == email).first()
 
 
-    if not verify_password(password, user.hash_password):
+    if not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password")
 
     return {"user_id": user.id,
-            "username": user.username}
+            "email": user.email}
 
 def create_access_token(data: dict) -> str:
 
