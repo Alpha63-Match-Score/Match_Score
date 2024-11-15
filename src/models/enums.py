@@ -18,8 +18,21 @@ class Stage(str, Enum):
    SEMI_FINAL = "semi final"  # For Single Elimination - MR15
    FINAL = "final"  # For both - MR15
 
+
 class Role(str, Enum):
    ADMIN = "admin"
    PLAYER = "player"
    DIRECTOR = "director"
    USER = "user"
+
+
+class RequestStatus(str, Enum):
+   PENDING = "pending"
+   ACCEPTED = "accepted"
+   REJECTED = "rejected"
+
+
+class RequestType(str, Enum):
+   LINK_USER_TO_PLAYER = "link user to player"
+   PROMOTE_USER_TO_DIRECTOR = "promote user to director"
+
