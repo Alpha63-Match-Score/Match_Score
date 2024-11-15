@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Enum, DateTime, ForeignKey, UUID
+from sqlalchemy import Column, String, Enum, DateTime, ForeignKey, UUID, func
 from sqlalchemy.orm import relationship
 
 from src.models.base import Base, BaseMixin
@@ -13,8 +13,8 @@ class User(Base, BaseMixin):
 
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(Enum(Role), nullable=False)
-    created_at = Column(DateTime, nullable=False)
+    role = Column(Enum(Role), nullable=False, default=Role.USER)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
 

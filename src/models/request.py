@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum, DateTime, ForeignKey, UUID
+from sqlalchemy import Column, Enum, DateTime, ForeignKey, UUID, func
 from sqlalchemy.orm import relationship
 
 from src.models.base import Base, BaseMixin
@@ -11,7 +11,7 @@ class Request(Base, BaseMixin):
     UUID and table name are inherited from BaseMixin.
     """
     status = Column(Enum(RequestStatus), nullable=False)
-    request_date = Column(DateTime, nullable=False)
+    request_date = Column(DateTime, default=func.now(), nullable=False)
     response_date = Column(DateTime, nullable=False)
     request_type = Column(Enum(RequestType), nullable=False)
 
