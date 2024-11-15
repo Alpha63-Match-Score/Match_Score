@@ -21,4 +21,4 @@ class Player(Base, BaseMixin):
     user = relationship("User", back_populates="player")
 
     team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True)
-    team = relationship("Team", back_populates="player")
+    team = relationship("Team", back_populates="players")
