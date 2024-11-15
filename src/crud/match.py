@@ -5,7 +5,7 @@ from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from src.models.enums import Stage, Role
+from src.models.enums import Stage
 from src.models.match import Match
 from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
 from src.crud import validators as v
