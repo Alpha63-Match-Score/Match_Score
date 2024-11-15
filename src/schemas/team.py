@@ -7,10 +7,11 @@ from src.schemas.player import PlayerListResponse
 
 class TeamCreate(BaseModel):
     id: UUID
-    name: str = Field(
-        min_length=2,
-        max_length=25,
-        examples=["Example"]
+    name: str  = Field(
+        min_length=5,
+        max_length=15,
+        pattern="^[a-zA-Z0-9_-]+$",
+        examples=["example_team"]
     )
     logo: Optional[str]
     played_games: int
