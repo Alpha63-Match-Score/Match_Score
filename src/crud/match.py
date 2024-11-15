@@ -3,13 +3,12 @@ from typing import Type
 from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
-from src.models.team import Team
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
+from starlette.status import HTTP_400_BAD_REQUEST
 
-from src.models import Tournament
 from src.models.enums import Stage, Role
 from src.models.match import Match
 from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
+from src.crud import validators as v
 
 
 def get_all_matches(
@@ -24,12 +23,15 @@ def get_all_matches(
 
     filters = []
     if tournament_id:
+        v.tournament_exists(db, tournament_id)
         filters.append(Match.tournament_id == tournament_id)
     if stage:
+        v.stage_exists(stage)
         filters.append(Match.stage == stage)
     if is_finished is not None:
         filters.append(Match.is_finished == is_finished)
     if team_id:
+        v.team_exists(db, team_id)
         filters.append(or_(Match.team1_id == team_id, Match.team2_id == team_id))
 
     if filters:
@@ -45,10 +47,8 @@ def get_match(
         match_id: UUID
 ) -> MatchDetailResponse:
 
+    v.match_exists(db, match_id)
     db_match = db.query(Match).filter(Match.id == match_id).first()
-
-    if not db_match:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Match not found")
 
     return _convert_db_to_match_response(db_match)
 
@@ -59,23 +59,14 @@ def create_match(
         current_user
 ) -> MatchDetailResponse:
 
-    if current_user.role != Role.ADMIN or current_user.role != Role.DIRECTOR:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is not authorized to create a match")
-
-    tournament = db.query(Tournament).filter(Tournament.id == match.tournament_id).first()
-    if tournament is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Tournament not found")
+    v.director_or_admin(current_user)
+    v.tournament_exists(db, match.tournament_id)
 
     if match.team1_id == match.team2_id:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Teams should be different")
 
-    team1 = db.query(Team).filter(Team.id == match.team1_id).first()
-    if team1 is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Team 1 not found")
-
-    team2 = db.query(Team).filter(Team.id == match.team2_id).first()
-    if team2 is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Team 2 not found")
+    v.team_exists(db, match.team1_id)
+    v.team_exists(db, match.team2_id)
 
     db_match = Match(**match.model_dump())
 
@@ -93,24 +84,17 @@ def update_match(
         current_user
 ) -> MatchDetailResponse:
 
-    if current_user.role != Role.ADMIN or current_user.role != Role.DIRECTOR:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is not authorized to create a match")
+    v.director_or_admin(current_user)
 
+    v.match_exists(db, match_id)
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
-    if not db_match:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Match not found")
+    # Creating a dictionary with the updated data
+    update_data = match.model_dump(exclude_unset=True)
 
-    if match.stage is not None:
-        db_match.stage = match.stage
-    if match.start_time is not None:
-        db_match.start_time = match.start_time
-    if match.is_finished is not None:
-        db_match.is_finished = match.is_finished
-    if match.team1_score is not None:
-        db_match.team1_score = match.team1_score
-    if match.team2_score is not None:
-        db_match.team2_score = match.team2_score
+    # Updating the data
+    for key, value in update_data.items():
+        setattr(db_match, key, value)
 
     db.commit()
     db.refresh(db_match)

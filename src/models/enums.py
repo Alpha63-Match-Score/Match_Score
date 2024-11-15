@@ -18,6 +18,7 @@ class Stage(str, Enum):
    SEMI_FINAL = "semi final"  # For Single Elimination - MR15
    FINAL = "final"  # For both - MR15
 
+
 class Role(str, Enum):
    ADMIN = "admin"
    PLAYER = "player"
