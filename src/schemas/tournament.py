@@ -10,6 +10,7 @@ from src.schemas.team import TeamListResponse
 
 class TournamentListResponse(BaseModel):
     id: UUID
+    title: str
     tournament_format: TournamentFormat
     start_date: datetime
     end_date: datetime

@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
-from src.models import Tournament, Match, Team
+from src.models import Tournament, Match, Team, User
 from src.models.enums import Stage, Role
 
 
@@ -19,6 +19,10 @@ def team_exists(db: Session, team_id: UUID) -> None:
 def match_exists(db: Session, match_id: UUID) -> None:
     if not db.query(Match).filter(Match.id == match_id).first():
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Match not found")
+
+def user_exists(db: Session, user_id: UUID) -> None:
+    if not db.query(User).filter(User.id == user_id).first():
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
 
 def stage_exists(stage: Stage) -> None:
     if stage not in Stage:
