@@ -16,7 +16,7 @@ class User(Base, BaseMixin):
     role = Column(Enum(Role), nullable=False)
     created_at = Column(DateTime, nullable=False)
 
-    player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=False)
+    player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
 
     requests_user = relationship("Request", back_populates="user", foreign_keys='[Request.user_id]')
     requests_admin = relationship("Request", back_populates="admin", foreign_keys='[Request.admin_id]')

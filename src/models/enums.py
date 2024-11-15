@@ -24,3 +24,15 @@ class Role(str, Enum):
    PLAYER = "player"
    DIRECTOR = "director"
    USER = "user"
+
+
+class RequestStatus(str, Enum):
+   PENDING = "pending"
+   ACCEPTED = "accepted"
+   REJECTED = "rejected"
+
+
+class RequestType(str, Enum):
+   LINK_USER_TO_PLAYER = "link user to player"
+   PROMOTE_USER_TO_DIRECTOR = "promote user to director"
+
