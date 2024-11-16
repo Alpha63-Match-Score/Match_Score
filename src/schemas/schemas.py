@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator, EmailStr
 from starlette import status
-from src.models.enums import TournamentFormat, Stage, MatchFormat
+from src.models.enums import TournamentFormat, Stage, MatchFormat, RequestType, RequestStatus
 
 # Forward References
 PlayerListResponse = ForwardRef('PlayerListResponse')
@@ -271,6 +271,34 @@ class PrizeCutResponse(BaseConfig):
 
 class PrizeCutUpdate(BaseConfig):
     team_id: UUID
+
+# Request schemas
+class RequestBase(BaseConfig):
+    response_date: Optional[str] = None
+    user_id: UUID
+    request_type: RequestType
+    player_id: Optional[UUID] = None
+    admin_id: Optional[UUID] = None
+
+    class Config:
+        orm_mode = True
+
+
+class LinkUserToPlayer(BaseConfig):
+    player_id: UUID
+    admin_id: UUID
+    request_type: RequestType = RequestType.LINK_USER_TO_PLAYER
+    status: RequestStatus
+    # response_date: datetime = datetime.now()
+
+
+class PromoteUserToDirector(BaseConfig):
+    user_id: UUID
+    admin_id: UUID
+    request_type: RequestType = RequestType.PROMOTE_USER_TO_DIRECTOR
+    status: RequestStatus
+    # response_date: datetime = datetime.now()
+
 
 # Updating forward references
 PlayerListResponse.model_rebuild()
