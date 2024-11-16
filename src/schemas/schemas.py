@@ -29,10 +29,7 @@ class TokenData(BaseModel):
 
 # User schemas
 class UserBase(BaseConfig):
-    id: UUID
     email: EmailStr
-    password_hash: str
-
 
 class UserCreate(UserBase):
     password: str = Field(
@@ -43,22 +40,23 @@ class UserCreate(UserBase):
 
     @field_validator('password')
     def validate_password(cls, value):
-        validate = lambda pwd: (
-            any(c.isupper() for c in pwd) and
-            any(c.islower() for c in pwd) and
-            any(c.isdigit() for c in pwd) and
-            any(c in '@$!%*?&' for c in pwd) and
-            not any(c.isspace() for c in pwd)
-        )
-
-        if not validate(value):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password must contain at least one uppercase letter, one lowercase letter, "
-                      "one number, and one special character and must not contain any spaces"
+        if not (
+            any(c.isupper() for c in value) and
+            any(c.islower() for c in value) and
+            any(c.isdigit() for c in value) and
+            any(c in '@$!%*?&' for c in value) and
+            not any(c.isspace() for c in value)
+        ):
+            raise ValueError(
+                "Password must contain at least one uppercase letter, one lowercase letter, "
+                "one number, one special character, and must not contain any spaces"
             )
         return value
 
+class UserResponse(UserBase):
+    email: EmailStr
+    role: str
+    
 class UserUpdateRole(BaseConfig):
     role: str
 

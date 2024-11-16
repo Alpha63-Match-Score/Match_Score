@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime, timezone
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
 
@@ -20,8 +20,7 @@ def authenticate_user(db: Session,
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password")
 
-    return {"user_id": user.id,
-            "email": user.email}
+    return user
 
 def create_access_token(data: dict) -> str:
 
