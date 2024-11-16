@@ -18,11 +18,20 @@ class BaseConfig(BaseModel):
     model_config = {
         "from_attributes": True
     }
+# Token schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_identifier: int | None = None
 
 # User schemas
 class UserBase(BaseConfig):
     id: UUID
     email: EmailStr
+    password_hash: str
 
 
 class UserCreate(UserBase):
