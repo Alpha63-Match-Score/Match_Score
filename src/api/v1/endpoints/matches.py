@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_db, get_current_user
 from src.crud import match as match_crud
 from src.models.enums import Stage
-from src.schemas.match import MatchCreate, MatchUpdate, MatchListResponse, MatchDetailResponse
+from src.schemas.schemas import MatchCreate, MatchUpdate, MatchListResponse, MatchDetailResponse
 
 router = APIRouter()
 
