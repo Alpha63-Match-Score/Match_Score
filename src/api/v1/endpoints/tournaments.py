@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db
-from src.schemas.tournament import TournamentListResponse, TournamentDetailResponse, TournamentCreate, TournamentUpdate
+from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TournamentCreate, TournamentUpdate
 from src.utils.pagination import PaginationParams, get_pagination
 from src.crud import tournament as tournament_crud
 
@@ -25,7 +25,8 @@ def read_tournaments(db: Session = Depends(get_db),
 @router.get("/{tournament_id}", response_model=TournamentDetailResponse)
 def read_tournament(tournament_id: UUID,
                     db: Session = Depends(get_db)):
-    pass
+
+    return tournament_crud.get_tournament(db, tournament_id)
 
 @router.post("/", response_model=TournamentDetailResponse)
 def create_tournament(tournament: TournamentCreate,

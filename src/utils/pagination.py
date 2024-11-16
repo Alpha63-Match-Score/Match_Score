@@ -1,13 +1,12 @@
 from fastapi import Query
-from typing import Optional
 
 class PaginationParams:
-    def __init__(self,
-            skip: int | None = Query(default=0, ge=0),
-            limit: int | None = Query(default=10, ge=1, le=100)
-    ):
+    def __init__(self, skip: int, limit: int):
         self.skip = skip
         self.limit = limit
 
-def get_pagination() -> PaginationParams:
-    return PaginationParams()
+def get_pagination(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100)
+) -> PaginationParams:
+    return PaginationParams(skip=skip, limit=limit)

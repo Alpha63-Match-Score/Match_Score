@@ -15,6 +15,8 @@ class Team(Base, BaseMixin):
 
 
     players = relationship("Player", back_populates="team")
-    matches = relationship("Match", back_populates="team")
+    # matches = relationship("Match", back_populates="team")
+    matches_as_team1 = relationship("Match", foreign_keys="[Match.team1_id]", back_populates="team1")
+    matches_as_team2 = relationship("Match", foreign_keys="[Match.team2_id]", back_populates="team2")
     prize_cuts = relationship("PrizeCut", back_populates="team")
 

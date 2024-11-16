@@ -7,7 +7,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.models.enums import Stage
 from src.models.match import Match
-from src.schemas.match import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
+from src.schemas.schemas import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate
 from src.utils import validators as v
 
 
@@ -39,7 +39,7 @@ def get_all_matches(
 
     db_matches = query.all()
 
-    return [_convert_db_to_match_list_response(db_match) for db_match in db_matches]
+    return [convert_db_to_match_list_response(db_match) for db_match in db_matches]
 
 
 def get_match(
@@ -50,7 +50,7 @@ def get_match(
     v.match_exists(db, match_id)
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
-    return _convert_db_to_match_response(db_match)
+    return convert_db_to_match_response(db_match)
 
 
 def create_match(
@@ -61,6 +61,7 @@ def create_match(
 
     v.director_or_admin(current_user)
     v.tournament_exists(db, match.tournament_id)
+    v.validate_start_time(match.start_time)
 
     if match.team1_id == match.team2_id:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Teams should be different")
@@ -74,7 +75,7 @@ def create_match(
     db.commit()
     db.refresh(db_match)
 
-    return _convert_db_to_match_response(db_match)
+    return convert_db_to_match_response(db_match)
 
 
 def update_match(
@@ -87,6 +88,7 @@ def update_match(
     v.director_or_admin(current_user)
 
     v.match_exists(db, match_id)
+    v.validate_start_time(match.start_time)
     db_match = db.query(Match).filter(Match.id == match_id).first()
 
     # Creating a dictionary with the updated data
@@ -99,10 +101,10 @@ def update_match(
     db.commit()
     db.refresh(db_match)
 
-    return _convert_db_to_match_response(db_match)
+    return convert_db_to_match_response(db_match)
 
 
-def _convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
+def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
     return MatchDetailResponse(
         id=db_match.id,
         match_format=db_match.match_format,
@@ -122,7 +124,7 @@ def _convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailR
     )
 
 
-def _convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchListResponse:
+def convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchListResponse:
     return MatchListResponse(
         id=db_match.id,
         match_format=db_match.match_format,
