@@ -19,8 +19,8 @@ class Request(Base, BaseMixin):
     player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
     admin_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
 
-    user = relationship("User", back_populates="requests_user", foreign_keys='[user_id]')
-    admin = relationship("User", back_populates="requests_admin", foreign_keys='[admin_id]')
+    user = relationship("User", back_populates="requests_user", foreign_keys=[user_id])
+    admin = relationship("User", back_populates="requests_admin", foreign_keys=[admin_id])
 
     player = relationship("Player", back_populates="requests")
 
