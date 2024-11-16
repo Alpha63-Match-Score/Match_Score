@@ -43,6 +43,6 @@ def get_current_user(
     except JWTError:
         raise credential_exception
 
-    user = get_by_id(db, int(user_identifier))
+    user = get_by_id(db, str(user_identifier))
 
     return user

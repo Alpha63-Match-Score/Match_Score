@@ -17,9 +17,9 @@ class Player(Base, BaseMixin):
     played_games = Column(Integer, nullable=False, default=0)
     won_games = Column(Integer, nullable=False, default=0)
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
+    # user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
     # user = relationship("User", back_populates="player")
-    user = relationship("User", back_populates="player", uselist=False, single_parent=True)
+    # user = relationship("User", back_populates="player", uselist=False, single_parent=True)
 
     team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True)
     team = relationship("Team", back_populates="players")

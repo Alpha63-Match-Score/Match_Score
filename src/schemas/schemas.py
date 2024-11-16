@@ -13,11 +13,14 @@ MatchListResponse = ForwardRef('MatchListResponse')
 TournamentListResponse = ForwardRef('TournamentListResponse')
 PrizeCutResponse = ForwardRef('PrizeCutResponse')
 
+
 # Base configs
 class BaseConfig(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
 # Token schemas
 class Token(BaseModel):
     access_token: str
@@ -27,9 +30,11 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_identifier: int | None = None
 
+
 # User schemas
 class UserBase(BaseConfig):
     email: EmailStr
+
 
 class UserCreate(UserBase):
     password: str = Field(
@@ -53,15 +58,15 @@ class UserCreate(UserBase):
             )
         return value
 
+
 class UserResponse(UserBase):
     email: EmailStr
     role: str
-    
-class UserUpdateRole(BaseConfig):
-    role: str
 
-class UserConnectPlayer(BaseConfig):
-    player_id: UUID
+
+class UserUpdate(UserBase):
+    pass
+
 
 # Player schemas
 class PlayerCreate(BaseConfig):
