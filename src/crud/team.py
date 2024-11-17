@@ -7,7 +7,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament
 from src.models.team import Team
-from src.schemas.team import TeamListResponse
+from src.schemas.schemas import TeamListResponse
 
 
 def get_teams():
