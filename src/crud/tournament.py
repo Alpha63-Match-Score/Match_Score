@@ -79,13 +79,21 @@ def create_tournament(
     current_user: UserResponse
 ) -> TournamentDetailResponse:
 
-    current_stage = v.tournament_format_number_of_teams(tournament.tournament_format, len(tournament.team_names))
+    current_stage = v.tournament_format_number_of_teams(tournament.tournament_format.value, len(tournament.team_names))
     v.tournament_title_unique(db, tournament.title)
     v.user_exists(db, current_user.id)
     v.director_or_admin(current_user)
     v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
 
-    db_tournament = Tournament(**tournament.model_dump(), current_stage=current_stage, director_id=current_user.id)
+    db_tournament = Tournament(
+        title=tournament.title,
+        tournament_format=TournamentFormat(tournament.tournament_format),
+        start_date=tournament.start_date,
+        end_date=tournament.end_date,
+        prize_pool=tournament.prize_pool,
+        current_stage=current_stage,
+        director_id=current_user.id
+    )
 
     db.add(db_tournament)
     db.commit()
@@ -236,7 +244,7 @@ def convert_db_to_tournament_response(
         start_date=db_tournament.start_date,
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
-        number_of_participants=len(db_tournament.teams),
+        number_of_teams=len(db_tournament.teams),
         matches=[convert_db_to_match_list_response(db_match) for db_match in db_tournament.matches],
         teams=[convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
         prizes=[convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]

@@ -61,6 +61,7 @@ class UserCreate(UserBase):
 
 
 class UserResponse(UserBase):
+    id: UUID
     email: EmailStr
     role: str
 

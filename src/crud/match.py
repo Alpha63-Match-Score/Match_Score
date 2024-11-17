@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
+import random
 from typing import Type
 
-from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.functions import random
 
 from src.models import Tournament
 from src.models.enums import Stage, MatchFormat, TournamentFormat
@@ -103,6 +102,7 @@ def _generate_single_elimination_matches(db: Session, db_tournament: Tournament)
             tournament_id=db_tournament.id
         )
 
+        db.add(db_match)
         db.commit()
         db.refresh(db_match)
 
@@ -289,5 +289,6 @@ def convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchLis
         team2_id=db_match.team2_id,
         team1_score=db_match.team1_score,
         team2_score=db_match.team2_score,
+        winner_id=db_match.winner_team_id,
         tournament_id=db_match.tournament_id
     )

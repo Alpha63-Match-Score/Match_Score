@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = create_user(user, db)
-    return UserResponse(email=db_user.email, role=db_user.role)
+    return UserResponse(id=db_user.id, email=db_user.email, role=db_user.role)
 
 
 @router.post("/login")
