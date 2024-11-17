@@ -28,8 +28,8 @@ def login(
 
 @router.put("/update")
 def update_user(user: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_user = update_email(db, user.email, current_user)
-    return db_user
+    msg = update_email(db, user.email, current_user)
+    return msg
 
 
 # TODO eventually add logout
