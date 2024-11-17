@@ -162,6 +162,7 @@ class MatchListResponse(BaseConfig):
     team2_id: UUID
     team1_score: int
     team2_score: int
+    winner_id: UUID | None
     tournament_id: UUID
 
 class MatchDetailResponse(MatchListResponse):
@@ -171,18 +172,12 @@ class MatchDetailResponse(MatchListResponse):
    team2_logo: str
    tournament_title: str
 
-class MatchCreate(BaseConfig):
-    match_format: MatchFormat
-    start_time: datetime
-    stage: Stage
-    team1_id: UUID
-    team2_id: UUID
-    tournament_id: UUID
-
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None
     is_finished: bool | None = None
     stage: Stage | None = None
+
+class MatchUpdateScore(BaseConfig):
     team1_score: int | None = None
     team2_score: int | None = None
 
@@ -194,13 +189,12 @@ class TournamentListResponse(BaseConfig):
     start_date: datetime
     end_date: datetime
     current_stage: Stage
-    number_of_participants: int
+    number_of_teams: int
 
 class TournamentDetailResponse(TournamentListResponse):
     matches: List[MatchListResponse]
-    participants: List[TeamListResponse]
+    teams: List[TeamListResponse]
     prizes: List[PrizeCutResponse]
-
 
 class TournamentCreate(BaseConfig):
    title: str = Field(
@@ -211,6 +205,7 @@ class TournamentCreate(BaseConfig):
    tournament_format: TournamentFormat
    start_date: datetime
    end_date: datetime
+   team_names: List[str]
    prize_pool: int = Field(
         ge=1,
         examples=[1000])
@@ -225,7 +220,6 @@ class TournamentUpdate(BaseConfig):
    start_date: datetime | None = None
    end_date: datetime | None = None
    prize_pool: int | None = None
-   current_round: Stage | None = None
 
 # PrizeCut schemas
 class PrizeCutResponse(BaseConfig):

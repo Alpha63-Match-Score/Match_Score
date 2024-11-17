@@ -25,5 +25,8 @@ class Match(Base, BaseMixin):
     team1_score = Column(Integer, default=0)
     team2_score = Column(Integer, default=0)
 
+    winner_team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True)
+    winner_team = relationship("Team", foreign_keys=[winner_team_id], back_populates="wins")
+
     tournament_id = Column(UUID(as_uuid=True), ForeignKey("tournament.id"), nullable=False)
     tournament = relationship("Tournament", back_populates="matches")

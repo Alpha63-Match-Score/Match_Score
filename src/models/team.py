@@ -22,3 +22,4 @@ class Team(Base, BaseMixin):
     prize_cuts = relationship("PrizeCut", back_populates="team")
     tournament = relationship("Tournament", back_populates="teams")
 
+    wins = relationship("Match", foreign_keys="[Match.winner_team_id]", back_populates="winner_team")

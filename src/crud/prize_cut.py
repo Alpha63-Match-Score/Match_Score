@@ -12,17 +12,15 @@ def create_prize_cuts_for_tournament(
         db_tournament,
 ) -> None:
 
-    prize_cut1 = _create_prize_cut(1, 0.5 * db_tournament.prize_pool, db_tournament.id)
+    prize_cut1 = _create_prize_cut(1, 0.7 * db_tournament.prize_pool, db_tournament.id)
     prize_cut2 = _create_prize_cut(2, 0.3 * db_tournament.prize_pool, db_tournament.id)
-    prize_cut3 = _create_prize_cut(3, 0.2 * db_tournament.prize_pool, db_tournament.id)
 
     db.add(prize_cut1)
     db.add(prize_cut2)
-    db.add(prize_cut3)
+
     db.commit()
     db.refresh(prize_cut1)
     db.refresh(prize_cut2)
-    db.refresh(prize_cut3)
 
 def _create_prize_cut(
         place: int,

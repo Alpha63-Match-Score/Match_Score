@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_db, get_current_user
 from src.crud import match as match_crud
 from src.models.enums import Stage
-from src.schemas.schemas import MatchCreate, MatchUpdate, MatchListResponse, MatchDetailResponse
+from src.schemas.schemas import MatchUpdate, MatchListResponse, MatchDetailResponse, MatchUpdateScore
 
 router = APIRouter()
 
@@ -32,14 +32,14 @@ def read_match(
     return match_crud.get_match(db, match_id)
 
 
-@router.post("/", response_model=MatchDetailResponse, status_code=status.HTTP_201_CREATED)
-def create_match(
-        match: MatchCreate,
-        db: Session = Depends(get_db),
-        current_user = Depends(get_current_user)
-):
-
-        return match_crud.create_match(db, match, current_user)
+# @router.post("/", response_model=MatchDetailResponse, status_code=status.HTTP_201_CREATED)
+# def create_match(
+#         match: MatchCreate,
+#         db: Session = Depends(get_db),
+#         current_user = Depends(get_current_user)
+# ):
+#
+#         return match_crud.create_match(db, match, current_user)
 
 
 @router.put("/{match_id}", response_model=MatchDetailResponse)
@@ -51,3 +51,13 @@ def update_match(
 ):
 
     return match_crud.update_match(db, match_id, match, current_user)
+
+@router.put("/{match_id}/scores", response_model=MatchDetailResponse)
+def update_match(
+        match_id: UUID,
+        match: MatchUpdateScore,
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_user)
+):
+
+    return match_crud.update_match_score(db, match_id, match, current_user)
