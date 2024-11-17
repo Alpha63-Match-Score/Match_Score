@@ -243,9 +243,6 @@ class RequestBase(BaseConfig):
     player_id: Optional[UUID] = None
     admin_id: Optional[UUID] = None
 
-    class Config:
-        orm_mode = True
-
 
 class LinkUserToPlayer(BaseConfig):
     player_id: UUID
@@ -256,10 +253,9 @@ class LinkUserToPlayer(BaseConfig):
 
 
 class PromoteUserToDirector(BaseConfig):
-    user_id: UUID
-    admin_id: UUID
     request_type: RequestType = RequestType.PROMOTE_USER_TO_DIRECTOR
     status: RequestStatus
+    request_date: datetime
     # response_date: datetime = datetime.now()
 
 
