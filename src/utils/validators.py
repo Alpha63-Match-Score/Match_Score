@@ -30,7 +30,9 @@ def match_exists(db: Session, match_id: UUID) -> None:
 def user_exists(db: Session, user_id: UUID) -> None:
     if not db.query(User).filter(User.id == user_id).first():
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
-
+def user_email_exists(db: Session, email: str) -> None:
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Email already registered.")
 def user_role_is_director(current_user: User) -> None:
     if current_user.role == Role.DIRECTOR:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a director.")
