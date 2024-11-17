@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.params import Path
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
@@ -16,7 +17,7 @@ def director_request(db: Session = Depends(get_db),
 
 
 @router.post("/users/{user_id}/players/{username}")
-def player_request(username: str,
+def player_request(username: str = Path(description="player_username"),
                    db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user),
                    ):
