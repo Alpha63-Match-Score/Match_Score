@@ -25,13 +25,7 @@ def authenticate_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password")
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
-
+    # TODO its returning 500 when no such user exists
     return user
 
 def create_access_token(data: dict) -> str:
