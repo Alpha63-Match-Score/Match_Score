@@ -1,5 +1,4 @@
 from datetime import datetime
-from http.client import HTTPException
 from typing import Literal, Type
 from uuid import UUID
 
@@ -9,7 +8,6 @@ from sqlalchemy.orm import Session
 from src.crud.match import convert_db_to_match_list_response
 from src.crud.prize_cut import convert_db_to_prize_cut_response
 from src.models import Tournament, Team
-from src.models.enums import Stage
 from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TeamListResponse
 from src.utils.pagination import PaginationParams
 from src.utils import validators as v
@@ -109,6 +107,7 @@ def convert_db_to_tournament_response(
         prizes=[convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
     )
 
+# TODO
 def convert_db_to_team_list_response(
         db_team: Team
 ) -> TeamListResponse:
