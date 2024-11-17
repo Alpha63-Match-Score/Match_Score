@@ -19,12 +19,17 @@ def authenticate_user(
 
     user = db.query(User).filter(User.email == email).first()
 
-    v.user_exists(db, user.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found")
+
+    # v.user_exists(db, user.id)
 
     if not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password")
+            detail="Incorrect email or password")
     # TODO its returning 500 when no such user exists
     return user
 
