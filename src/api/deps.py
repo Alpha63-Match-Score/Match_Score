@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Type
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.core.config import settings
 from src.crud.user import get_by_id
 from src.database.session import SessionLocal
+from src.models import User
 
 
 def get_db() -> Generator:
@@ -25,8 +26,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/users/login")
 
 
 def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
-):
+    db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+) -> Type[User]:
+
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
