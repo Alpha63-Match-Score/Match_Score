@@ -66,6 +66,11 @@ class UserResponse(UserBase):
     role: str
 
 
+class UserRegisterResponse(BaseConfig):
+    email: EmailStr
+    role: str
+
+
 class UserUpdate(UserBase):
     pass
 
@@ -244,15 +249,15 @@ class RequestBase(BaseConfig):
     admin_id: Optional[UUID] = None
 
 
-class LinkUserToPlayer(BaseConfig):
-    player_id: UUID
-    admin_id: UUID
-    request_type: RequestType = RequestType.LINK_USER_TO_PLAYER
-    status: RequestStatus
+# class LinkUserToPlayer(BaseConfig):
+#     player_id: UUID
+#     admin_id: UUID
+#     request_type: RequestType = RequestType.LINK_USER_TO_PLAYER
+#     status: RequestStatus
     # response_date: datetime = datetime.now()
 
 
-class PromoteUserToDirector(BaseConfig):
+class ResponseRequest(BaseConfig):
     request_type: RequestType = RequestType.PROMOTE_USER_TO_DIRECTOR
     status: RequestStatus
     request_date: datetime
