@@ -5,10 +5,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db, get_current_user
-from src.models import User
-from src.models.enums import Stage
 from src.schemas.schemas import (TournamentListResponse, TournamentDetailResponse,
-                                 TournamentCreate, TournamentUpdate, UserResponse, TournamentUpdateStage)
+                                 TournamentCreate, TournamentUpdate, UserResponse)
 from src.utils.pagination import PaginationParams, get_pagination
 from src.crud import tournament as tournament_crud
 

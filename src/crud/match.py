@@ -5,12 +5,11 @@ from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import random
-from starlette.status import HTTP_400_BAD_REQUEST
 
-from src.models import Tournament, Team
+from src.models import Tournament
 from src.models.enums import Stage, MatchFormat, TournamentFormat
 from src.models.match import Match
-from src.schemas.schemas import MatchListResponse, MatchDetailResponse, MatchCreate, MatchUpdate, MatchUpdateScore
+from src.schemas.schemas import MatchListResponse, MatchDetailResponse, MatchUpdate, MatchUpdateScore
 from src.utils import validators as v
 
 
