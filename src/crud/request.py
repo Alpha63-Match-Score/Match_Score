@@ -3,19 +3,15 @@ from sqlalchemy.orm import Session
 
 from src.models import Request, User, Player
 from src.models.enums import RequestType
-from src.schemas.schemas import PromoteUserToDirector
+from src.schemas.schemas import ResponseRequest
+from src.utils.validators import player_exists, user_role_is_director, user_role_is_player
 
 
 def send_director_request(db: Session, current_user: User):
-    """Send a request to be a director. Has to be approved by the admin."""
-    if current_user.role == "director":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already a director."
-        )
-    if current_user.role == "player":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already a player."
-        )
+
+    user_role_is_director(current_user)
+    user_role_is_player(current_user)
+
     db_request = Request(
         user_id=current_user.id,
         request_type=RequestType.PROMOTE_USER_TO_DIRECTOR
@@ -23,7 +19,7 @@ def send_director_request(db: Session, current_user: User):
     db.add(db_request)
     db.commit()
     db.refresh(db_request)
-    return PromoteUserToDirector(
+    return ResponseRequest(
         request_type=db_request.request_type,
         request_date=db_request.request_date,
         status=db_request.status
@@ -45,26 +41,21 @@ def reject_director_request():
     pass
 
 
-def send_link_to_player_request(db: Session, current_user: User, player: Player):
-    """Send a request to link to a player."""
-    if current_user.role == "director":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already a director."
-        )
-    if current_user.role == "player":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already a player."
-        )
+def send_link_to_player_request(db: Session, current_user: User, username: str):
+
+    player_exists(db, username)
+    user_role_is_director(current_user)
+    user_role_is_player(current_user)
+
     db_request = Request(
         user_id=current_user.id,
         request_type=RequestType.LINK_USER_TO_PLAYER,
-        player=player.username
-
+        username=username
     )
     db.add(db_request)
     db.commit()
     db.refresh(db_request)
-    return PromoteUserToDirector(
+    return ResponseRequest(
         request_type=db_request.request_type,
         request_date=db_request.request_date,
         status=db_request.status

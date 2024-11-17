@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum, DateTime, ForeignKey, UUID, func
+from sqlalchemy import Column, Enum, DateTime, ForeignKey, UUID, func, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import Base, BaseMixin
@@ -16,7 +16,8 @@ class Request(Base, BaseMixin):
     request_type = Column(Enum(RequestType), nullable=False)
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
-    player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
+    # player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
+    username = Column(String(45), ForeignKey("player.username"), nullable=True)
     admin_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
 
     user = relationship("User", back_populates="requests_user", foreign_keys=[user_id])

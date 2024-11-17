@@ -4,14 +4,11 @@ from sqlalchemy.orm import Session
 from src.core.security import get_password_hash
 from src.models.user import User
 from src.schemas.schemas import UserCreate, UserResponse
+from src.utils.validators import user_email_exists
 
 
 def create_user(user: UserCreate, db: Session):
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered."
-        )
+    user_email_exists(db, user.email)
     hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
@@ -33,11 +30,7 @@ def get_by_id(db: Session, user_id: str):
 
 
 def update_email(db: Session, email: str, current_user: User):
-    existing_email = db.query(User).filter(User.email == email).first()
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered."
-        )
+    user_email_exists(db, email)
 
     current_user.email = email
     db.commit()

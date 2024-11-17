@@ -6,7 +6,7 @@ from src.api.deps import get_db, get_current_user
 from src.core.authentication import authenticate_user, create_access_token
 from src.crud.user import create_user, update_email
 from src.models import User
-from src.schemas.schemas import Token, UserResponse, UserCreate, UserUpdate
+from src.schemas.schemas import Token, UserResponse, UserCreate, UserUpdate, UserRegisterResponse
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = create_user(user, db)
-    return UserResponse(id=db_user.id, email=db_user.email, role=db_user.role)
+    return UserRegisterResponse(email=db_user.email, role=db_user.role)
 
 
 @router.post("/login")
