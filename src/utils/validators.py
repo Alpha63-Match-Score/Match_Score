@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -30,10 +30,22 @@ def stage_exists(stage: Stage) -> None:
     if stage not in Stage:
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid stage")
 
-def director_or_admin(user) -> None:
+def director_or_admin(user: User) -> None:
     if user.role not in [Role.DIRECTOR, Role.ADMIN]:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is not authorized to perform this action")
 
 def validate_start_time(start_time) -> None:
     if start_time < datetime.now():
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Start time must be in the future")
+
+def validate_start_vs_end_date(start_date, end_date) -> None:
+    now = datetime.now(timezone.utc)
+
+    if start_date < now:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Start date must be in the future")
+    if end_date < start_date:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="End must be after start")
+
+def tournament_title_unique(db: Session, title: str) -> None:
+    if db.query(Tournament).filter(Tournament.title == title).first():
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Tournament title must be unique")

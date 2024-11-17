@@ -2,13 +2,15 @@ from datetime import datetime
 from typing import Literal, Type
 from uuid import UUID
 
+from passlib.utils import timer
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from src.crud.match import convert_db_to_match_list_response
-from src.crud.prize_cut import convert_db_to_prize_cut_response
-from src.models import Tournament, Team
-from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TeamListResponse
+from src.crud.prize_cut import convert_db_to_prize_cut_response, create_prize_cuts_for_tournament
+from src.models import Tournament, Team, User
+from src.models.enums import TournamentFormat, Stage
+from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TeamListResponse, TournamentCreate
 from src.utils.pagination import PaginationParams
 from src.utils import validators as v
 
@@ -72,6 +74,34 @@ def get_tournament(
             participants.append(db_match.team2)
 
     return convert_db_to_tournament_response(db_tournament, participants)
+
+def create_tournament(
+    db: Session,
+    tournament: TournamentCreate,
+    current_user: User
+) -> TournamentDetailResponse:
+
+    v.tournament_title_unique(db, tournament.title)
+    v.user_exists(db, current_user.id)
+    v.director_or_admin(current_user)
+    v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
+
+    db_tournament = Tournament(
+        title=tournament.title,
+        tournament_format=TournamentFormat(tournament.tournament_format),
+        start_date=tournament.start_date,
+        end_date=tournament.end_date,
+        prize_pool=tournament.prize_pool,
+        director_id=current_user.id,
+        current_stage=Stage.GROUP_STAGE if tournament.tournament_format == 'round robin' else Stage.ROUND_OF_16
+    )
+
+    db.add(db_tournament)
+    db.commit()
+    db.refresh(db_tournament)
+
+    create_prize_cuts_for_tournament(db, db_tournament)
+    return convert_db_to_tournament_response(db_tournament, [])
 
 
 def convert_db_to_tournament_list_response(

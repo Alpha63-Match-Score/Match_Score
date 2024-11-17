@@ -29,6 +29,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_identifier: int | None = None
+    user_email: str | None = None
 
 
 # User schemas
@@ -250,15 +251,15 @@ class TournamentDetailResponse(TournamentListResponse):
 class TournamentCreate(BaseConfig):
    title: str = Field(
         min_length=3,
-        max_length=20,
-        pattern="^[a-zA-Z0-9_-]+$",
+        max_length=50,
         examples=["Example Tournament Title"]
     )
    tournament_format: TournamentFormat
    start_date: datetime
    end_date: datetime
-   prize_pool: int
-   director_id: UUID
+   prize_pool: int = Field(
+        ge=1,
+        examples=[1000])
 
 class TournamentUpdate(BaseConfig):
    title: str | None = Field(
@@ -278,6 +279,7 @@ class PrizeCutResponse(BaseConfig):
     place: int
     prize_cut: float
     tournament_id: UUID
+    tournament_name: str
     team_id: UUID | None
     team_name: str | None
 
