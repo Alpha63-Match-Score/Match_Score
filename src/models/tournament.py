@@ -24,5 +24,4 @@ class Tournament(Base, BaseMixin):
 
     matches = relationship("Match", back_populates="tournament")
     prize_cuts = relationship("PrizeCut", back_populates="tournament")
-
-
+    teams = relationship("Team", back_populates="tournament")

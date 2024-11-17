@@ -9,6 +9,7 @@ from src.core.config import settings
 from src.crud.user import get_by_id
 from src.database.session import SessionLocal
 from src.models import User
+from src.schemas.schemas import UserResponse
 
 
 def get_db() -> Generator:
@@ -28,7 +29,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/users/login")
 def get_current_user(
     db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
-) -> Type[User]:
+) -> UserResponse:
 
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -48,4 +49,12 @@ def get_current_user(
 
     user = get_by_id(db, str(user_identifier))
 
-    return user
+    return convert_db_to_user_response(user)
+
+
+def convert_db_to_user_response(user: User) -> UserResponse:
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        role=user.role
+    )

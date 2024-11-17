@@ -20,3 +20,4 @@ class Team(Base, BaseMixin):
     matches_as_team2 = relationship("Match", foreign_keys="[Match.team2_id]", back_populates="team2")
     prize_cuts = relationship("PrizeCut", back_populates="team")
 
+    wins = relationship("Match", foreign_keys="[Match.winner_team_id]", back_populates="winner_team")
