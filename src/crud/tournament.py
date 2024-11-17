@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Literal, Type
 from uuid import UUID
 
-from passlib.utils import timer
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
@@ -47,7 +46,7 @@ def get_tournaments(
     if filters:
         query = query.filter(*filters)
 
-    query = query.offset(pagination.skip).limit(pagination.limit)
+    query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_tournaments = query.all()
 
