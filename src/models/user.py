@@ -25,7 +25,5 @@ class User(Base, BaseMixin):
 
     tournaments = relationship("Tournament", back_populates="director")
     # player = relationship("Player", back_populates="user")
-    # player = relationship("Player", back_populates="user", uselist=False, foreign_keys="[Player.user_id]")
-
-
+    player = relationship("Player", back_populates="user", uselist=False, foreign_keys="[Player.user_id]")
 
