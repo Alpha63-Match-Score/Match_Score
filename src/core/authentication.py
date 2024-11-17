@@ -26,6 +26,12 @@ def authenticate_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password")
 
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
     return user
 
 def create_access_token(data: dict) -> str:
