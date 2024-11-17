@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, UUID, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseMixin, Base
@@ -12,6 +12,7 @@ class Team(Base, BaseMixin):
     logo = Column(String(45), nullable=True)
     played_games = Column(Integer, nullable=False, default=0)
     won_games = Column(Integer, nullable=False, default=0)
+    tournament_id = Column(UUID(as_uuid=True), ForeignKey("tournament.id"), nullable=True)
 
 
     players = relationship("Player", back_populates="team")
@@ -19,4 +20,5 @@ class Team(Base, BaseMixin):
     matches_as_team1 = relationship("Match", foreign_keys="[Match.team1_id]", back_populates="team1")
     matches_as_team2 = relationship("Match", foreign_keys="[Match.team2_id]", back_populates="team2")
     prize_cuts = relationship("PrizeCut", back_populates="team")
+    tournament = relationship("Tournament", back_populates="teams")
 
