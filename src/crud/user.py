@@ -31,10 +31,11 @@ def get_by_id(db: Session, user_id: str):
 
 def update_email(db: Session, email: str, current_user: User):
     user_email_exists(db, email)
+    user = db.query(User).filter(User.id == current_user.id).first()
 
-    current_user.email = email
+    user.email = email
     db.commit()
-    db.refresh(current_user)
+    db.refresh(user)
     return {"message": "Email updated successfully."}
 
 
