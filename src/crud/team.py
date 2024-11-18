@@ -48,10 +48,7 @@ def create_teams_lst_for_tournament(
     for db_team in teams:
         db_team.tournament_id = tournament_id
 
-    db.commit()
-
 def leave_top_teams_from_robin_round(
-        db: Session,
         db_tournament: Type[Tournament],
 ) -> None:
 
@@ -69,5 +66,3 @@ def leave_top_teams_from_robin_round(
             best_teams.append(team)
         else:
             team.tournament_id = None
-
-    db.commit()

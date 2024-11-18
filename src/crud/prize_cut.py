@@ -18,10 +18,6 @@ def create_prize_cuts_for_tournament(
     db.add(prize_cut1)
     db.add(prize_cut2)
 
-    db.commit()
-    db.refresh(prize_cut1)
-    db.refresh(prize_cut2)
-
 def _create_prize_cut(
         place: int,
         prize_cut: int,

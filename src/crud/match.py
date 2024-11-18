@@ -69,14 +69,14 @@ def _generate_round_robin_matches(db: Session, db_tournament: Tournament) -> Non
 
     for i, team1 in enumerate(teams):
         for team2 in teams[i + 1:]:
-            match = Match(
+            db_match = Match(
                 match_format=MatchFormat.MR12,
                 stage=Stage.GROUP_STAGE,
                 team1_id=team1.id,
                 team2_id=team2.id,
                 tournament_id=db_tournament.id
             )
-            matches.append(match)
+            matches.append(db_match)
 
     match_dates = _distribute_matches_dates(db_tournament.start_date, db_tournament.end_date, len(matches))
 
@@ -84,12 +84,12 @@ def _generate_round_robin_matches(db: Session, db_tournament: Tournament) -> Non
         match.start_time = match_dates.pop(0)
 
     db.bulk_save_objects(matches)
-    db.commit()
 
 def _generate_single_elimination_matches(db: Session, db_tournament: Tournament) -> None:
     teams = db_tournament.teams
     shuffled_teams = random.sample(teams, len(teams))
     match_dates = _distribute_matches_dates(db_tournament.start_date, db_tournament.end_date, len(teams) // 2)
+    matches = []
 
     for i in range(0, len(shuffled_teams), 2):
         db_match = Match(
@@ -102,9 +102,9 @@ def _generate_single_elimination_matches(db: Session, db_tournament: Tournament)
             tournament_id=db_tournament.id
         )
 
-        db.add(db_match)
-        db.commit()
-        db.refresh(db_match)
+        matches.append(db_match)
+
+    db.bulk_save_objects(matches)
 
 
 def _distribute_matches_dates(
@@ -136,24 +136,34 @@ def update_match(
         current_user
 ) -> MatchDetailResponse:
 
-    v.director_or_admin(current_user)
+    try:
+        db.begin_nested()
 
-    v.match_exists(db, match_id)
-    if match.start_time:
-        v.validate_start_time(match.start_time)
-    db_match = db.query(Match).filter(Match.id == match_id).first()
+        # Validating the match data
+        v.director_or_admin(current_user)
+        v.match_exists(db, match_id)
 
-    # Creating a dictionary with the updated data
-    update_data = match.model_dump(exclude_unset=True)
+        if match.start_time:
+            v.validate_start_time(match.start_time)
+        db_match = db.query(Match).filter(Match.id == match_id).first()
 
-    # Updating the data
-    for key, value in update_data.items():
-        setattr(db_match, key, value)
+        # Creating a dictionary with the updated data
+        update_data = match.model_dump(exclude_unset=True)
 
-    db.commit()
-    db.refresh(db_match)
+        # Updating the data
+        for key, value in update_data.items():
+            setattr(db_match, key, value)
 
-    return convert_db_to_match_response(db_match)
+        db.flush()
+        db.commit()
+        db.refresh(db_match)
+
+        return convert_db_to_match_response(db_match)
+
+    except Exception as e:
+        db.rollback()
+        raise e
+
 
 def update_match_score(
         db: Session,
@@ -162,42 +172,48 @@ def update_match_score(
         current_user
 ) -> MatchDetailResponse:
 
-    v.director_or_admin(current_user)
+    try:
+        db.begin_nested()
+        # Validating the match data
+        v.director_or_admin(current_user)
+        v.match_exists(db, match_id)
 
-    v.match_exists(db, match_id)
-    db_match = db.query(Match).filter(Match.id == match_id).first()
+        db_match = db.query(Match).filter(Match.id == match_id).first()
 
-    # Creating a dictionary with the updated data
-    update_data = match.model_dump(exclude_unset=True)
+        # Creating a dictionary with the updated data
+        update_data = match.model_dump(exclude_unset=True)
 
-    # Updating the data
-    for key, value in update_data.items():
-        setattr(db_match, key, value)
+        # Updating the data
+        for key, value in update_data.items():
+            setattr(db_match, key, value)
 
-    if db_match.match_format == MatchFormat.MR15:
-        _check_for_winner_for_mr15(db_match)
+        db.flush()
 
-    elif db_match.match_format == MatchFormat.MR12:
-        _check_for_winner_for_mr12(db_match)
+        # Check if the match is finished
+        if db_match.match_format == MatchFormat.MR15:
+            _check_for_winner_for_mr15(db_match)
+        elif db_match.match_format == MatchFormat.MR12:
+            _check_for_winner_for_mr12(db_match)
 
-    if match.is_finished and db_match.tournament.current_stage == Stage.FINAL:
-        _match_team_prizes(db, db_match)
+        # If the tournament is finished, update the team prizes
+        if match.is_finished and db_match.tournament.current_stage == Stage.FINAL:
+            _match_team_prizes(db, db_match)
+        elif (match.is_finished
+              and db_match.tournament.current_stage != Stage.FINAL
+              and db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN):
 
-    elif (match.is_finished
-          and db_match.tournament.current_stage != Stage.FINAL
-          and db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN):
+            losing_team = next(team for team in db_match.teams if team.id != db_match.winner_id)
+            losing_team.tournament_id = None
+            db.flush()
 
-        for team in match.teams:
-            if team.id != match.winner_id:
-                team.tournament_id = None
+        db.commit()
+        db.refresh(db_match)
 
-                db.commit()
-                db.refresh(team)
+        return convert_db_to_match_response(db_match)
 
-    db.commit()
-    db.refresh(db_match)
-
-    return convert_db_to_match_response(db_match)
+    except Exception as e:
+        db.rollback()
+        raise e
 
 def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
     for prize in db_match.tournament.prize_cuts:

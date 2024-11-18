@@ -75,37 +75,49 @@ def get_tournament(
 
     return convert_db_to_tournament_response(db_tournament)
 
+
 def create_tournament(
     db: Session,
     tournament: TournamentCreate,
     current_user: UserResponse
 ) -> TournamentDetailResponse:
+    try:
+        # Creating a new tournament
+        db.begin_nested()
 
-    current_stage = v.tournament_format_number_of_teams(tournament.tournament_format.value, len(tournament.team_names))
-    v.tournament_title_unique(db, tournament.title)
-    v.user_exists(db, current_user.id)
-    v.director_or_admin(current_user)
-    v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
+        # Validating the tournament data
+        current_stage = v.tournament_format_number_of_teams(tournament.tournament_format.value, len(tournament.team_names))
+        v.tournament_title_unique(db, tournament.title)
+        v.user_exists(db, current_user.id)
+        v.director_or_admin(current_user)
+        v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
 
-    db_tournament = Tournament(
-        title=tournament.title,
-        tournament_format=TournamentFormat(tournament.tournament_format),
-        start_date=tournament.start_date,
-        end_date=tournament.end_date,
-        prize_pool=tournament.prize_pool,
-        current_stage=current_stage,
-        director_id=current_user.id
-    )
+        # Creating the tournament
+        db_tournament = Tournament(
+            title=tournament.title,
+            tournament_format=TournamentFormat(tournament.tournament_format),
+            start_date=tournament.start_date,
+            end_date=tournament.end_date,
+            prize_pool=tournament.prize_pool,
+            current_stage=current_stage,
+            director_id=current_user.id
+        )
 
-    db.add(db_tournament)
-    db.commit()
-    db.refresh(db_tournament)
+        db.add(db_tournament)
+        db.flush()
 
-    create_prize_cuts_for_tournament(db, db_tournament)
-    create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
-    generate_matches(db, db_tournament)
+        create_prize_cuts_for_tournament(db, db_tournament)
+        create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
+        generate_matches(db, db_tournament)
 
-    return convert_db_to_tournament_response(db_tournament)
+        db.commit()
+
+        return convert_db_to_tournament_response(db_tournament)
+
+    except Exception as e:
+        # Rollback the transaction if an error occurs, so that no changes are made to the database
+        db.rollback()
+        raise e
 
 
 def update_tournament(
@@ -115,58 +127,78 @@ def update_tournament(
     current_user: UserResponse
 ) -> TournamentDetailResponse:
 
-    v.director_or_admin(current_user)
+    try:
+        db.begin_nested()
 
-    v.tournament_exists(db, tournament_id)
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+        # Validating the tournament data
+        v.director_or_admin(current_user)
+        v.tournament_exists(db, tournament_id)
 
-    if tournament.start_date:
-        v.validate_start_vs_end_date(tournament.start_date, db_tournament.end_date)
-    elif tournament.end_date:
-        v.validate_start_vs_end_date(db_tournament.start_date, tournament.end_date)
-    elif tournament.start_date and tournament.end_date:
-        v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
+        db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
 
-    # Creating a dictionary with the updated data
-    update_data = tournament.model_dump(exclude_unset=True)
+        if tournament.start_date:
+            v.validate_start_vs_end_date(tournament.start_date, db_tournament.end_date)
+        elif tournament.end_date:
+            v.validate_start_vs_end_date(db_tournament.start_date, tournament.end_date)
+        elif tournament.start_date and tournament.end_date:
+            v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
 
-    # Updating the data
-    for key, value in update_data.items():
-        setattr(db_tournament, key, value)
+        # Creating a dictionary with the updated data
+        update_data = tournament.model_dump(exclude_unset=True)
 
-    db.commit()
-    db.refresh(db_tournament)
+        # Updating the data
+        for key, value in update_data.items():
+            setattr(db_tournament, key, value)
 
-    return convert_db_to_tournament_response(db_tournament)
+        db.flush()
+        db.commit()
+        db.refresh(db_tournament)
+
+        return convert_db_to_tournament_response(db_tournament)
+
+    except Exception as e:
+        db.rollback()
+        raise e
+
 
 def update_tournament_stage(
     db: Session,
     tournament_id: UUID,
     current_user: UserResponse
 ) -> TournamentDetailResponse:
+    try:
+        db.begin_nested()
 
-    v.director_or_admin(current_user)
-    v.is_author_of_tournament(db, tournament_id, current_user.id)
+        # Validating the tournament data
+        v.director_or_admin(current_user)
+        v.is_author_of_tournament(db, tournament_id, current_user.id)
+        v.tournament_exists(db, tournament_id)
 
-    v.tournament_exists(db, tournament_id)
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+        db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
 
-    for match in db_tournament.matches:
-        if not match.is_finished:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="All matches must be finished before moving to the next stage")
+        for match in db_tournament.matches:
+            if not match.is_finished:
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail="All matches must be finished before moving to the next stage")
 
-    if db_tournament.current_stage == Stage.GROUP_STAGE:
-        leave_top_teams_from_robin_round(db, db_tournament)
+        # If tournament is robin round, the top teams will be selected to move to the next stage
+        if db_tournament.current_stage == Stage.GROUP_STAGE:
+            leave_top_teams_from_robin_round(db_tournament)
 
-    db_tournament.current_stage = db_tournament.current_stage.next_stage()
+        db_tournament.current_stage = db_tournament.current_stage.next_stage()
+        db.flush()
 
-    db.commit()
-    db.refresh(db_tournament)
-    generate_matches(db, db_tournament)
+        generate_matches(db, db_tournament)
 
-    return convert_db_to_tournament_response(db_tournament)
+        db.commit()
+        db.refresh(db_tournament)
+
+        return convert_db_to_tournament_response(db_tournament)
+
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def convert_db_to_tournament_list_response(
@@ -182,6 +214,7 @@ def convert_db_to_tournament_list_response(
         current_stage=db_tournament.current_stage,
         number_of_participants=len(db_tournament.teams),
     )
+
 
 def convert_db_to_tournament_response(
         db_tournament: Tournament | Type[Tournament]
