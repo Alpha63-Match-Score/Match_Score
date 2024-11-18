@@ -9,6 +9,8 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.crud.match import convert_db_to_match_list_response, generate_matches
 from src.crud.prize_cut import convert_db_to_prize_cut_response, create_prize_cuts_for_tournament
+from src.crud.team import convert_db_to_team_list_response, leave_top_teams_from_robin_round, \
+    create_teams_lst_for_tournament
 from src.models import Tournament, Team, User
 from src.models.enums import Stage, TournamentFormat
 from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TeamListResponse, TournamentCreate, \
@@ -106,35 +108,6 @@ def create_tournament(
     return convert_db_to_tournament_response(db_tournament)
 
 
-# TODO
-def create_teams_lst_for_tournament(
-        db: Session,
-        team_names: list[str],
-        tournament_id: UUID
-) -> None:
-
-    teams = []
-    for name in team_names:
-        v.team_exists_by_name(db, name)
-        db_team = db.query(Team).filter(Team.name == name).first()
-
-        if db_team.tournament_id is not None:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Team already participates in another tournament")
-
-        if len(db_team.players) < 5:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Team must have at least 5 players")
-
-        teams.append(db_team)
-
-    for db_team in teams:
-        db_team.tournament_id = tournament_id
-
-    db.commit()
-
 def update_tournament(
     db: Session,
     tournament_id: UUID,
@@ -195,29 +168,6 @@ def update_tournament_stage(
 
     return convert_db_to_tournament_response(db_tournament)
 
-# TODO
-def leave_top_teams_from_robin_round(
-        db: Session,
-        db_tournament: Type[Tournament],
-) -> None:
-
-    team_stats = {}
-    for match in db_tournament.matches:
-            if match.winner_team_id not in team_stats:
-                team_stats[match.winner_team] = 0
-            team_stats[match.winner_team] += 1
-
-    top_scores = sorted(team_stats.values(), reverse=True)[:2]
-
-    best_teams = []
-    for team, score in team_stats.items():
-        if score in top_scores:
-            best_teams.append(team)
-        else:
-            team.tournament_id = None
-
-    db.commit()
-
 
 def convert_db_to_tournament_list_response(
         db_tournament: Tournament | Type[Tournament],
@@ -249,14 +199,3 @@ def convert_db_to_tournament_response(
         teams=[convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
         prizes=[convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
     )
-
-# TODO
-def convert_db_to_team_list_response(
-        db_team: Type[Team]
-) -> TeamListResponse:
-
-        return TeamListResponse(
-            id=db_team.id,
-            name=db_team.name,
-            logo=db_team.logo,
-        )
