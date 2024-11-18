@@ -83,7 +83,7 @@ class PlayerListResponse(BaseConfig):
     country: str
 
 class PlayerDetailResponse(PlayerListResponse):
-    avatar: str
+    avatar: str | None
     team_id: UUID
     tournaments: List["TournamentListResponse"]
 
@@ -138,7 +138,7 @@ class PlayerUpdate(BaseConfig):
 class TeamListResponse(BaseConfig):
     id: UUID
     name: str
-    logo: str
+    logo: str | None
 
 class TeamDetailedListResponse(BaseConfig):
     players: List[PlayerListResponse]
@@ -168,14 +168,14 @@ class MatchListResponse(BaseConfig):
     team2_id: UUID
     team1_score: int
     team2_score: int
-    winner_id: UUID | None
+    winner_id: UUID | None = None
     tournament_id: UUID
 
 class MatchDetailResponse(MatchListResponse):
    team1_name: str
    team2_name: str
-   team1_logo: str
-   team2_logo: str
+   team1_logo: str | None = None
+   team2_logo: str | None = None
    tournament_title: str
 
 class MatchUpdate(BaseConfig):

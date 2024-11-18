@@ -108,6 +108,8 @@ def create_tournament(
 
         create_prize_cuts_for_tournament(db, db_tournament)
         create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
+        db.flush()
+        db.refresh(db_tournament)
         generate_matches(db, db_tournament)
 
         db.commit()
@@ -151,46 +153,6 @@ def update_tournament(
             setattr(db_tournament, key, value)
 
         db.flush()
-        db.commit()
-        db.refresh(db_tournament)
-
-        return convert_db_to_tournament_response(db_tournament)
-
-    except Exception as e:
-        db.rollback()
-        raise e
-
-
-def update_tournament_stage(
-    db: Session,
-    tournament_id: UUID,
-    current_user: UserResponse
-) -> TournamentDetailResponse:
-    try:
-        db.begin_nested()
-
-        # Validating the tournament data
-        v.director_or_admin(current_user)
-        v.is_author_of_tournament(db, tournament_id, current_user.id)
-        v.tournament_exists(db, tournament_id)
-
-        db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
-
-        for match in db_tournament.matches:
-            if not match.is_finished:
-                raise HTTPException(
-                    status_code=HTTP_400_BAD_REQUEST,
-                    detail="All matches must be finished before moving to the next stage")
-
-        # If tournament is robin round, the top teams will be selected to move to the next stage
-        if db_tournament.current_stage == Stage.GROUP_STAGE:
-            leave_top_teams_from_robin_round(db_tournament)
-
-        db_tournament.current_stage = db_tournament.current_stage.next_stage()
-        db.flush()
-
-        generate_matches(db, db_tournament)
-
         db.commit()
         db.refresh(db_tournament)
 

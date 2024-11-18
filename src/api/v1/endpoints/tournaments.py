@@ -49,10 +49,10 @@ def update_tournament(
 ):
     return tournament_crud.update_tournament(db, tournament_id, tournament, current_user)
 
-@router.put("/{tournament_id}/stages", response_model=TournamentDetailResponse)
-def update_tournament(tournament_id: UUID,
-                      db: Session = Depends(get_db),
-                      current_user: UserResponse = Depends(get_current_user)
-):
-
-    return tournament_crud.update_tournament_stage(db, tournament_id, current_user)
+# @router.put("/{tournament_id}/stages", response_model=TournamentDetailResponse)
+# def update_tournament(tournament_id: UUID,
+#                       db: Session = Depends(get_db),
+#                       current_user: UserResponse = Depends(get_current_user)
+# ):
+#
+#     return tournament_crud.update_tournament_stage(db, tournament_id, current_user)

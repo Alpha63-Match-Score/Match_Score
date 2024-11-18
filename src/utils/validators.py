@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Type
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -117,3 +118,7 @@ def is_author_of_tournament(db: Session, tournament_id: UUID, user_id: UUID) -> 
     db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if db_tournament.director_id != user_id:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="You are not authorized to perform this action")
+
+def match_shouldnt_be_finished(match: Type[Match]) -> None:
+    if match.is_finished:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
