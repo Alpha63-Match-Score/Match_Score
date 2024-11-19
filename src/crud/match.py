@@ -240,7 +240,6 @@ def _update_current_stage(
         crud_team.leave_top_teams_from_robin_round(db_tournament)
 
     db_tournament.current_stage = db_tournament.current_stage.next_stage()
-    db.flush()
     db.refresh(db_tournament)
 
 
