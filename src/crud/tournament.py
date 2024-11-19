@@ -1,20 +1,27 @@
-from datetime import datetime
+import math
+from datetime import datetime, timedelta
 from typing import Literal, Type
 from uuid import UUID
 
 from fastapi import HTTPException
+from starlette.status import HTTP_400_BAD_REQUEST
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_400_BAD_REQUEST
 
-from src.crud.match import convert_db_to_match_list_response, generate_matches
-from src.crud.prize_cut import convert_db_to_prize_cut_response, create_prize_cuts_for_tournament
-from src.crud.team import convert_db_to_team_list_response, leave_top_teams_from_robin_round, \
-    create_teams_lst_for_tournament
-from src.models import Tournament, Team, User
+from src.crud import match as crud_match
+from src.crud import prize_cut as crud_prize_cut
+from src.crud import team as crud_team
+
+from src.models import Tournament
 from src.models.enums import Stage, TournamentFormat
-from src.schemas.schemas import TournamentListResponse, TournamentDetailResponse, TeamListResponse, TournamentCreate, \
-    UserResponse, TournamentUpdate
+
+from src.schemas.schemas import (TournamentListResponse,
+                                 TournamentDetailResponse,
+                                 TournamentCreate,
+                                 UserResponse,
+                                 TournamentUpdate)
+
+from src.crud import constants as c
 from src.utils.pagination import PaginationParams
 from src.utils import validators as v
 
@@ -75,37 +82,112 @@ def get_tournament(
 
     return convert_db_to_tournament_response(db_tournament)
 
+
 def create_tournament(
     db: Session,
     tournament: TournamentCreate,
     current_user: UserResponse
 ) -> TournamentDetailResponse:
 
-    current_stage = v.tournament_format_number_of_teams(tournament.tournament_format.value, len(tournament.team_names))
-    v.tournament_title_unique(db, tournament.title)
-    v.user_exists(db, current_user.id)
-    v.director_or_admin(current_user)
-    v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
+    try:
+        # Creating a new tournament
+        db.begin_nested()
 
-    db_tournament = Tournament(
-        title=tournament.title,
-        tournament_format=TournamentFormat(tournament.tournament_format),
-        start_date=tournament.start_date,
-        end_date=tournament.end_date,
-        prize_pool=tournament.prize_pool,
-        current_stage=current_stage,
-        director_id=current_user.id
-    )
+        # Validating the tournament data
+        v.unique_teams_in_tournament(tournament.team_names)
+        v.tournament_title_unique(db, tournament.title)
+        v.director_or_admin(current_user)
+        v.validate_start_date(tournament.start_date)
 
-    db.add(db_tournament)
-    db.commit()
-    db.refresh(db_tournament)
+        # get current stage for tournament
+        total_teams = len(tournament.team_names)
+        current_stage = _get_tournament_current_stage(tournament.tournament_format.value, total_teams)
 
-    create_prize_cuts_for_tournament(db, db_tournament)
-    create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
-    generate_matches(db, db_tournament)
+        # calculating the end date
+        end_date = _calculate_tournament_end_date(
+            tournament.start_date,
+            tournament.tournament_format,
+            current_stage,
+            total_teams)
 
-    return convert_db_to_tournament_response(db_tournament)
+        # Creating the tournament
+        db_tournament = Tournament(
+            title=tournament.title,
+            tournament_format=TournamentFormat(tournament.tournament_format),
+            start_date=tournament.start_date,
+            end_date=end_date,
+            prize_pool=tournament.prize_pool,
+            current_stage=current_stage,
+            director_id=current_user.id
+        )
+
+        db.add(db_tournament)
+        db.flush()
+
+        crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament)
+        crud_team.create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
+
+        db.flush()
+
+        crud_match.generate_matches(db, db_tournament)
+        tournament = convert_db_to_tournament_response(db_tournament)
+        db.commit()
+
+        return tournament
+
+    except Exception as e:
+        # Ensure no changes are made to the database
+        db.rollback()
+        raise e
+
+
+def _get_tournament_current_stage(
+        tournament_format: str,
+        number_of_teams: int
+) -> Stage:
+
+    if tournament_format == TournamentFormat.SINGLE_ELIMINATION:
+        if number_of_teams not in c.SINGLE_ELIMINATION_TEAMS:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="Invalid number of teams for single elimination - must be 4, 8 or 16")
+
+        if number_of_teams == 4:
+            return Stage.SEMI_FINAL
+        elif number_of_teams == 8:
+            return Stage.QUARTER_FINAL
+        else:
+            return Stage.ROUND_OF_16
+
+    elif tournament_format == TournamentFormat.ROUND_ROBIN:
+        if number_of_teams not in c.ROUND_ROBIN_TEAMS:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="Invalid number of teams for round robin - must be 4 or 5")
+        return Stage.GROUP_STAGE
+
+    elif tournament_format == TournamentFormat.ONE_OFF_MATCH:
+        if number_of_teams not in c.ONE_OFF_MATCH_TEAMS:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="Invalid number of teams for one off match - must be 2")
+        return Stage.FINAL
+
+
+def _calculate_tournament_end_date(
+        start_date: datetime,
+        tournament_format: TournamentFormat,
+        current_stage: Stage,
+        total_teams: int
+) -> datetime:
+
+    if tournament_format == TournamentFormat.ROUND_ROBIN:
+        total_matches = total_teams * (total_teams - 1) // 2
+        required_days = math.ceil((total_matches - 1) / c.MAX_MATCHES_PER_DAY) + 1
+    else:
+        required_days = c.STAGE_DAYS[current_stage]
+
+    return start_date + timedelta(days=required_days)
 
 
 def update_tournament(
@@ -115,58 +197,42 @@ def update_tournament(
     current_user: UserResponse
 ) -> TournamentDetailResponse:
 
-    v.director_or_admin(current_user)
+    try:
+        db.begin_nested()
 
-    v.tournament_exists(db, tournament_id)
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+        # Validating the tournament data
+        v.tournament_exists(db, tournament_id)
+        db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
 
-    if tournament.start_date:
-        v.validate_start_vs_end_date(tournament.start_date, db_tournament.end_date)
-    elif tournament.end_date:
-        v.validate_start_vs_end_date(db_tournament.start_date, tournament.end_date)
-    elif tournament.start_date and tournament.end_date:
-        v.validate_start_vs_end_date(tournament.start_date, tournament.end_date)
-
-    # Creating a dictionary with the updated data
-    update_data = tournament.model_dump(exclude_unset=True)
-
-    # Updating the data
-    for key, value in update_data.items():
-        setattr(db_tournament, key, value)
-
-    db.commit()
-    db.refresh(db_tournament)
-
-    return convert_db_to_tournament_response(db_tournament)
-
-def update_tournament_stage(
-    db: Session,
-    tournament_id: UUID,
-    current_user: UserResponse
-) -> TournamentDetailResponse:
-
-    v.director_or_admin(current_user)
-    v.is_author_of_tournament(db, tournament_id, current_user.id)
-
-    v.tournament_exists(db, tournament_id)
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
-
-    for match in db_tournament.matches:
-        if not match.is_finished:
+        if datetime.now() >= db_tournament.end_date:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="All matches must be finished before moving to the next stage")
+                detail="The tournament has already ended. You cannot update it.")
 
-    if db_tournament.current_stage == Stage.GROUP_STAGE:
-        leave_top_teams_from_robin_round(db, db_tournament)
+        v.director_or_admin(current_user)
+        v.is_author_of_tournament(db, current_user.id, tournament_id)
 
-    db_tournament.current_stage = db_tournament.current_stage.next_stage()
 
-    db.commit()
-    db.refresh(db_tournament)
-    generate_matches(db, db_tournament)
+        # Creating a dictionary with the updated data
+        update_data = tournament.model_dump(exclude_unset=True)
 
-    return convert_db_to_tournament_response(db_tournament)
+        if db_tournament.start_date >= db_tournament.end_date:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="Start date must be before end date")
+
+        # Updating the data
+        for key, value in update_data.items():
+            setattr(db_tournament, key, value)
+
+        db.commit()
+        db.refresh(db_tournament)
+
+        return convert_db_to_tournament_response(db_tournament)
+
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def convert_db_to_tournament_list_response(
@@ -183,6 +249,7 @@ def convert_db_to_tournament_list_response(
         number_of_participants=len(db_tournament.teams),
     )
 
+
 def convert_db_to_tournament_response(
         db_tournament: Tournament | Type[Tournament]
 ) -> TournamentDetailResponse:
@@ -195,7 +262,9 @@ def convert_db_to_tournament_response(
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
         number_of_teams=len(db_tournament.teams),
-        matches=[convert_db_to_match_list_response(db_match) for db_match in db_tournament.matches],
-        teams=[convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
-        prizes=[convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
+        matches_of_current_stage=[crud_match.convert_db_to_match_list_response(db_match)
+                 for db_match in db_tournament.matches
+                 if not db_match.is_finished],
+        teams=[crud_team.convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
+        prizes=[crud_prize_cut.convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
     )

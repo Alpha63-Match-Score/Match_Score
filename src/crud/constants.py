@@ -1,0 +1,17 @@
+from src.models.enums import Stage
+
+MATCH_DURATION_PLUS_BUFFER = 180
+MAX_MATCHES_PER_DAY = 4
+START_HOUR = 11
+END_HOUR = 20
+
+SINGLE_ELIMINATION_TEAMS = [4, 8, 16]
+ROUND_ROBIN_TEAMS = [4, 5]
+ONE_OFF_MATCH_TEAMS = [2]
+
+STAGE_DAYS = {
+    Stage.FINAL: 1,
+    Stage.SEMI_FINAL: 2,
+    Stage.QUARTER_FINAL: 3,
+    Stage.ROUND_OF_16: 4,
+}

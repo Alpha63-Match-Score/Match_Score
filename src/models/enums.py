@@ -20,7 +20,6 @@ class Stage(str, Enum):
    FINAL = "final"  # For all formats - MR15
 
    def next_stage(self):
-
        if self == Stage.GROUP_STAGE:
            return Stage.FINAL
 
