@@ -1,10 +1,49 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
+from src.utils.pagination import PaginationParams
 from src.models import Request, User, Player
 from src.models.enums import RequestType
 from src.schemas.schemas import ResponseRequest
-from src.utils.validators import player_exists, user_role_is_director, user_role_is_player
+from src.utils.validators import player_exists, user_role_is_director, user_role_is_player, user_role_is_admin
+from typing import Literal
+
+
+def get_all(
+        db: Session,
+        current_user: User
+        # status: Literal['pending', 'accepted', 'rejected'] | None = None,
+        # request_type: Literal['link user to player', 'promote user to director'] | None = None,
+        # request_date: str = None,
+        # response_date: str = None,
+        # admin_id: str = None,
+        # pagination: PaginationParams
+):
+    user_role_is_admin(current_user)
+    query = db.query(Request).order_by(Request.request_date.desc())
+
+    # if status:
+    #     query = query.filter(Request.status == status)
+    #
+    # if request_type:
+    #     query = query.filter(Request.request_type == request_type)
+    #
+    # if admin_id:
+    #     query = query.filter(Request.admin_id == admin_id)
+    #
+    # if response_date:
+    #     query = query.filter(Request.response_date == response_date)
+
+    # query = query.offset(pagination.offset).limit(pagination.limit)
+    all = []
+    for request in query:
+        all.append(
+            ResponseRequest(
+                request_type=request.request_type,
+                status=request.status,
+                request_date=request.request_date,
+            )
+        )
+    return all
 
 
 def send_director_request(db: Session, current_user: User):
