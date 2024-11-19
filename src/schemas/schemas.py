@@ -189,7 +189,7 @@ class TournamentListResponse(BaseConfig):
     start_date: datetime
     end_date: datetime
     current_stage: Stage
-    number_of_teams: int
+    number_of_teams: int | None = None
 
 class TournamentDetailResponse(TournamentListResponse):
     matches_of_current_stage: List[MatchListResponse]

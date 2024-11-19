@@ -18,6 +18,7 @@ class Stage(str, Enum):
    QUARTER_FINAL = "quarter final"  # For Single Elimination - MR15
    SEMI_FINAL = "semi final"  # For Single Elimination - MR15
    FINAL = "final"  # For all formats - MR15
+   FINISHED = "finished"
 
    def next_stage(self):
        if self == Stage.GROUP_STAGE:
