@@ -29,10 +29,12 @@ def player_request(username: str = Path(description="player_username"),
 
 @router.get("/users")
 def get_all_requests(db: Session = Depends(get_db),
-                     current_user: User = Depends(get_current_user)):
-    return get_all(db, current_user)
+                     current_user: User = Depends(get_current_user),
+                     sort_by: Literal['acs', 'desc'] = 'desc',
+                     status: Literal['pending', 'accepted', 'rejected'] | None = None,
+                     request_type: Literal['link user to player', 'promote user to director'] | None = None,
+                     filter_by_current_admin: bool = False,
+                     pagination: PaginationParams = Depends(get_pagination)
+                     ):
+    return get_all(db, current_user, pagination, sort_by, status, request_type, filter_by_current_admin)
 
-# pagination: PaginationParams = Depends(get_pagination),
-                    # current_user: User = Depends(get_current_user),
-                    # status: Literal['pending', 'accepted', 'rejected'] | None = None,
-                    # request_type: Literal['link user to player', 'promote user to director'] | None = None,)
