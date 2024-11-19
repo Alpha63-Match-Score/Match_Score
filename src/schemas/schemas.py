@@ -259,6 +259,13 @@ class ResponseRequest(BaseConfig):
     # response_date: datetime = datetime.now()
 
 
+class RequestListResponse(BaseConfig):
+    request_type: RequestType
+    status: RequestStatus
+    request_date: datetime
+    admin_id: UUID | None
+
+
 # Updating forward references
 PlayerListResponse.model_rebuild()
 TournamentDetailResponse.model_rebuild()

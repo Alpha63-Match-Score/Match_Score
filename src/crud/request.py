@@ -1,10 +1,57 @@
 from fastapi import HTTPException, status
+from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
-
+from src.utils.pagination import PaginationParams
 from src.models import Request, User, Player
 from src.models.enums import RequestType
-from src.schemas.schemas import ResponseRequest
-from src.utils.validators import player_exists, user_role_is_director, user_role_is_player
+from src.schemas.schemas import ResponseRequest, RequestListResponse
+from src.utils.validators import player_exists, user_role_is_director, user_role_is_player, user_role_is_admin
+from typing import Literal
+
+
+def get_all(
+        db: Session,
+        current_user: User,
+        pagination: PaginationParams,
+        sort_by: Literal['asc', 'desc'] = 'desc',
+        status: Literal['pending', 'accepted', 'rejected'] | None = None,
+        request_type: Literal['link user to player', 'promote user to director'] | None = None,
+        filter_by_admin: bool = False,
+        # request_date: str = None,
+        # response_date: str = None,
+):
+    user_role_is_admin(current_user)
+    query = db.query(Request)
+
+    if status:
+        query = query.filter(Request.status == status)
+
+    if request_type:
+        query = query.filter(Request.request_type == request_type)
+
+    if filter_by_admin:
+        query = query.filter(Request.admin_id == current_user.id)
+
+    if sort_by == 'asc':
+        query = query.order_by(asc(Request.request_date))
+    elif sort_by == 'desc':
+        query = query.order_by(desc(Request.request_date))
+
+    # if response_date:
+    #     query = query.filter(Request.response_date == response_date)
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    result = [
+        RequestListResponse(
+            request_type=request.request_type,
+            status=request.status,
+            request_date=request.request_date,
+            admin_id=request.admin_id
+        )
+        for request in query
+    ]
+    return result
 
 
 def send_director_request(db: Session, current_user: User):

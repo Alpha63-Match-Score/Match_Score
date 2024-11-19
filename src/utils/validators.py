@@ -91,6 +91,11 @@ def user_role_is_director(current_user: User) -> None:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a director.")
 
 
+def user_role_is_admin(current_user: User) -> None:
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Only admins can perform this action.")
+
+
 def user_role_is_player(current_user: User) -> None:
     if current_user.role == Role.PLAYER:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a player.")
