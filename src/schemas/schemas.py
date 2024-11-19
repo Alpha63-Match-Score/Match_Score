@@ -142,7 +142,7 @@ class TeamDetailedListResponse(BaseConfig):
     players: List[PlayerListResponse]
 
 class TeamCreate(BaseConfig):
-    id: UUID
+    # id: UUID
     name: str  = Field(
         min_length=5,
         max_length=15,

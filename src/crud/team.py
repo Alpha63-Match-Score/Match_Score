@@ -1,17 +1,52 @@
 from typing import Type
 from uuid import UUID
 
+from dns.e164 import query
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament
 from src.models.team import Team
-from src.schemas.schemas import TeamListResponse
+from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse
+from src.utils import validators as v
+from src.utils.pagination import PaginationParams
 
 
-def get_teams():
-    raise NotImplementedError
+def get_teams(db: Session,
+              pagination: PaginationParams,
+              search: str | None = None) -> TeamListResponse:
+
+    query = db.query(Team).order_by(Team.name.asc())
+
+    filters = []
+
+    if search:
+        filters.append(Team.name.ilike(f"%{search}%"))
+
+    if filters:
+        query = db.query(Team).filter(*filters)
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    db_teams = query.all()
+    return [convert_db_to_team_list_response(db_team) for db_team in db_teams]
+
+def create_team( db: Session, team: TeamCreate, current_user: UserResponse)-> TeamListResponse:
+    # v.team_exists(db, team_name=team.name)
+    v.director_or_admin(current_user)
+
+    db_team = Team(
+        name=team.name,
+        logo=team.logo,
+ )
+
+    db.add(db_team)
+    db.commit()
+    db.refresh(db_team)
+
+    return convert_db_to_team_list_response(db_team)
+
 
 def convert_db_to_team_list_response(
         db_team: Type[Team]
