@@ -1,12 +1,13 @@
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db, get_current_user
 from src.crud import match as match_crud
 from src.models.enums import Stage
-from src.schemas.schemas import MatchUpdate, MatchListResponse, MatchDetailResponse, MatchUpdateScore
+from src.schemas.schemas import MatchUpdate, MatchListResponse, MatchDetailResponse
 
 router = APIRouter()
 
@@ -52,12 +53,12 @@ def update_match(
 
     return match_crud.update_match(db, match_id, match, current_user)
 
-@router.put("/{match_id}/scores", response_model=MatchDetailResponse)
-def update_match(
+@router.put("/{match_id}/team-scores", response_model=MatchDetailResponse)
+def update_match_score(
         match_id: UUID,
-        match: MatchUpdateScore,
+        team_to_upvote_score: Literal["team1", "team2"],
         db: Session = Depends(get_db),
         current_user = Depends(get_current_user)
 ):
 
-    return match_crud.update_match_score(db, match_id, match, current_user)
+    return match_crud.update_match_score(db, match_id, team_to_upvote_score, current_user)

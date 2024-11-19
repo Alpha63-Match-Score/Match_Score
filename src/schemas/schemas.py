@@ -1,9 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, ForwardRef
 from uuid import UUID
-from fastapi import HTTPException
-from pydantic import BaseModel, Field, field_validator, EmailStr
-from starlette import status
+from pydantic import BaseModel, Field, field_validator, EmailStr, validator
 from src.models.enums import TournamentFormat, Stage, MatchFormat, RequestType, RequestStatus
 
 # Forward References
@@ -180,12 +178,8 @@ class MatchDetailResponse(MatchListResponse):
 
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None
-    is_finished: bool | None = None
     stage: Stage | None = None
 
-class MatchUpdateScore(BaseConfig):
-    team1_score: int | None = None
-    team2_score: int | None = None
 
 # Tournament schemas
 class TournamentListResponse(BaseConfig):
@@ -198,9 +192,10 @@ class TournamentListResponse(BaseConfig):
     number_of_teams: int
 
 class TournamentDetailResponse(TournamentListResponse):
-    matches: List[MatchListResponse]
+    matches_of_current_stage: List[MatchListResponse]
     teams: List[TeamListResponse]
     prizes: List[PrizeCutResponse]
+
 
 class TournamentCreate(BaseConfig):
    title: str = Field(
@@ -210,11 +205,11 @@ class TournamentCreate(BaseConfig):
     )
    tournament_format: TournamentFormat
    start_date: datetime
-   end_date: datetime
    team_names: List[str]
    prize_pool: int = Field(
         ge=1,
         examples=[1000])
+
 
 class TournamentUpdate(BaseConfig):
    title: str | None = Field(

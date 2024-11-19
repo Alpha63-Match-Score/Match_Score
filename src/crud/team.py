@@ -28,15 +28,16 @@ def create_teams_lst_for_tournament(
         team_names: list[str],
         tournament_id: UUID
 ) -> None:
+
     teams = []
     for name in team_names:
-        v.team_exists_by_name(db, name)
+        v.team_exists(db, team_name=name)
         db_team = db.query(Team).filter(Team.name == name).first()
 
         if db_team.tournament_id is not None:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Team already participates in another tournament")
+                detail=f"Team '{db_team.name}' already participates in another tournament")
 
         if len(db_team.players) < 5:
             raise HTTPException(
@@ -47,6 +48,7 @@ def create_teams_lst_for_tournament(
 
     for db_team in teams:
         db_team.tournament_id = tournament_id
+
 
 def leave_top_teams_from_robin_round(
         db_tournament: Type[Tournament],
