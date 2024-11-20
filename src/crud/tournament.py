@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from src.crud import match as crud_match
@@ -40,15 +40,21 @@ def get_tournaments(
 
     if period:
         if period == 'past':
-            filters.append(Tournament.end_date < datetime.now())
+            filters.append(or_(
+                Tournament.end_date < datetime.now(),
+                Tournament.current_stage == Stage.FINISHED
+            ))
         elif period == 'present':
             filters.append(
                 and_(Tournament.start_date <= datetime.now(),
-                     Tournament.end_date >= datetime.now()))
+                     Tournament.end_date >= datetime.now(),
+                     Tournament.current_stage != Stage.FINISHED))
         elif period == 'future':
-            filters.append(Tournament.start_date > datetime.now())
+            filters.append(
+                and_(Tournament.start_date > datetime.now(),
+                     Tournament.current_stage != Stage.FINISHED))
 
-    if search:
+    if search is not None:
         filters.append(Tournament.title.ilike(f"%{search}%"))
 
     if director_id:
@@ -246,7 +252,7 @@ def convert_db_to_tournament_list_response(
         start_date=db_tournament.start_date,
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
-        number_of_participants=len(db_tournament.teams),
+        number_of_teams=len(db_tournament.teams),
     )
 
 

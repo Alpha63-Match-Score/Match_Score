@@ -140,6 +140,12 @@ class TeamListResponse(BaseConfig):
 
 class TeamDetailedListResponse(BaseConfig):
     players: List[PlayerListResponse]
+    #TODO: Please add these (needed for front-end):
+    # matches: List[MatchListResponse]
+    # tournament_id: UUID
+    # prize_cuts: List[PrizeCutResponse]
+    # ratings/statistics?
+
 
 class TeamCreate(BaseConfig):
     id: UUID

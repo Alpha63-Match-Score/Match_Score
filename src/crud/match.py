@@ -260,61 +260,70 @@ def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
 
 
 def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> None:
-    if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team1_id)
-
-    elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team2_id)
-
-    elif db_match.team1_score >= 15 and db_match.team2_score >= 15:
+    if db_match.team1_score >= 15 and db_match.team2_score >= 15:
         if db_match.team1_score >= 19 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
 
         elif db_match.team2_score >= 19 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
 
+    elif db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team1_id)
+
+    elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team2_id)
+
     db.flush()
     db.refresh(db_match)
 
 
 def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> None:
-    if db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team1_id)
-
-    elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team2_id)
-
-    elif db_match.team1_score >= 12 and db_match.team2_score >= 12:
+    if db_match.team1_score >= 12 and db_match.team2_score >= 12:
         if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
 
         elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
 
+    elif db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team1_id)
+
+    elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team2_id)
+
+
+
     db.flush()
     db.refresh(db_match)
 
 
-def _mark_match_as_finished(db: Session, db_match: Match, winner_team_id: UUID) -> None:
+def _mark_match_as_finished(
+        db: Session,
+        db_match: Match,
+        winner_team_id: UUID
+) -> None:
+
     db_match.is_finished = True
     db_match.winner_team_id = winner_team_id
 
-    for player in db_match.team1.players:
-        player.played_games += 1
-        if player.team_id == winner_team_id:
-            player.won_games += 1
-        db.flush()
-        db.refresh(player)
+    winner_team = db_match.team1 if db_match.team1_id == winner_team_id else db_match.team2
+    loser_team = db_match.team2 if db_match.team1_id == winner_team_id else db_match.team1
 
-    for player in db_match.team2.players:
+    winner_team.played_games += 1
+    winner_team.won_games += 1
+    loser_team.played_games += 1
+
+
+    for player in winner_team.players:
         player.played_games += 1
-        if player.team_id == winner_team_id:
-            player.won_games += 1
-        db.flush()
-        db.refresh(player)
+        player.won_games += 1
+
+    for player in loser_team.players:
+        player.played_games += 1
 
     db.flush()
     db.refresh(db_match)
+
 
 def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
     return MatchDetailResponse(
