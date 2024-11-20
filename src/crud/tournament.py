@@ -30,6 +30,7 @@ def get_tournaments(
     db: Session,
     pagination: PaginationParams,
     period: Literal['past', 'present', 'future'] | None = None,
+    status: Literal['active', 'finished'] | None = None,
     search: str | None = None,
     director_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
@@ -53,6 +54,12 @@ def get_tournaments(
             filters.append(
                 and_(Tournament.start_date > datetime.now(),
                      Tournament.current_stage != Stage.FINISHED))
+
+    if status is not None:
+        if status == 'active':
+            filters.append(Tournament.current_stage != Stage.FINISHED)
+        elif status == 'finished':
+            filters.append(Tournament.current_stage == Stage.FINISHED)
 
     if search is not None:
         filters.append(Tournament.title.ilike(f"%{search}%"))

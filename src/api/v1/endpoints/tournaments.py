@@ -17,11 +17,12 @@ router = APIRouter()
 def read_tournaments(
         pagination: PaginationParams = Depends(get_pagination),
         period: Literal['past', 'present', 'future'] | None= None,
+        status: Literal['active', 'finished'] | None = None,
         search: str | None = None,
         director_id: UUID | None = None,
         db: Session = Depends(get_db)
 ):
-    return tournament_crud.get_tournaments(db, pagination, period, search, director_id)
+    return tournament_crud.get_tournaments(db, pagination, status, period, search, director_id)
 
 
 @router.get("/{tournament_id}", response_model=TournamentDetailResponse)
