@@ -8,7 +8,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament
 from src.models.team import Team
-from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse
+from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse, TeamDetailedResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
@@ -47,6 +47,9 @@ def create_team( db: Session, team: TeamCreate, current_user: UserResponse)-> Te
 
     return convert_db_to_team_list_response(db_team)
 
+def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
+    db_team = v.team_exists(db, team_id=team_id)
+    return convert_db_to_team_list_response(db_team)
 
 def convert_db_to_team_list_response(
         db_team: Type[Team]
