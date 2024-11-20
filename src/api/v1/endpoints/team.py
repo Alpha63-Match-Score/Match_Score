@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
@@ -19,3 +20,7 @@ def get_teams(db: Session = Depends(get_db),
 @router.post("/", response_model=TeamListResponse, status_code=201)
 def create_team(team: TeamCreate, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
     return team_crud.create_team(db, team, current_user)
+
+@router.get("/{team_id}", response_model=TeamListResponse, status_code = 201)
+def get_team(team_id: UUID, db: Session = Depends(get_db)):
+    return team_crud.get_team(db, team_id)
