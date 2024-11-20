@@ -76,8 +76,7 @@ def get_tournament(
     tournament_id: UUID
 ) -> TournamentListResponse:
 
-    v.tournament_exists(db, tournament_id)
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    db_tournament = v.tournament_exists(db, tournament_id)
 
     participants = []
     for db_match in db_tournament.matches:
@@ -207,8 +206,7 @@ def update_tournament(
         db.begin_nested()
 
         # Validating the tournament data
-        v.tournament_exists(db, tournament_id)
-        db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+        db_tournament = v.tournament_exists(db, tournament_id)
 
         if datetime.now() >= db_tournament.end_date:
             raise HTTPException(

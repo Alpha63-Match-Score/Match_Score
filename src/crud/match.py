@@ -55,8 +55,7 @@ def get_match(
         match_id: UUID
 ) -> MatchDetailResponse:
 
-    v.match_exists(db, match_id)
-    db_match = db.query(Match).filter(Match.id == match_id).first()
+    db_match = v.match_exists(db, match_id)
 
     return convert_db_to_match_response(db_match)
 
@@ -137,9 +136,11 @@ def update_match(
         # Validating the match data
         v.director_or_admin(current_user)
         v.is_author_of_tournament(db, match.tournament_id, current_user.id)
-        v.match_exists(db, match_id)
+        db_match = v.match_exists(db, match_id)
 
-        db_match = db.query(Match).filter(Match.id == match_id).first()
+        if db_match.is_finished:
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
+
         if match.start_time:
             if (match.start_time < db_match.tournament.start_date
                     or match.start_time > db_match.tournament.end_date):
@@ -174,10 +175,8 @@ def update_match_score(
 
         # Validating the match data
         v.director_or_admin(current_user)
-        v.match_exists(db, match_id)
-        db_match = db.query(Match).filter(Match.id == match_id).first()
-        v.is_author_of_tournament(db, db_match.tournament_id, current_user.id)
-
+        db_match = v.match_exists(db, match_id)
+        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
 
         if db_match.is_finished:
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
@@ -214,7 +213,7 @@ def update_match_score(
             db.flush()
 
         if all(match.is_finished for match in db_match.tournament.matches):
-            _update_current_stage(db, db_match.tournament_id)
+            _update_current_stage(db, db_match.tournament.id)
 
         db.commit()
         db.refresh(db_match)
@@ -233,7 +232,7 @@ def _update_current_stage(
 ) -> None:
     db.begin_nested()
 
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    db_tournament = v.tournament_exists(db, tournament_id)
 
     # If tournament is robin round, the top teams will be selected to move to the next stage
     if db_tournament.current_stage == Stage.GROUP_STAGE:
@@ -290,8 +289,6 @@ def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> No
 
     elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
         _mark_match_as_finished(db, db_match, db_match.team2_id)
-
-
 
     db.flush()
     db.refresh(db_match)
