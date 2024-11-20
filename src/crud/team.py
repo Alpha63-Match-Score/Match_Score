@@ -4,6 +4,7 @@ from uuid import UUID
 from dns.e164 import query
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.testing import db
 from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament
@@ -84,21 +85,43 @@ def create_teams_lst_for_tournament(
         db_team.tournament_id = tournament_id
 
 
-def leave_top_teams_from_robin_round(
-        db_tournament: Type[Tournament],
-) -> None:
-
+def leave_top_teams_from_robin_round(db, db_tournament: Tournament) -> None:
     team_stats = {}
+    for team in db_tournament.teams:
+        team_stats[team] = {
+            'points': 0,
+            'wins': 0,
+            'score_difference': 0,
+            'total_score': 0
+        }
+
     for match in db_tournament.matches:
-            if match.winner_team_id not in team_stats:
-                team_stats[match.winner_team] = 0
-            team_stats[match.winner_team] += 1
+        team1 = match.team1
+        team2 = match.team2
 
-    top_scores = sorted(team_stats.values(), reverse=True)[:2]
+        team_stats[team1]['total_score'] += match.team1_score
+        team_stats[team2]['total_score'] += match.team2_score
 
-    best_teams = []
-    for team, score in team_stats.items():
-        if score in top_scores:
-            best_teams.append(team)
-        else:
-            team.tournament_id = None
+        team_stats[team1]['score_difference'] += (match.team1_score - match.team2_score)
+        team_stats[team2]['score_difference'] += (match.team2_score - match.team1_score)
+
+
+        winner = team1 if match.winner_team_id == team1.id else team2
+        team_stats[winner]['points'] += 2
+        team_stats[winner]['wins'] += 1
+
+    sorted_teams = sorted(
+        team_stats.keys(),
+        key=lambda t: (
+            team_stats[t]['points'],
+            team_stats[t]['wins'],
+            team_stats[t]['score_difference'],
+            team_stats[t]['total_score']
+        ),
+        reverse=True
+    )
+
+    for team in sorted_teams[2:]:
+        team.tournament_id = None
+
+    db.flush()

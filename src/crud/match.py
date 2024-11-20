@@ -7,7 +7,7 @@ from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from src.models import Tournament
+from src.models import Tournament, Team
 from src.models.match import Match
 from src.crud import team as crud_team
 from src.models.enums import Stage, MatchFormat, TournamentFormat, Role
@@ -67,7 +67,7 @@ def generate_matches(
     matches = []
 
     # Get the team pairs and the first match datetime
-    if db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN:
+    if db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN and db_tournament.current_stage == Stage.GROUP_STAGE:
         team_pairs, first_match_datetime = _get_pairs_robin_round(db_tournament)
     else:
         team_pairs, first_match_datetime = _get_pairs_single_elimination(db_tournament)
@@ -103,8 +103,8 @@ def _get_pairs_robin_round(db_tournament: Tournament) -> tuple:
             team_pairs.append((team1, team2))
 
 
-    stage_date = db_tournament.start_date if db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN \
-        else db_tournament.end_date
+    stage_date = db_tournament.start_date if (db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN
+        and db_tournament.current_stage == Stage.GROUP_STAGE) else db_tournament.end_date
     first_match_datetime = stage_date.replace(hour=11, minute=0, second=0, microsecond=0)
 
     return team_pairs, first_match_datetime
@@ -204,19 +204,16 @@ def update_match_score(
         db.flush()
         db.refresh(db_match)
 
-        # If the tournament is finished, update the team prizes
-        if db_match.is_finished and db_match.stage == Stage.FINAL:
-            _match_team_prizes(db, db_match)
-
-        if (not db_match.is_finished
-              and db_match.tournament.current_stage != Stage.FINAL
-              and db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN):
-
-            losing_team.tournament_id = None
-            db.flush()
+        if db_match.is_finished:
+            if db_match.stage == Stage.FINAL:
+                _match_team_prizes(db, db_match)
+            elif db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN:
+                losing_team.tournament_id = None
+                db.flush()
 
         if all(match.is_finished for match in db_match.tournament.matches):
             _update_current_stage(db, db_match.tournament.id)
+            current_stage = db_match.tournament.current_stage
             generate_matches(db, db_match.tournament)
 
         db.commit()
@@ -240,9 +237,13 @@ def _update_current_stage(
 
     # If tournament is robin round, the top teams will be selected to move to the next stage
     if db_tournament.current_stage == Stage.GROUP_STAGE:
-        crud_team.leave_top_teams_from_robin_round(db_tournament)
+        crud_team.leave_top_teams_from_robin_round(db, db_tournament)
+
+    db.flush()
 
     db_tournament.current_stage = db_tournament.current_stage.next_stage()
+
+    db.flush()
     db.refresh(db_tournament)
 
 
@@ -261,37 +262,45 @@ def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
         db.refresh(prize.team)
 
 
-def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> None:
+def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> Team:
     if db_match.team1_score >= 15 and db_match.team2_score >= 15:
         if db_match.team1_score >= 19 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
+            return db_match.team2
 
         elif db_match.team2_score >= 19 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
+            return db_match.team1
 
     elif db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
         _mark_match_as_finished(db, db_match, db_match.team1_id)
+        return db_match.team2
 
     elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
         _mark_match_as_finished(db, db_match, db_match.team2_id)
+        return db_match.team1
 
     db.flush()
     db.refresh(db_match)
 
 
-def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> None:
+def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> Team:
     if db_match.team1_score >= 12 and db_match.team2_score >= 12:
         if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
+            return db_match.team2
 
         elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
+            return db_match.team1
 
     elif db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
         _mark_match_as_finished(db, db_match, db_match.team1_id)
+        return db_match.team2
 
     elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
         _mark_match_as_finished(db, db_match, db_match.team2_id)
+        return db_match.team1
 
     db.flush()
     db.refresh(db_match)
