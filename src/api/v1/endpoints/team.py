@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
-from src.schemas.schemas import TeamCreate, UserResponse, TeamListResponse
+from src.schemas.schemas import TeamCreate, UserResponse, TeamListResponse, TeamDetailedResponse
 from src.crud import team as team_crud
 from src.utils.pagination import PaginationParams, get_pagination
 
@@ -21,6 +21,6 @@ def get_teams(db: Session = Depends(get_db),
 def create_team(team: TeamCreate, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
     return team_crud.create_team(db, team, current_user)
 
-@router.get("/{team_id}", response_model=TeamListResponse, status_code = 201)
+@router.get("/{team_id}", response_model=TeamDetailedResponse, status_code = 201)
 def get_team(team_id: UUID, db: Session = Depends(get_db)):
     return team_crud.get_team(db, team_id)

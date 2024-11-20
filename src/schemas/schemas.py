@@ -139,7 +139,14 @@ class TeamListResponse(BaseConfig):
     logo: str | None
 
 class TeamDetailedResponse(BaseConfig):
+    id: UUID
+    name: str
+    logo: Optional[str]
     players: List[PlayerListResponse]
+    matches: List[MatchListResponse]
+    tournament_id: Optional[UUID]
+    prize_cuts: List[PrizeCutResponse]
+    team_stats: dict
 
 class TeamCreate(BaseConfig):
     # id: UUID
@@ -262,4 +269,4 @@ class ResponseRequest(BaseConfig):
 # Updating forward references
 PlayerListResponse.model_rebuild()
 TournamentDetailResponse.model_rebuild()
-TeamDetailedListResponse.model_rebuild()
+TeamDetailedResponse.model_rebuild()
