@@ -244,11 +244,8 @@ class RequestBase(BaseConfig):
     admin_id: Optional[UUID] = None
 
 
-# class LinkUserToPlayer(BaseConfig):
-#     player_id: UUID
-#     admin_id: UUID
-#     request_type: RequestType = RequestType.LINK_USER_TO_PLAYER
-#     status: RequestStatus
+class RequestUpdate(BaseConfig):
+    request_id: UUID
     # response_date: datetime = datetime.now()
 
 
@@ -256,14 +253,18 @@ class ResponseRequest(BaseConfig):
     request_type: RequestType = RequestType.PROMOTE_USER_TO_DIRECTOR
     status: RequestStatus
     request_date: datetime
-    # response_date: datetime = datetime.now()
+    response_date: datetime | None
 
 
 class RequestListResponse(BaseConfig):
+    email: str
     request_type: RequestType
     status: RequestStatus
     request_date: datetime
+    response_date: datetime | None
     admin_id: UUID | None
+    username: str | None
+
 
 
 # Updating forward references
