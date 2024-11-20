@@ -140,6 +140,12 @@ class TeamListResponse(BaseConfig):
 
 class TeamDetailedListResponse(BaseConfig):
     players: List[PlayerListResponse]
+    #TODO: Please add these (needed for front-end):
+    # matches: List[MatchListResponse]
+    # tournament_id: UUID
+    # prize_cuts: List[PrizeCutResponse]
+    # ratings/statistics?
+
 
 class TeamCreate(BaseConfig):
     # id: UUID
@@ -179,6 +185,8 @@ class MatchDetailResponse(MatchListResponse):
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None
     stage: Stage | None = None
+    team1_id: UUID | None = None
+    team2_id: UUID | None = None
 
 
 # Tournament schemas
@@ -212,7 +220,7 @@ class TournamentCreate(BaseConfig):
 
 
 class TournamentUpdate(BaseConfig):
-   title: str | None = Field(
+   title: str | None = None, Field(
         min_length=3,
         max_length=20,
         pattern="^[a-zA-Z0-9_-]+$",

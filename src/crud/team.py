@@ -66,8 +66,7 @@ def create_teams_lst_for_tournament(
 
     teams = []
     for name in team_names:
-        v.team_exists(db, team_name=name)
-        db_team = db.query(Team).filter(Team.name == name).first()
+        db_team = v.team_exists(db, team_name=name)
 
         if db_team.tournament_id is not None:
             raise HTTPException(

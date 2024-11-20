@@ -33,16 +33,6 @@ def read_match(
     return match_crud.get_match(db, match_id)
 
 
-# @router.post("/", response_model=MatchDetailResponse, status_code=status.HTTP_201_CREATED)
-# def create_match(
-#         match: MatchCreate,
-#         db: Session = Depends(get_db),
-#         current_user = Depends(get_current_user)
-# ):
-#
-#         return match_crud.create_match(db, match, current_user)
-
-
 @router.put("/{match_id}", response_model=MatchDetailResponse)
 def update_match(
         match_id: UUID,

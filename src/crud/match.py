@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from fastapi import HTTPException
 import random
 from typing import Type, Literal
@@ -10,7 +10,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.models import Tournament
 from src.models.match import Match
 from src.crud import team as crud_team
-from src.models.enums import Stage, MatchFormat, TournamentFormat
+from src.models.enums import Stage, MatchFormat, TournamentFormat, Role
 
 from src.schemas.schemas import (MatchListResponse,
                                  MatchDetailResponse,
@@ -55,8 +55,7 @@ def get_match(
         match_id: UUID
 ) -> MatchDetailResponse:
 
-    v.match_exists(db, match_id)
-    db_match = db.query(Match).filter(Match.id == match_id).first()
+    db_match = v.match_exists(db, match_id)
 
     return convert_db_to_match_response(db_match)
 
@@ -136,13 +135,19 @@ def update_match(
 
         # Validating the match data
         v.director_or_admin(current_user)
-        v.is_author_of_tournament(db, match.tournament_id, current_user.id)
-        v.match_exists(db, match_id)
+        db_match = v.match_exists(db, match_id)
 
-        db_match = db.query(Match).filter(Match.id == match_id).first()
+        if current_user.role == Role.DIRECTOR:
+            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
+        v.match_is_finished(db_match)
+        v.match_has_started(db_match)
+
+        # Validating the start time
         if match.start_time:
             if (match.start_time < db_match.tournament.start_date
-                    or match.start_time > db_match.tournament.end_date):
+                    or match.start_time > db_match.tournament.end_date
+                    or match.start_time < datetime.now(timezone.utc)):
                 raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
 
         # Creating a dictionary with the updated data
@@ -174,13 +179,13 @@ def update_match_score(
 
         # Validating the match data
         v.director_or_admin(current_user)
-        v.match_exists(db, match_id)
-        db_match = db.query(Match).filter(Match.id == match_id).first()
-        v.is_author_of_tournament(db, db_match.tournament_id, current_user.id)
+        db_match = v.match_exists(db, match_id)
 
+        if current_user.role == Role.DIRECTOR:
+            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
 
-        if db_match.is_finished:
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
+        v.match_is_finished(db_match)
+
 
         # Creating a dictionary with the updated data
         if team_to_upvote_score == "team1":
@@ -192,9 +197,9 @@ def update_match_score(
 
         # Check if the match is finished
         if db_match.match_format == MatchFormat.MR15:
-            _check_for_winner_for_mr15(db, db_match)
+            losing_team = _check_for_winner_for_mr15(db, db_match)
         elif db_match.match_format == MatchFormat.MR12:
-            _check_for_winner_for_mr12(db, db_match)
+            losing_team = _check_for_winner_for_mr12(db, db_match)
 
         db.flush()
         db.refresh(db_match)
@@ -207,14 +212,12 @@ def update_match_score(
               and db_match.tournament.current_stage != Stage.FINAL
               and db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN):
 
-            losing_team = next(
-                team for team in [db_match.team1, db_match.team2]
-                if team.id != db_match.winner_team_id)
             losing_team.tournament_id = None
             db.flush()
 
         if all(match.is_finished for match in db_match.tournament.matches):
-            _update_current_stage(db, db_match.tournament_id)
+            _update_current_stage(db, db_match.tournament.id)
+            generate_matches(db, db_match.tournament)
 
         db.commit()
         db.refresh(db_match)
@@ -233,7 +236,7 @@ def _update_current_stage(
 ) -> None:
     db.begin_nested()
 
-    db_tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    db_tournament = v.tournament_exists(db, tournament_id)
 
     # If tournament is robin round, the top teams will be selected to move to the next stage
     if db_tournament.current_stage == Stage.GROUP_STAGE:
@@ -259,61 +262,68 @@ def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
 
 
 def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> None:
-    if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team1_id)
-
-    elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team2_id)
-
-    elif db_match.team1_score >= 15 and db_match.team2_score >= 15:
+    if db_match.team1_score >= 15 and db_match.team2_score >= 15:
         if db_match.team1_score >= 19 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
 
         elif db_match.team2_score >= 19 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
 
+    elif db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team1_id)
+
+    elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team2_id)
+
     db.flush()
     db.refresh(db_match)
 
 
 def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> None:
-    if db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team1_id)
-
-    elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
-        _mark_match_as_finished(db, db_match, db_match.team2_id)
-
-    elif db_match.team1_score >= 12 and db_match.team2_score >= 12:
+    if db_match.team1_score >= 12 and db_match.team2_score >= 12:
         if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team1_id)
 
         elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
             _mark_match_as_finished(db, db_match, db_match.team2_id)
 
+    elif db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team1_id)
+
+    elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
+        _mark_match_as_finished(db, db_match, db_match.team2_id)
+
     db.flush()
     db.refresh(db_match)
 
 
-def _mark_match_as_finished(db: Session, db_match: Match, winner_team_id: UUID) -> None:
+def _mark_match_as_finished(
+        db: Session,
+        db_match: Match,
+        winner_team_id: UUID
+) -> None:
+
     db_match.is_finished = True
     db_match.winner_team_id = winner_team_id
 
-    for player in db_match.team1.players:
-        player.played_games += 1
-        if player.team_id == winner_team_id:
-            player.won_games += 1
-        db.flush()
-        db.refresh(player)
+    winner_team = db_match.team1 if db_match.team1_id == winner_team_id else db_match.team2
+    loser_team = db_match.team2 if db_match.team1_id == winner_team_id else db_match.team1
 
-    for player in db_match.team2.players:
+    winner_team.played_games += 1
+    winner_team.won_games += 1
+    loser_team.played_games += 1
+
+
+    for player in winner_team.players:
         player.played_games += 1
-        if player.team_id == winner_team_id:
-            player.won_games += 1
-        db.flush()
-        db.refresh(player)
+        player.won_games += 1
+
+    for player in loser_team.players:
+        player.played_games += 1
 
     db.flush()
     db.refresh(db_match)
+
 
 def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
     return MatchDetailResponse(

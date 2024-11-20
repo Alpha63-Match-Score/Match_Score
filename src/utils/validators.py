@@ -116,3 +116,38 @@ def unique_teams_in_tournament(teams: list[str]) -> None:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="There is a duplicate team in the tournament list")
+
+
+# state of match
+def match_is_finished(match: Type[Match]) -> None:
+    if match.is_finished:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Match is already finished")
+
+
+def match_has_started(match: Type[Match]) -> None:
+    match_start = match.start_time.replace(tzinfo=timezone.utc)
+    if (match.team1_score > 0 or match.team2_score > 0) \
+            or (match_start < datetime.now(timezone.utc)):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Match has already started")
+
+
+# state of tournament
+def tournament_is_finished(tournament: Type[Tournament]) -> None:
+    tournament_end = tournament.end_date.replace(tzinfo=timezone.utc)
+    if (tournament.current_stage == Stage.FINISHED)\
+            or (tournament_end < datetime.now(timezone.utc)):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Tournament is already finished")
+
+
+def tournament_has_started(tournament: Type[Tournament]) -> None:
+    tournament_start = tournament.start_date.replace(tzinfo=timezone.utc)
+    if tournament_start < datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Tournament has already started")
