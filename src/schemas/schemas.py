@@ -185,6 +185,8 @@ class MatchDetailResponse(MatchListResponse):
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None
     stage: Stage | None = None
+    team1_id: UUID | None = None
+    team2_id: UUID | None = None
 
 
 # Tournament schemas

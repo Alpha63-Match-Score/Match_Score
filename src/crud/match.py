@@ -135,12 +135,12 @@ def update_match(
 
         # Validating the match data
         v.director_or_admin(current_user)
-        v.is_author_of_tournament(db, match.tournament_id, current_user.id)
         db_match = v.match_exists(db, match_id)
+        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+        v.match_is_finished(db_match)
+        v.match_has_started(db_match)
 
-        if db_match.is_finished:
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
-
+        # Validating the start time
         if match.start_time:
             if (match.start_time < db_match.tournament.start_date
                     or match.start_time > db_match.tournament.end_date):
@@ -177,9 +177,8 @@ def update_match_score(
         v.director_or_admin(current_user)
         db_match = v.match_exists(db, match_id)
         v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+        v.match_is_finished(db_match)
 
-        if db_match.is_finished:
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Match is already finished")
 
         # Creating a dictionary with the updated data
         if team_to_upvote_score == "team1":
