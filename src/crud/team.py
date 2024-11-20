@@ -9,7 +9,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament, Match, Team
 from src.models.team import Team
-from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse, TeamDetailedResponse
+from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse, TeamDetailedResponse, TeamUpdate
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
@@ -114,6 +114,18 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
                                                                                                                 "tournaments_played"] > 0 else 0.0
 
     return convert_db_to_team_detailed_response(db_team, matches, stats)
+
+def update_team(db: Session, team_id: UUID, team: TeamUpdate, current_user: UserResponse) -> TeamListResponse:
+    db_team = v.team_exists(db, team_id=team_id)
+    v.director_or_admin(current_user)
+
+    db_team.name = team.name
+    db_team.logo = team.logo
+
+    db.commit()
+    db.refresh(db_team)
+
+    return convert_db_to_team_list_response(db_team)
 
 def convert_db_to_team_detailed_response(
         db_team: Type[Team],
