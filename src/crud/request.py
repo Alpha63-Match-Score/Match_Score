@@ -1,11 +1,14 @@
+from datetime import datetime
+
 from fastapi import HTTPException, status
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, UUID
 from sqlalchemy.orm import Session
 from src.utils.pagination import PaginationParams
 from src.models import Request, User, Player
-from src.models.enums import RequestType
+from src.models.enums import RequestType, Role, RequestStatus
 from src.schemas.schemas import ResponseRequest, RequestListResponse
-from src.utils.validators import player_exists, user_role_is_director, user_role_is_player, user_role_is_admin
+from src.utils.validators import player_exists, user_role_is_admin, \
+    request_exists, user_exists, user_role_is_user, get_user_by_email
 from typing import Literal
 
 
@@ -44,10 +47,13 @@ def get_all(
 
     result = [
         RequestListResponse(
+            email=request.user.email,
             request_type=request.request_type,
             status=request.status,
             request_date=request.request_date,
-            admin_id=request.admin_id
+            response_date=request.response_date,
+            admin_id=request.admin_id,
+            username=request.username
         )
         for request in query
     ]
@@ -56,8 +62,8 @@ def get_all(
 
 def send_director_request(db: Session, current_user: User):
 
-    user_role_is_director(current_user)
-    user_role_is_player(current_user)
+    user_role_is_user(current_user)
+    check_valid_request(db, current_user)
 
     db_request = Request(
         user_id=current_user.id,
@@ -69,30 +75,16 @@ def send_director_request(db: Session, current_user: User):
     return ResponseRequest(
         request_type=db_request.request_type,
         request_date=db_request.request_date,
-        status=db_request.status
+        status=db_request.status,
+        response_date=db_request.response_date
     )
-
-
-def get_director_requests():
-    """Get all director requests."""
-    pass
-
-
-def accept_director_request():
-    """Change the status of the request to accepted."""
-    pass
-
-
-def reject_director_request():
-    """Change the status of the request to rejected."""
-    pass
 
 
 def send_link_to_player_request(db: Session, current_user: User, username: str):
 
+    user_role_is_user(current_user)
     player_exists(db, username)
-    user_role_is_director(current_user)
-    user_role_is_player(current_user)
+    check_valid_request(db, current_user)
 
     db_request = Request(
         user_id=current_user.id,
@@ -105,10 +97,84 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
     return ResponseRequest(
         request_type=db_request.request_type,
         request_date=db_request.request_date,
-        status=db_request.status
+        status=db_request.status,
+        response_date=db_request.response_date
     )
 
 
+def check_valid_request(db: Session, current_user: User):
+    request = db.query(Request).filter(Request.user_id == current_user.id).first()
+    if request and request.status == RequestStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already have a pending request."
+        )
+
+
+def update_request(db: Session,
+                   current_user: User,
+                   status: Literal['accepted', 'rejected'],
+                   email: str):
+    user_role_is_admin(current_user)
+    user = get_user_by_email(db, email)
+    request = request_exists(db, user)
+    check_request_status(request)
+
+    if request.request_type == RequestType.LINK_USER_TO_PLAYER:
+        player = player_exists(db, request.username)
+        pass
+    elif request.request_type == RequestType.PROMOTE_USER_TO_DIRECTOR:
+        return get_director_requests(db, current_user, status, request)
+
+
+def get_director_requests(db, admin: User, status: str, request: Request):
+    user_id = request.user_id
+    user = user_exists(db, user_id)
+
+    if status == RequestStatus.ACCEPTED:
+        return accept_director_request(db, admin, user, request)
+    elif status == RequestStatus.REJECTED:
+        return reject_director_request(db, admin, request)
+
+
+def accept_director_request(db, admin: User, user: User, request: Request):
+    request.status = RequestStatus.ACCEPTED
+    request.admin_id = admin.id
+    request.response_date = datetime.now()
+    user.role = Role.DIRECTOR
+    db.commit()
+    db.refresh(request)
+    db.refresh(user)
+
+    return ResponseRequest(
+        request_type=request.request_type,
+        request_date=request.request_date,
+        status=request.status,
+        response_date=request.response_date,
+    )
+
+
+def reject_director_request(db, admin: User, request: Request):
+    request.status = RequestStatus.REJECTED
+    request.admin_id = admin.id
+    request.response_date = datetime.now()
+    db.commit()
+    db.refresh(request)
+
+    return ResponseRequest(
+        request_type=request.request_type,
+        request_date=request.request_date,
+        status=request.status,
+        response_date=request.response_date,
+    )
+
+
+def check_request_status(request: Request):
+    if request.response_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request has already been responded to."
+        )
 def get_link_to_player_requests():
     """Get all link to player requests."""
     pass
