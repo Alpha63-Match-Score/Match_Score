@@ -36,19 +36,18 @@ class Stage(str, Enum):
 
 
 class Role(str, Enum):
-   ADMIN = "admin"
-   PLAYER = "player"
-   DIRECTOR = "director"
-   USER = "user"
+    ADMIN = "admin"
+    PLAYER = "player"
+    DIRECTOR = "director"
+    USER = "user"
 
 
 class RequestStatus(str, Enum):
-   PENDING = "pending"
-   ACCEPTED = "accepted"
-   REJECTED = "rejected"
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 
 
 class RequestType(str, Enum):
-   LINK_USER_TO_PLAYER = "link user to player"
-   PROMOTE_USER_TO_DIRECTOR = "promote user to director"
-
+    LINK_USER_TO_PLAYER = "link user to player"
+    PROMOTE_USER_TO_DIRECTOR = "promote user to director"

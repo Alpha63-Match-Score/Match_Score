@@ -9,20 +9,29 @@ from src.models import Request, User, Player
 from src.models.enums import RequestType, Role, RequestStatus
 from src.schemas.schemas import ResponseRequest, RequestListResponse
 from src.utils.pagination import PaginationParams
-from src.utils.validators import player_exists, user_role_is_admin, \
-    request_exists, user_exists, user_role_is_user, get_user_by_email, player_already_linked
+from src.utils.validators import (
+    player_exists,
+    user_role_is_admin,
+    request_exists,
+    user_exists,
+    user_role_is_user,
+    get_user_by_email,
+    player_already_linked,
+)
 
 
 def get_all(
-        db: Session,
-        current_user: User,
-        pagination: PaginationParams,
-        sort_by: Literal['asc', 'desc'] = 'desc',
-        status: Literal['pending', 'accepted', 'rejected'] | None = None,
-        request_type: Literal['link user to player', 'promote user to director'] | None = None,
-        filter_by_admin: bool = False,
-        # request_date: str = None,
-        # response_date: str = None,
+    db: Session,
+    current_user: User,
+    pagination: PaginationParams,
+    sort_by: Literal["asc", "desc"] = "desc",
+    status: Literal["pending", "accepted", "rejected"] | None = None,
+    request_type: (
+        Literal["link user to player", "promote user to director"] | None
+    ) = None,
+    filter_by_admin: bool = False,
+    # request_date: str = None,
+    # response_date: str = None,
 ):
     user_role_is_admin(current_user)
     query = db.query(Request)
@@ -36,9 +45,9 @@ def get_all(
     if filter_by_admin:
         query = query.filter(Request.admin_id == current_user.id)
 
-    if sort_by == 'asc':
+    if sort_by == "asc":
         query = query.order_by(asc(Request.request_date))
-    elif sort_by == 'desc':
+    elif sort_by == "desc":
         query = query.order_by(desc(Request.request_date))
 
     # if response_date:
@@ -54,7 +63,7 @@ def get_all(
             request_date=request.request_date,
             response_date=request.response_date,
             admin_id=request.admin_id,
-            username=request.username
+            username=request.username,
         )
         for request in query
     ]
@@ -66,8 +75,7 @@ def send_director_request(db: Session, current_user: User):
     check_valid_request(db, current_user)
 
     db_request = Request(
-        user_id=current_user.id,
-        request_type=RequestType.PROMOTE_USER_TO_DIRECTOR
+        user_id=current_user.id, request_type=RequestType.PROMOTE_USER_TO_DIRECTOR
     )
     db.add(db_request)
     db.commit()
@@ -76,7 +84,7 @@ def send_director_request(db: Session, current_user: User):
         request_type=db_request.request_type,
         request_date=db_request.request_date,
         status=db_request.status,
-        response_date=db_request.response_date
+        response_date=db_request.response_date,
     )
 
 
@@ -89,7 +97,7 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
     db_request = Request(
         user_id=current_user.id,
         request_type=RequestType.LINK_USER_TO_PLAYER,
-        username=username
+        username=username,
     )
     db.add(db_request)
     db.commit()
@@ -98,26 +106,28 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
         request_type=db_request.request_type,
         request_date=db_request.request_date,
         status=db_request.status,
-        response_date=db_request.response_date
+        response_date=db_request.response_date,
     )
 
 
 def check_valid_request(db: Session, current_user: User):
-    existing_request = db.query(Request).filter(
-        Request.user_id == current_user.id,
-        Request.status == RequestStatus.PENDING
-    ).first()
+    existing_request = (
+        db.query(Request)
+        .filter(
+            Request.user_id == current_user.id, Request.status == RequestStatus.PENDING
+        )
+        .first()
+    )
     if existing_request and existing_request.status == RequestStatus.PENDING:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You have already have a pending request."
+            detail="You have already have a pending request.",
         )
 
 
-def update_request(db: Session,
-                   current_user: User,
-                   status: Literal['accepted', 'rejected'],
-                   email: str):
+def update_request(
+    db: Session, current_user: User, status: Literal["accepted", "rejected"], email: str
+):
     user_role_is_admin(current_user)
     user = get_user_by_email(db, email)
     request = request_exists(db, user)
@@ -125,7 +135,9 @@ def update_request(db: Session,
 
     if request.request_type == RequestType.LINK_USER_TO_PLAYER:
         player = player_exists(db, request.username)
-        return get_link_to_player_requests(db, current_user, user, status, request, player)
+        return get_link_to_player_requests(
+            db, current_user, user, status, request, player
+        )
     elif request.request_type == RequestType.PROMOTE_USER_TO_DIRECTOR:
         return get_director_requests(db, current_user, status, request)
 
@@ -176,18 +188,22 @@ def check_request_status(request: Request):
     if request.response_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request has already been responded to."
+            detail="Request has already been responded to.",
         )
 
 
-def get_link_to_player_requests(db, admin: User, user: User, status: str, request: Request, player: Player):
+def get_link_to_player_requests(
+    db, admin: User, user: User, status: str, request: Request, player: Player
+):
     if status == RequestStatus.ACCEPTED:
         return accept_link_to_player_request(db, admin, user, request, player)
     elif status == RequestStatus.REJECTED:
         return reject_link_to_player_request(db, admin, request)
 
 
-def accept_link_to_player_request(db, admin: User, user: User, request: Request, player: Player):
+def accept_link_to_player_request(
+    db, admin: User, user: User, request: Request, player: Player
+):
     request.status = RequestStatus.ACCEPTED
     request.admin_id = admin.id
     request.response_date = datetime.now()

@@ -14,4 +14,24 @@ dependencies = [
     "uvicorn>=0.32.0",
     "passlib[bcrypt]>=1.7.4",
     "python-dotenv>=1.0.1",
+    "ruff>=0.7.4",
+    "black>=24.10.0",
 ]
+
+[tools.ruff]
+select = ["E", "F", "I", "C"]
+line-length = 88
+fix = true
+exclude = ["migrations", ".venv", "__pycache__"]
+
+[tools.ruff.isort]
+known-first-party = ["match_score"]
+default-section = "THIRDPARTY"
+force-sort-within-sections = true
+combine-as-imports = true
+
+extend-ignore = ["E203", "W503"]
+
+[tools.black]
+line-length = 88
+target-version = ["py312"]

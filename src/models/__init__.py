@@ -7,4 +7,13 @@ from src.models.user import User
 from src.models.request import Request
 from src.models.prize_cut import PrizeCut
 
-__all__ = ['Base', 'Match', 'Player',  'PrizeCut', 'Request', 'Team', 'Tournament', 'User']
+__all__ = [
+    "Base",
+    "Match",
+    "Player",
+    "PrizeCut",
+    "Request",
+    "Team",
+    "Tournament",
+    "User",
+]

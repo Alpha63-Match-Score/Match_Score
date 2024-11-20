@@ -40,8 +40,4 @@ def update_email(db: Session, email: str, current_user: User):
 
 
 def convert_db_to_user_response(user: User) -> UserResponse:
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        role=user.role
-    )
+    return UserResponse(id=user.id, email=user.email, role=user.role)

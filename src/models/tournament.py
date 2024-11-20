@@ -5,7 +5,6 @@ from src.models.base import Base, BaseMixin
 from src.models.enums import TournamentFormat, Stage
 
 
-
 class Tournament(Base, BaseMixin):
     """
     Database model representing "tournament" table in the database.

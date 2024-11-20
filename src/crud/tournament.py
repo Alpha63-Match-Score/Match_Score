@@ -15,11 +15,13 @@ from src.crud import team as crud_team
 from src.models import Tournament
 from src.models.enums import Stage, TournamentFormat, Role
 
-from src.schemas.schemas import (TournamentListResponse,
-                                 TournamentDetailResponse,
-                                 TournamentCreate,
-                                 UserResponse,
-                                 TournamentUpdate)
+from src.schemas.schemas import (
+    TournamentListResponse,
+    TournamentDetailResponse,
+    TournamentCreate,
+    UserResponse,
+    TournamentUpdate,
+)
 
 from src.crud import constants as c
 from src.utils.pagination import PaginationParams
@@ -29,8 +31,8 @@ from src.utils import validators as v
 def get_tournaments(
     db: Session,
     pagination: PaginationParams,
-    period: Literal['past', 'present', 'future'] | None = None,
-    status: Literal['active', 'finished'] | None = None,
+    period: Literal["past", "present", "future"] | None = None,
+    status: Literal["active", "finished"] | None = None,
     search: str | None = None,
     director_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
@@ -40,25 +42,33 @@ def get_tournaments(
     filters = []
 
     if period:
-        if period == 'past':
-            filters.append(or_(
-                Tournament.end_date < datetime.now(),
-                Tournament.current_stage == Stage.FINISHED
-            ))
-        elif period == 'present':
+        if period == "past":
             filters.append(
-                and_(Tournament.start_date <= datetime.now(),
-                     Tournament.end_date >= datetime.now(),
-                     Tournament.current_stage != Stage.FINISHED))
-        elif period == 'future':
+                or_(
+                    Tournament.end_date < datetime.now(),
+                    Tournament.current_stage == Stage.FINISHED,
+                )
+            )
+        elif period == "present":
             filters.append(
-                and_(Tournament.start_date > datetime.now(),
-                     Tournament.current_stage != Stage.FINISHED))
+                and_(
+                    Tournament.start_date <= datetime.now(),
+                    Tournament.end_date >= datetime.now(),
+                    Tournament.current_stage != Stage.FINISHED,
+                )
+            )
+        elif period == "future":
+            filters.append(
+                and_(
+                    Tournament.start_date > datetime.now(),
+                    Tournament.current_stage != Stage.FINISHED,
+                )
+            )
 
     if status is not None:
-        if status == 'active':
+        if status == "active":
             filters.append(Tournament.current_stage != Stage.FINISHED)
-        elif status == 'finished':
+        elif status == "finished":
             filters.append(Tournament.current_stage == Stage.FINISHED)
 
     if search is not None:
@@ -75,13 +85,13 @@ def get_tournaments(
 
     db_tournaments = query.all()
 
-    return [convert_db_to_tournament_list_response(db_tournament) for db_tournament in db_tournaments]
+    return [
+        convert_db_to_tournament_list_response(db_tournament)
+        for db_tournament in db_tournaments
+    ]
 
 
-def get_tournament(
-    db: Session,
-    tournament_id: UUID
-) -> TournamentListResponse:
+def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
 
     db_tournament = v.tournament_exists(db, tournament_id)
 
@@ -96,9 +106,7 @@ def get_tournament(
 
 
 def create_tournament(
-    db: Session,
-    tournament: TournamentCreate,
-    current_user: UserResponse
+    db: Session, tournament: TournamentCreate, current_user: UserResponse
 ) -> TournamentDetailResponse:
 
     try:
@@ -113,14 +121,17 @@ def create_tournament(
 
         # get current stage for tournament
         total_teams = len(tournament.team_names)
-        current_stage = _get_tournament_current_stage(tournament.tournament_format.value, total_teams)
+        current_stage = _get_tournament_current_stage(
+            tournament.tournament_format.value, total_teams
+        )
 
         # calculating the end date
         end_date = _calculate_tournament_end_date(
             tournament.start_date,
             tournament.tournament_format,
             current_stage,
-            total_teams)
+            total_teams,
+        )
 
         # Creating the tournament
         db_tournament = Tournament(
@@ -130,14 +141,18 @@ def create_tournament(
             end_date=end_date,
             prize_pool=tournament.prize_pool,
             current_stage=current_stage,
-            director_id=current_user.id
+            director_id=current_user.id,
         )
 
         db.add(db_tournament)
         db.flush()
 
-        crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament, db_tournament.prize_pool)
-        crud_team.create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
+        crud_prize_cut.create_prize_cuts_for_tournament(
+            db, db_tournament, db_tournament.prize_pool
+        )
+        crud_team.create_teams_lst_for_tournament(
+            db, tournament.team_names, db_tournament.id
+        )
 
         db.flush()
 
@@ -154,15 +169,15 @@ def create_tournament(
 
 
 def _get_tournament_current_stage(
-        tournament_format: str,
-        number_of_teams: int
+    tournament_format: str, number_of_teams: int
 ) -> Stage:
 
     if tournament_format == TournamentFormat.SINGLE_ELIMINATION:
         if number_of_teams not in c.SINGLE_ELIMINATION_TEAMS:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Invalid number of teams for single elimination - must be 4, 8 or 16")
+                detail="Invalid number of teams for single elimination - must be 4, 8 or 16",
+            )
 
         if number_of_teams == 4:
             return Stage.SEMI_FINAL
@@ -175,22 +190,24 @@ def _get_tournament_current_stage(
         if number_of_teams not in c.ROUND_ROBIN_TEAMS:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Invalid number of teams for round robin - must be 4 or 5")
+                detail="Invalid number of teams for round robin - must be 4 or 5",
+            )
         return Stage.GROUP_STAGE
 
     elif tournament_format == TournamentFormat.ONE_OFF_MATCH:
         if number_of_teams not in c.ONE_OFF_MATCH_TEAMS:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Invalid number of teams for one off match - must be 2")
+                detail="Invalid number of teams for one off match - must be 2",
+            )
         return Stage.FINAL
 
 
 def _calculate_tournament_end_date(
-        start_date: datetime,
-        tournament_format: TournamentFormat,
-        current_stage: Stage,
-        total_teams: int
+    start_date: datetime,
+    tournament_format: TournamentFormat,
+    current_stage: Stage,
+    total_teams: int,
 ) -> datetime:
 
     if tournament_format == TournamentFormat.ROUND_ROBIN:
@@ -206,7 +223,7 @@ def update_tournament(
     db: Session,
     tournament_id: UUID,
     tournament: TournamentUpdate,
-    current_user: UserResponse
+    current_user: UserResponse,
 ) -> TournamentDetailResponse:
 
     try:
@@ -232,11 +249,13 @@ def update_tournament(
         if db_tournament.start_date >= db_tournament.end_date:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Start date must be before end date")
+                detail="Start date must be before end date",
+            )
 
         if tournament.prize_pool:
-            crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament, int(tournament.prize_pool))
-
+            crud_prize_cut.create_prize_cuts_for_tournament(
+                db, db_tournament, int(tournament.prize_pool)
+            )
 
         # Updating the data
         for key, value in update_data.items():
@@ -253,7 +272,7 @@ def update_tournament(
 
 
 def convert_db_to_tournament_list_response(
-        db_tournament: Tournament | Type[Tournament],
+    db_tournament: Tournament | Type[Tournament],
 ) -> TournamentListResponse:
 
     return TournamentListResponse(
@@ -268,7 +287,7 @@ def convert_db_to_tournament_list_response(
 
 
 def convert_db_to_tournament_response(
-        db_tournament: Tournament | Type[Tournament]
+    db_tournament: Tournament | Type[Tournament],
 ) -> TournamentDetailResponse:
 
     return TournamentDetailResponse(
@@ -279,9 +298,17 @@ def convert_db_to_tournament_response(
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
         number_of_teams=len(db_tournament.teams),
-        matches_of_current_stage=[crud_match.convert_db_to_match_list_response(db_match)
-                 for db_match in db_tournament.matches
-                 if db_match.stage == db_tournament.current_stage],
-        teams=[crud_team.convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
-        prizes=[crud_prize_cut.convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
+        matches_of_current_stage=[
+            crud_match.convert_db_to_match_list_response(db_match)
+            for db_match in db_tournament.matches
+            if db_match.stage == db_tournament.current_stage
+        ],
+        teams=[
+            crud_team.convert_db_to_team_list_response(db_team)
+            for db_team in db_tournament.teams
+        ],
+        prizes=[
+            crud_prize_cut.convert_db_to_prize_cut_response(db_prize)
+            for db_prize in db_tournament.prize_cuts
+        ],
     )

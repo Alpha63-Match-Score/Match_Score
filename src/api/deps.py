@@ -27,8 +27,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/users/login")
 
 
 def get_current_user(
-    db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
 ) -> UserResponse:
 
     credential_exception = HTTPException(
@@ -53,8 +52,4 @@ def get_current_user(
 
 
 def convert_db_to_user_response(user: User) -> UserResponse:
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        role=user.role
-    )
+    return UserResponse(id=user.id, email=user.email, role=user.role)

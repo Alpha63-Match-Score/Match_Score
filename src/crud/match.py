@@ -12,20 +12,18 @@ from src.models.match import Match
 from src.crud import team as crud_team
 from src.models.enums import Stage, MatchFormat, TournamentFormat, Role
 
-from src.schemas.schemas import (MatchListResponse,
-                                 MatchDetailResponse,
-                                 MatchUpdate)
+from src.schemas.schemas import MatchListResponse, MatchDetailResponse, MatchUpdate
 
 from src.crud import constants as c
 from src.utils import validators as v
 
 
 def get_all_matches(
-        db: Session,
-        tournament_id: UUID | None = None,
-        stage: Stage | None = None,
-        is_finished: bool | None = None,
-        team_id: UUID | None = None
+    db: Session,
+    tournament_id: UUID | None = None,
+    stage: Stage | None = None,
+    is_finished: bool | None = None,
+    team_id: UUID | None = None,
 ) -> list[MatchListResponse]:
 
     query = db.query(Match).order_by(Match.start_time.asc())
@@ -50,24 +48,21 @@ def get_all_matches(
     return [convert_db_to_match_list_response(db_match) for db_match in db_matches]
 
 
-def get_match(
-        db: Session,
-        match_id: UUID
-) -> MatchDetailResponse:
+def get_match(db: Session, match_id: UUID) -> MatchDetailResponse:
 
     db_match = v.match_exists(db, match_id)
 
     return convert_db_to_match_response(db_match)
 
 
-def generate_matches(
-        db: Session,
-        db_tournament: Tournament
-):
+def generate_matches(db: Session, db_tournament: Tournament):
     matches = []
 
     # Get the team pairs and the first match datetime
-    if db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN and db_tournament.current_stage == Stage.GROUP_STAGE:
+    if (
+        db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN
+        and db_tournament.current_stage == Stage.GROUP_STAGE
+    ):
         team_pairs, first_match_datetime = _get_pairs_robin_round(db_tournament)
     else:
         team_pairs, first_match_datetime = _get_pairs_single_elimination(db_tournament)
@@ -80,12 +75,16 @@ def generate_matches(
             current_time = (current_time + timedelta(days=1)).replace(hour=11, minute=0)
 
         match = Match(
-            match_format=MatchFormat.MR12 if db_tournament.current_stage == Stage.GROUP_STAGE else MatchFormat.MR15,
+            match_format=(
+                MatchFormat.MR12
+                if db_tournament.current_stage == Stage.GROUP_STAGE
+                else MatchFormat.MR15
+            ),
             start_time=current_time,
             stage=db_tournament.current_stage,
             team1_id=team1.id,
             team2_id=team2.id,
-            tournament_id=db_tournament.id
+            tournament_id=db_tournament.id,
         )
         matches.append(match)
 
@@ -99,15 +98,23 @@ def _get_pairs_robin_round(db_tournament: Tournament) -> tuple:
     team_pairs = []
 
     for i, team1 in enumerate(teams):
-        for team2 in teams[i + 1:]:
+        for team2 in teams[i + 1 :]:
             team_pairs.append((team1, team2))
 
-
-    stage_date = db_tournament.start_date if (db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN
-        and db_tournament.current_stage == Stage.GROUP_STAGE) else db_tournament.end_date
-    first_match_datetime = stage_date.replace(hour=11, minute=0, second=0, microsecond=0)
+    stage_date = (
+        db_tournament.start_date
+        if (
+            db_tournament.tournament_format == TournamentFormat.ROUND_ROBIN
+            and db_tournament.current_stage == Stage.GROUP_STAGE
+        )
+        else db_tournament.end_date
+    )
+    first_match_datetime = stage_date.replace(
+        hour=11, minute=0, second=0, microsecond=0
+    )
 
     return team_pairs, first_match_datetime
+
 
 def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
     teams = db_tournament.teams
@@ -117,17 +124,18 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
     for i in range(0, len(shuffled_teams), 2):
         team_pairs.append((shuffled_teams[i], shuffled_teams[i + 1]))
 
-    stage_date = db_tournament.end_date - timedelta(days=c.STAGE_DAYS[db_tournament.current_stage])
-    first_match_datetime = stage_date.replace(hour=11, minute=0, second=0, microsecond=0)
+    stage_date = db_tournament.end_date - timedelta(
+        days=c.STAGE_DAYS[db_tournament.current_stage]
+    )
+    first_match_datetime = stage_date.replace(
+        hour=11, minute=0, second=0, microsecond=0
+    )
 
     return team_pairs, first_match_datetime
 
 
 def update_match(
-        db: Session,
-        match_id: UUID,
-        match: MatchUpdate,
-        current_user
+    db: Session, match_id: UUID, match: MatchUpdate, current_user
 ) -> MatchDetailResponse:
 
     try:
@@ -145,10 +153,14 @@ def update_match(
 
         # Validating the start time
         if match.start_time:
-            if (match.start_time < db_match.tournament.start_date
-                    or match.start_time > db_match.tournament.end_date
-                    or match.start_time < datetime.now(timezone.utc)):
-                raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
+            if (
+                match.start_time < db_match.tournament.start_date
+                or match.start_time > db_match.tournament.end_date
+                or match.start_time < datetime.now(timezone.utc)
+            ):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time"
+                )
 
         if match.team1_id:
             v.team_exists(db, match.team1_id)
@@ -182,10 +194,10 @@ def update_match(
 
 
 def update_match_score(
-        db: Session,
-        match_id: UUID,
-        team_to_upvote_score: Literal["team1", "team2"],
-        current_user
+    db: Session,
+    match_id: UUID,
+    team_to_upvote_score: Literal["team1", "team2"],
+    current_user,
 ) -> MatchDetailResponse:
 
     try:
@@ -231,7 +243,6 @@ def update_match_score(
             if db_match.tournament.current_stage != Stage.FINISHED:
                 _update_current_stage(db, db_match.tournament.id)
 
-            current_stage = db_match.tournament.current_stage
             if db_match.tournament.current_stage != Stage.FINISHED:
                 generate_matches(db, db_match.tournament)
 
@@ -246,10 +257,7 @@ def update_match_score(
         raise e
 
 
-def _update_current_stage(
-    db: Session,
-    tournament_id: UUID
-) -> None:
+def _update_current_stage(db: Session, tournament_id: UUID) -> None:
     db.begin_nested()
 
     db_tournament = v.tournament_exists(db, tournament_id)
@@ -272,8 +280,11 @@ def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
             prize.team_id = db_match.winner_team_id
 
         elif prize.place == 2:
-            prize.team_id = db_match.team1_id if db_match.team2_id == db_match.winner_team_id \
+            prize.team_id = (
+                db_match.team1_id
+                if db_match.team2_id == db_match.winner_team_id
                 else db_match.team2_id
+            )
 
         prize.team.tournament_id = None
         db.commit()
@@ -283,19 +294,29 @@ def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
 
 def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> Team:
     if db_match.team1_score >= 15 and db_match.team2_score >= 15:
-        if db_match.team1_score >= 19 and db_match.team1_score - db_match.team2_score >= 2:
+        if (
+            db_match.team1_score >= 19
+            and db_match.team1_score - db_match.team2_score >= 2
+        ):
             _mark_match_as_finished(db, db_match, db_match.team1_id)
             return db_match.team2
 
-        elif db_match.team2_score >= 19 and db_match.team2_score - db_match.team1_score >= 2:
+        elif (
+            db_match.team2_score >= 19
+            and db_match.team2_score - db_match.team1_score >= 2
+        ):
             _mark_match_as_finished(db, db_match, db_match.team2_id)
             return db_match.team1
 
-    elif db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
+    elif (
+        db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2
+    ):
         _mark_match_as_finished(db, db_match, db_match.team1_id)
         return db_match.team2
 
-    elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
+    elif (
+        db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2
+    ):
         _mark_match_as_finished(db, db_match, db_match.team2_id)
         return db_match.team1
 
@@ -305,19 +326,29 @@ def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> Te
 
 def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> Team:
     if db_match.team1_score >= 12 and db_match.team2_score >= 12:
-        if db_match.team1_score >= 16 and db_match.team1_score - db_match.team2_score >= 2:
+        if (
+            db_match.team1_score >= 16
+            and db_match.team1_score - db_match.team2_score >= 2
+        ):
             _mark_match_as_finished(db, db_match, db_match.team1_id)
             return db_match.team2
 
-        elif db_match.team2_score >= 16 and db_match.team2_score - db_match.team1_score >= 2:
+        elif (
+            db_match.team2_score >= 16
+            and db_match.team2_score - db_match.team1_score >= 2
+        ):
             _mark_match_as_finished(db, db_match, db_match.team2_id)
             return db_match.team1
 
-    elif db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2:
+    elif (
+        db_match.team1_score >= 13 and db_match.team1_score - db_match.team2_score >= 2
+    ):
         _mark_match_as_finished(db, db_match, db_match.team1_id)
         return db_match.team2
 
-    elif db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2:
+    elif (
+        db_match.team2_score >= 13 and db_match.team2_score - db_match.team1_score >= 2
+    ):
         _mark_match_as_finished(db, db_match, db_match.team2_id)
         return db_match.team1
 
@@ -325,22 +356,21 @@ def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> Te
     db.refresh(db_match)
 
 
-def _mark_match_as_finished(
-        db: Session,
-        db_match: Match,
-        winner_team_id: UUID
-) -> None:
+def _mark_match_as_finished(db: Session, db_match: Match, winner_team_id: UUID) -> None:
 
     db_match.is_finished = True
     db_match.winner_team_id = winner_team_id
 
-    winner_team = db_match.team1 if db_match.team1_id == winner_team_id else db_match.team2
-    loser_team = db_match.team2 if db_match.team1_id == winner_team_id else db_match.team1
+    winner_team = (
+        db_match.team1 if db_match.team1_id == winner_team_id else db_match.team2
+    )
+    loser_team = (
+        db_match.team2 if db_match.team1_id == winner_team_id else db_match.team1
+    )
 
     winner_team.played_games += 1
     winner_team.won_games += 1
     loser_team.played_games += 1
-
 
     for player in winner_team.players:
         player.played_games += 1
@@ -370,11 +400,13 @@ def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailRe
         team2_name=db_match.team2.name,
         team1_logo=db_match.team1.logo,
         team2_logo=db_match.team2.logo,
-        tournament_title=db_match.tournament.title
+        tournament_title=db_match.tournament.title,
     )
 
 
-def convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchListResponse:
+def convert_db_to_match_list_response(
+    db_match: Match | Type[Match],
+) -> MatchListResponse:
     return MatchListResponse(
         id=db_match.id,
         match_format=db_match.match_format,
@@ -386,5 +418,5 @@ def convert_db_to_match_list_response(db_match: Match | Type[Match]) -> MatchLis
         team1_score=db_match.team1_score,
         team2_score=db_match.team2_score,
         winner_id=db_match.winner_team_id,
-        tournament_id=db_match.tournament_id
+        tournament_id=db_match.tournament_id,
     )

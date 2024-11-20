@@ -5,9 +5,7 @@ from src.core.config import settings
 from src.models.base import Base
 
 engine = create_engine(
-    settings.DATABASE_URL,
-    echo=True,
-    connect_args={'options': '-c timezone=UTC'}
+    settings.DATABASE_URL, echo=True, connect_args={"options": "-c timezone=UTC"}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

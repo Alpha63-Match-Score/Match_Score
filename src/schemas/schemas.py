@@ -2,21 +2,25 @@ from datetime import datetime
 from typing import Optional, List, ForwardRef
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, EmailStr
-from src.models.enums import TournamentFormat, Stage, MatchFormat, RequestType, RequestStatus
+from src.models.enums import (
+    TournamentFormat,
+    Stage,
+    MatchFormat,
+    RequestType,
+    RequestStatus,
+)
 
 # Forward References
-PlayerListResponse = ForwardRef('PlayerListResponse')
-TeamListResponse = ForwardRef('TeamListResponse')
-MatchListResponse = ForwardRef('MatchListResponse')
-TournamentListResponse = ForwardRef('TournamentListResponse')
-PrizeCutResponse = ForwardRef('PrizeCutResponse')
+PlayerListResponse = ForwardRef("PlayerListResponse")
+TeamListResponse = ForwardRef("TeamListResponse")
+MatchListResponse = ForwardRef("MatchListResponse")
+TournamentListResponse = ForwardRef("TournamentListResponse")
+PrizeCutResponse = ForwardRef("PrizeCutResponse")
 
 
 # Base configs
 class BaseConfig(BaseModel):
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 # Token schemas
@@ -36,20 +40,16 @@ class UserBase(BaseConfig):
 
 
 class UserCreate(UserBase):
-    password: str = Field(
-        min_length=4,
-        max_length=36,
-        examples=["Example123@"]
-    )
+    password: str = Field(min_length=4, max_length=36, examples=["Example123@"])
 
-    @field_validator('password')
+    @field_validator("password")
     def validate_password(cls, value):
         if not (
-            any(c.isupper() for c in value) and
-            any(c.islower() for c in value) and
-            any(c.isdigit() for c in value) and
-            any(c in '@$!%*?&' for c in value) and
-            not any(c.isspace() for c in value)
+            any(c.isupper() for c in value)
+            and any(c.islower() for c in value)
+            and any(c.isdigit() for c in value)
+            and any(c in "@$!%*?&" for c in value)
+            and not any(c.isspace() for c in value)
         ):
             raise ValueError(
                 "Password must contain at least one uppercase letter, one lowercase letter, "
@@ -80,43 +80,46 @@ class PlayerListResponse(BaseConfig):
     last_name: str
     country: str
 
+
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
     team_id: UUID
     tournaments: List["TournamentListResponse"]
+
 
 class PlayerCreate(BaseConfig):
     username: str = Field(
         min_length=5,
         max_length=15,
         pattern="^[a-zA-Z0-9_-]+$",
-        examples=["example_user"]
+        examples=["example_user"],
     )
     first_name: str = Field(
         min_length=2,
         max_length=25,
         pattern="^[a-zA-Z]+(?:-[a-zA-Z]+)?$",
-        examples=["Example"]
+        examples=["Example"],
     )
     last_name: str = Field(
         min_length=2,
         max_length=25,
         pattern="^[a-zA-Z]+(?:-[a-zA-Z]+)?$",
-        examples=["Example"]
+        examples=["Example"],
     )
     country: str = Field(
         min_length=2,
         max_length=25,
         pattern="^[a-zA-Z]+(?:-[a-zA-Z]+)?$",
-        examples=["Example"]
+        examples=["Example"],
     )
     avatar: Optional[str]
     user_id: UUID | None = None
     team_id: UUID | None = None
 
-    @field_validator('first_name', 'last_name', mode='before')
+    @field_validator("first_name", "last_name", mode="before")
     def capitalize_names(cls, value):
-        return '-'.join(part.capitalize() for part in value.split('-'))
+        return "-".join(part.capitalize() for part in value.split("-"))
+
 
 class PlayerUpdate(BaseConfig):
     username: str | None = None
@@ -127,9 +130,9 @@ class PlayerUpdate(BaseConfig):
     user_id: UUID | None = None
     team_id: UUID | None = None
 
-    @field_validator('first_name', 'last_name', mode='before')
+    @field_validator("first_name", "last_name", mode="before")
     def capitalize_names(cls, value):
-        return '-'.join(part.capitalize() for part in value.split('-'))
+        return "-".join(part.capitalize() for part in value.split("-"))
 
 
 # Team schemas
@@ -138,9 +141,10 @@ class TeamListResponse(BaseConfig):
     name: str
     logo: str | None
 
+
 class TeamDetailedResponse(BaseConfig):
     players: List[PlayerListResponse]
-    #TODO: Please add these (needed for front-end):
+    # TODO: Please add these (needed for front-end):
     # matches: List[MatchListResponse]
     # tournament_id: UUID
     # prize_cuts: List[PrizeCutResponse]
@@ -149,17 +153,19 @@ class TeamDetailedResponse(BaseConfig):
 
 class TeamCreate(BaseConfig):
     # id: UUID
-    name: str  = Field(
+    name: str = Field(
         min_length=5,
         max_length=15,
         pattern="^[a-zA-Z0-9_-]+$",
-        examples=["example_team"]
+        examples=["example_team"],
     )
     logo: Optional[str]
+
 
 class TeamUpdate(BaseConfig):
     name: str | None = None
     logo: str | None = None
+
 
 # Match schemas
 class MatchListResponse(BaseConfig):
@@ -175,12 +181,14 @@ class MatchListResponse(BaseConfig):
     winner_id: UUID | None = None
     tournament_id: UUID
 
+
 class MatchDetailResponse(MatchListResponse):
-   team1_name: str
-   team2_name: str
-   team1_logo: str | None = None
-   team2_logo: str | None = None
-   tournament_title: str
+    team1_name: str
+    team2_name: str
+    team1_logo: str | None = None
+    team2_logo: str | None = None
+    tournament_title: str
+
 
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None
@@ -199,6 +207,7 @@ class TournamentListResponse(BaseConfig):
     current_stage: Stage
     number_of_teams: int | None = None
 
+
 class TournamentDetailResponse(TournamentListResponse):
     matches_of_current_stage: List[MatchListResponse]
     teams: List[TeamListResponse]
@@ -206,29 +215,26 @@ class TournamentDetailResponse(TournamentListResponse):
 
 
 class TournamentCreate(BaseConfig):
-   title: str = Field(
-        min_length=3,
-        max_length=50,
-        examples=["Example Tournament Title"]
+    title: str = Field(
+        min_length=3, max_length=50, examples=["Example Tournament Title"]
     )
-   tournament_format: TournamentFormat
-   start_date: datetime
-   team_names: List[str]
-   prize_pool: int = Field(
-        ge=1,
-        examples=[1000])
+    tournament_format: TournamentFormat
+    start_date: datetime
+    team_names: List[str]
+    prize_pool: int = Field(ge=1, examples=[1000])
 
 
 class TournamentUpdate(BaseConfig):
-   title: str | None = None, Field(
+    title: str | None = None, Field(
         min_length=3,
         max_length=20,
         pattern="^[a-zA-Z0-9_-]+$",
-        examples=["Example Tournament Title"]
+        examples=["Example Tournament Title"],
     )
-   start_date: datetime | None = None
-   end_date: datetime | None = None
-   prize_pool: int | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    prize_pool: int | None = None
+
 
 # PrizeCut schemas
 class PrizeCutResponse(BaseConfig):
@@ -240,8 +246,10 @@ class PrizeCutResponse(BaseConfig):
     team_id: UUID | None
     team_name: str | None
 
+
 class PrizeCutUpdate(BaseConfig):
     team_id: UUID
+
 
 # Request schemas
 class RequestBase(BaseConfig):
@@ -272,7 +280,6 @@ class RequestListResponse(BaseConfig):
     response_date: datetime | None
     admin_id: UUID | None
     username: str | None
-
 
 
 # Updating forward references
