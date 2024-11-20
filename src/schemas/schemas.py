@@ -138,7 +138,7 @@ class TeamListResponse(BaseConfig):
     name: str
     logo: str | None
 
-class TeamDetailedListResponse(BaseConfig):
+class TeamDetailedResponse(BaseConfig):
     players: List[PlayerListResponse]
     #TODO: Please add these (needed for front-end):
     # matches: List[MatchListResponse]
@@ -277,4 +277,4 @@ class RequestListResponse(BaseConfig):
 # Updating forward references
 PlayerListResponse.model_rebuild()
 TournamentDetailResponse.model_rebuild()
-TeamDetailedListResponse.model_rebuild()
+TeamDetailedResponse.model_rebuild()
