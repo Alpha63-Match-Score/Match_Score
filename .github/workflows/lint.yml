@@ -5,12 +5,15 @@ on:
     branches:
       - linting_rumi
   pull_request:
+    branches:
+      - linting_rumi
 
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -21,8 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff black
 
-#      - name: Run Ruff
-#        run: ruff check . --fix
+      - name: Run Ruff (Auto-Fix)
+        run: ruff check . --fix
 
-      - name: Run Black
-        run: black . --check
+      - name: Run Black (Auto-Fix)
+        run: black .
+
+      - name: Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add .
+          git commit -m "Auto-fix linting and formatting issues" || echo "No changes to commit"
+          git push origin linting_rumi
