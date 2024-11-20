@@ -3,10 +3,11 @@ from typing import Type
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
-from src.models import Tournament, Match, User, Player
+from src.models import Tournament, Match, User, Player, Request
 from src.models.enums import Stage, Role, TournamentFormat
 from src.models.team import Team
 from src.schemas.schemas import UserResponse
@@ -55,6 +56,17 @@ def user_exists(db: Session, user_id: UUID) -> Type[User]:
     return user
 
 
+def request_exists(db: Session, user: User) -> Type[Request]:
+    request = db.query(Request)\
+        .filter(Request.user_id == user.id)\
+        .order_by(desc(Request.request_date))\
+        .first()
+    if not request:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Request not found.")
+
+    return request
+
+
 def player_exists(db: Session, username: str) -> Type[Player]:
     player = db.query(Player).filter(Player.username == username).first()
     if not player:
@@ -67,6 +79,13 @@ def user_email_exists(db: Session, email: str) -> None:
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Email already exists")
 
+
+def get_user_by_email(db: Session, email: str) -> Type[User]:
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
+
+    return user
 
 def tournament_title_unique(db: Session, title: str) -> None:
     if db.query(Tournament).filter(Tournament.title == title).first():
@@ -86,9 +105,9 @@ def is_author_of_tournament(db: Session, tournament_id: UUID, user_id: UUID) -> 
 
 
 # role validators
-def user_role_is_director(current_user: User) -> None:
-    if current_user.role == Role.DIRECTOR:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a director.")
+# def user_role_is_director(current_user: User) -> None:
+#     if current_user.role == Role.DIRECTOR:
+#         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a director.")
 
 
 def user_role_is_admin(current_user: User) -> None:
@@ -96,9 +115,13 @@ def user_role_is_admin(current_user: User) -> None:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Only admins can perform this action.")
 
 
-def user_role_is_player(current_user: User) -> None:
-    if current_user.role == Role.PLAYER:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a player.")
+def user_role_is_user(current_user: User) -> None:
+    if current_user.role != Role.USER:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Only users can send requests.")
+
+# def user_role_is_player(current_user: User) -> None:
+#     if current_user.role == Role.PLAYER:
+#         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a player.")
 
 
 # datetime validators
