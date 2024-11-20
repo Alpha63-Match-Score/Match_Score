@@ -1,14 +1,15 @@
 from typing import Type
 from uuid import UUID
 
+from src.models import Tournament
+from src.models.team import Team
+from src.schemas.schemas import TeamCreate, TeamListResponse, UserResponse
+from src.utils import validators as v
+from src.utils.pagination import PaginationParams
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
-from src.utils import validators as v
-from src.models import Tournament
-from src.models.team import Team
-from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse
-from src.utils.pagination import PaginationParams
 
 
 def get_teams(

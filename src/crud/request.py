@@ -1,23 +1,23 @@
 from datetime import datetime
 from typing import Literal
 
+from src.models import Player, Request, User
+from src.models.enums import RequestStatus, RequestType, Role
+from src.schemas.schemas import RequestListResponse, ResponseRequest
+from src.utils.pagination import PaginationParams
+from src.utils.validators import (
+    get_user_by_email,
+    player_already_linked,
+    player_exists,
+    request_exists,
+    user_exists,
+    user_role_is_admin,
+    user_role_is_user,
+)
+
 from fastapi import HTTPException, status
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
-
-from src.models import Request, User, Player
-from src.models.enums import RequestType, Role, RequestStatus
-from src.schemas.schemas import ResponseRequest, RequestListResponse
-from src.utils.pagination import PaginationParams
-from src.utils.validators import (
-    player_exists,
-    user_role_is_admin,
-    request_exists,
-    user_exists,
-    user_role_is_user,
-    get_user_by_email,
-    player_already_linked,
-)
 
 
 def get_all(

@@ -1,10 +1,10 @@
+from src.api.deps import get_current_user, get_db
+from src.crud import team as team_crud
+from src.schemas.schemas import TeamCreate, TeamListResponse, UserResponse
+from src.utils.pagination import PaginationParams, get_pagination
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
-from src.api.deps import get_current_user, get_db
-from src.schemas.schemas import TeamCreate, UserResponse, TeamListResponse
-from src.crud import team as team_crud
-from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
 

@@ -1,7 +1,6 @@
 from typing import Type
 from uuid import UUID
 
-
 from src.models import PrizeCut
 from src.schemas.schemas import PrizeCutResponse
 

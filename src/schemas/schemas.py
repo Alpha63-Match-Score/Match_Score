@@ -1,14 +1,16 @@
 from datetime import datetime
-from typing import Optional, List, ForwardRef
+from typing import ForwardRef, List, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator, EmailStr
+
 from src.models.enums import (
-    TournamentFormat,
-    Stage,
     MatchFormat,
-    RequestType,
     RequestStatus,
+    RequestType,
+    Stage,
+    TournamentFormat,
 )
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # Forward References
 PlayerListResponse = ForwardRef("PlayerListResponse")

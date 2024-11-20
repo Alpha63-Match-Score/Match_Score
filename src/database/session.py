@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from src.core.config import settings
 from src.models.base import Base
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(
     settings.DATABASE_URL, echo=True, connect_args={"options": "-c timezone=UTC"}

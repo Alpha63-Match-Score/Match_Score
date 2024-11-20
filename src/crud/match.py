@@ -1,21 +1,18 @@
-from datetime import timedelta, datetime, timezone
-from fastapi import HTTPException
+from datetime import datetime, timedelta, timezone
 import random
-from typing import Type, Literal
+from typing import Literal, Type
 
+from src.crud import constants as c, team as crud_team
+from src.models import Team, Tournament
+from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
+from src.models.match import Match
+from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate
+from src.utils import validators as v
+
+from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
-
-from src.models import Tournament, Team
-from src.models.match import Match
-from src.crud import team as crud_team
-from src.models.enums import Stage, MatchFormat, TournamentFormat, Role
-
-from src.schemas.schemas import MatchListResponse, MatchDetailResponse, MatchUpdate
-
-from src.crud import constants as c
-from src.utils import validators as v
 
 
 def get_all_matches(

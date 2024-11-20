@@ -18,20 +18,20 @@ dependencies = [
     "black>=24.10.0",
 ]
 
-[tools.ruff]
+[tool.ruff]
 select = ["E", "F", "I", "C"]
 line-length = 88
 fix = true
 extend-select = ["E301", "E302", "E303", "E305"]
 exclude = ["migrations", ".venv", "__pycache__"]
 
-[tools.ruff.isort]
+extend-ignore = ["E203", "F811", "E501", "C901"]
+
+[tool.ruff.isort]
 known-first-party = ["match_score"]
 default-section = "THIRDPARTY"
 force-sort-within-sections = true
 combine-as-imports = true
-
-extend-ignore = ["E203", "W503", "F811"]
 
 [tools.black]
 line-length = 88

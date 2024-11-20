@@ -1,31 +1,30 @@
-import math
 from datetime import datetime, timedelta
+import math
 from typing import Literal, Type
 from uuid import UUID
 
+from src.crud import (
+    constants as c,
+    match as crud_match,
+    prize_cut as crud_prize_cut,
+    team as crud_team,
+)
+from src.models import Tournament
+from src.models.enums import Role, Stage, TournamentFormat
+from src.schemas.schemas import (
+    TournamentCreate,
+    TournamentDetailResponse,
+    TournamentListResponse,
+    TournamentUpdate,
+    UserResponse,
+)
+from src.utils import validators as v
+from src.utils.pagination import PaginationParams
+
 from fastapi import HTTPException
-from starlette.status import HTTP_400_BAD_REQUEST
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
-
-from src.crud import match as crud_match
-from src.crud import prize_cut as crud_prize_cut
-from src.crud import team as crud_team
-
-from src.models import Tournament
-from src.models.enums import Stage, TournamentFormat, Role
-
-from src.schemas.schemas import (
-    TournamentListResponse,
-    TournamentDetailResponse,
-    TournamentCreate,
-    UserResponse,
-    TournamentUpdate,
-)
-
-from src.crud import constants as c
-from src.utils.pagination import PaginationParams
-from src.utils import validators as v
+from starlette.status import HTTP_400_BAD_REQUEST
 
 
 def get_tournaments(

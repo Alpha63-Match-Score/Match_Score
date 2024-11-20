@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Enum, DateTime, ForeignKey, UUID, func, String
-from sqlalchemy.orm import relationship
-
 from src.models.base import Base, BaseMixin
 from src.models.enums import RequestStatus, RequestType
+
+from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, String, func
+from sqlalchemy.orm import relationship
 
 
 class Request(Base, BaseMixin):

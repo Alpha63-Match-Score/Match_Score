@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, UUID, ForeignKey, UniqueConstraint, Float
-from sqlalchemy.orm import relationship
-
 from src.models.base import Base, BaseMixin
+
+from sqlalchemy import UUID, Column, Float, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 
 class PrizeCut(Base, BaseMixin):

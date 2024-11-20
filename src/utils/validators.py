@@ -1,20 +1,20 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Type
 from uuid import UUID
+
+from src.models import Match, Player, Request, Tournament, User
+from src.models.enums import Role, Stage
+from src.models.team import Team
+from src.schemas.schemas import UserResponse
 
 from fastapi import HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from starlette.status import (
-    HTTP_404_NOT_FOUND,
     HTTP_400_BAD_REQUEST,
     HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
 )
-
-from src.models import Tournament, Match, User, Player, Request
-from src.models.enums import Stage, Role
-from src.models.team import Team
-from src.schemas.schemas import UserResponse
 
 
 # existing validators

@@ -1,18 +1,18 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends
-from fastapi.params import Path
-from sqlalchemy.orm import Session
-
 from src.api.deps import get_current_user, get_db
 from src.crud.request import (
+    get_all,
     send_director_request,
     send_link_to_player_request,
-    get_all,
     update_request,
 )
 from src.models import User
 from src.utils.pagination import PaginationParams, get_pagination
+
+from fastapi import APIRouter, Depends
+from fastapi.params import Path
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 

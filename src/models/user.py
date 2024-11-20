@@ -1,8 +1,8 @@
-from sqlalchemy import Column, String, Enum, DateTime, func
-from sqlalchemy.orm import relationship
-
 from src.models.base import Base, BaseMixin
 from src.models.enums import Role
+
+from sqlalchemy import Column, DateTime, Enum, String, func
+from sqlalchemy.orm import relationship
 
 
 class User(Base, BaseMixin):
