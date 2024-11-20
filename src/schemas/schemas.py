@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional, List, ForwardRef
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator, EmailStr, validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 from src.models.enums import TournamentFormat, Stage, MatchFormat, RequestType, RequestStatus
 
 # Forward References

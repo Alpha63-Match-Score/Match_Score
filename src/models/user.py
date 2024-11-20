@@ -1,6 +1,5 @@
-import uuid
 
-from sqlalchemy import Column, String, Enum, DateTime, ForeignKey, UUID, func
+from sqlalchemy import Column, String, Enum, DateTime, func
 from sqlalchemy.orm import relationship
 
 from src.models.base import Base, BaseMixin

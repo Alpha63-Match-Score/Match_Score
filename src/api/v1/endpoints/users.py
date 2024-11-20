@@ -6,7 +6,7 @@ from src.api.deps import get_db, get_current_user
 from src.core.authentication import authenticate_user, create_access_token
 from src.crud.user import create_user, update_email
 from src.models import User
-from src.schemas.schemas import Token, UserResponse, UserCreate, UserUpdate, UserRegisterResponse
+from src.schemas.schemas import Token, UserCreate, UserUpdate, UserRegisterResponse
 
 router = APIRouter()
 

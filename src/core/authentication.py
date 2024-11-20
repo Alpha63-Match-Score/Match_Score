@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from src.core.config import settings
 from src.core.security import verify_password
 from src.models.user import User
-from src.utils import validators as v
 
 
 def authenticate_user(

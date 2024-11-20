@@ -1,16 +1,13 @@
 from typing import Type
 from uuid import UUID
 
-from dns.e164 import query
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy.testing import db
 from starlette.status import HTTP_400_BAD_REQUEST
 from src.utils import validators as v
 from src.models import Tournament
 from src.models.team import Team
 from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse
-from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 

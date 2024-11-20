@@ -1,7 +1,6 @@
 from typing import Type
 from uuid import UUID
 
-from pydantic.v1 import UUID1
 
 from src.models import PrizeCut
 from src.schemas.schemas import PrizeCutResponse

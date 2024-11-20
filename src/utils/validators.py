@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
 from src.models import Tournament, Match, User, Player, Request
-from src.models.enums import Stage, Role, TournamentFormat
+from src.models.enums import Stage, Role
 from src.models.team import Team
 from src.schemas.schemas import UserResponse
 

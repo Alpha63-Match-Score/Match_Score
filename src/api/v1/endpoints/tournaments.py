@@ -1,4 +1,4 @@
-from typing import Literal, Type
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from uuid import UUID
