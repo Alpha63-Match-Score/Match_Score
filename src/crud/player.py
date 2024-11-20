@@ -11,9 +11,10 @@ from src.utils import validators as v
 from src.models import Player, Team, Tournament
 
 from src.schemas.schemas import UserResponse, PlayerCreate, \
-    PlayerListResponse, PlayerDetailResponse
+    PlayerListResponse, PlayerDetailResponse, PlayerUpdate
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
+from sqlalchemy.exc import IntegrityError
 
 
 def create_player( db: Session, player: PlayerCreate, current_user: UserResponse)-> PlayerListResponse:
@@ -88,3 +89,30 @@ def convert_db_to_player_detail_response(
         user_id=db_player.user_id,
         tournaments=[convert_db_to_tournament_list_response(db_tournament) for db_tournament in db_tournaments]
     )
+
+def update_player(
+        db: Session,
+        username: str,
+        player: PlayerUpdate,
+        current_user: UserResponse
+) -> PlayerListResponse:
+    db_player = v.player_exists(db, username=username)
+    v.director_or_admin(current_user)
+
+
+    db_player.username = player.username,
+    db_player.first_name = player.first_name,
+    db_player.last_name = player.last_name,
+    db_player.country = player.country,
+    db_player.avatar = player.avatar,
+    db_player.team_id = player.team_id,
+    db_player.user_id = player.user_id
+
+    try:
+        db.commit()
+        db.refresh(db_player)
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(f"Foreign key constraint failed: {e}")
+
+    return convert_db_to_player_list_response(db_player)
