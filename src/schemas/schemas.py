@@ -220,7 +220,7 @@ class TournamentCreate(BaseConfig):
 
 
 class TournamentUpdate(BaseConfig):
-   title: str | None = Field(
+   title: str | None = None, Field(
         min_length=3,
         max_length=20,
         pattern="^[a-zA-Z0-9_-]+$",

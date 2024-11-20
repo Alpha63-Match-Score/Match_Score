@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from fastapi import HTTPException
 import random
 from typing import Type, Literal
@@ -10,7 +10,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from src.models import Tournament
 from src.models.match import Match
 from src.crud import team as crud_team
-from src.models.enums import Stage, MatchFormat, TournamentFormat
+from src.models.enums import Stage, MatchFormat, TournamentFormat, Role
 
 from src.schemas.schemas import (MatchListResponse,
                                  MatchDetailResponse,
@@ -136,14 +136,18 @@ def update_match(
         # Validating the match data
         v.director_or_admin(current_user)
         db_match = v.match_exists(db, match_id)
-        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
+        if current_user.role == Role.DIRECTOR:
+            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
         v.match_is_finished(db_match)
         v.match_has_started(db_match)
 
         # Validating the start time
         if match.start_time:
             if (match.start_time < db_match.tournament.start_date
-                    or match.start_time > db_match.tournament.end_date):
+                    or match.start_time > db_match.tournament.end_date
+                    or match.start_time < datetime.now(timezone.utc)):
                 raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
 
         # Creating a dictionary with the updated data
@@ -176,7 +180,10 @@ def update_match_score(
         # Validating the match data
         v.director_or_admin(current_user)
         db_match = v.match_exists(db, match_id)
-        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
+        if current_user.role == Role.DIRECTOR:
+            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
         v.match_is_finished(db_match)
 
 
@@ -190,9 +197,9 @@ def update_match_score(
 
         # Check if the match is finished
         if db_match.match_format == MatchFormat.MR15:
-            _check_for_winner_for_mr15(db, db_match)
+            losing_team = _check_for_winner_for_mr15(db, db_match)
         elif db_match.match_format == MatchFormat.MR12:
-            _check_for_winner_for_mr12(db, db_match)
+            losing_team = _check_for_winner_for_mr12(db, db_match)
 
         db.flush()
         db.refresh(db_match)
@@ -205,14 +212,12 @@ def update_match_score(
               and db_match.tournament.current_stage != Stage.FINAL
               and db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN):
 
-            losing_team = next(
-                team for team in [db_match.team1, db_match.team2]
-                if team.id != db_match.winner_team_id)
             losing_team.tournament_id = None
             db.flush()
 
         if all(match.is_finished for match in db_match.tournament.matches):
             _update_current_stage(db, db_match.tournament.id)
+            generate_matches(db, db_match.tournament)
 
         db.commit()
         db.refresh(db_match)

@@ -13,7 +13,7 @@ from src.crud import prize_cut as crud_prize_cut
 from src.crud import team as crud_team
 
 from src.models import Tournament
-from src.models.enums import Stage, TournamentFormat
+from src.models.enums import Stage, TournamentFormat, Role
 
 from src.schemas.schemas import (TournamentListResponse,
                                  TournamentDetailResponse,
@@ -129,7 +129,7 @@ def create_tournament(
         db.add(db_tournament)
         db.flush()
 
-        crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament)
+        crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament, db_tournament.prize_pool)
         crud_team.create_teams_lst_for_tournament(db, tournament.team_names, db_tournament.id)
 
         db.flush()
@@ -207,16 +207,17 @@ def update_tournament(
 
         # Validating the tournament data
         v.director_or_admin(current_user)
-        v.is_author_of_tournament(db, current_user.id, tournament_id)
         db_tournament = v.tournament_exists(db, tournament_id)
         v.tournament_is_finished(db_tournament)
 
-        if current_user.role != 'admin':
+        if current_user.role != Role.ADMIN:
             v.tournament_has_started(db_tournament)
 
-        v.director_or_admin(current_user)
-        v.is_author_of_tournament(db, current_user.id, tournament_id)
+        if current_user.role == Role.DIRECTOR:
+            v.is_author_of_tournament(db, tournament_id, current_user.id)
 
+        if tournament.prize_pool:
+            crud_prize_cut.delete_prize_cuts_for_tournament(db, db_tournament)
 
         # Creating a dictionary with the updated data
         update_data = tournament.model_dump(exclude_unset=True)
@@ -225,6 +226,10 @@ def update_tournament(
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
                 detail="Start date must be before end date")
+
+        if tournament.prize_pool:
+            crud_prize_cut.create_prize_cuts_for_tournament(db, db_tournament, int(tournament.prize_pool))
+
 
         # Updating the data
         for key, value in update_data.items():
@@ -269,7 +274,7 @@ def convert_db_to_tournament_response(
         number_of_teams=len(db_tournament.teams),
         matches_of_current_stage=[crud_match.convert_db_to_match_list_response(db_match)
                  for db_match in db_tournament.matches
-                 if not db_match.is_finished],
+                 if db_match.stage == db_tournament.current_stage],
         teams=[crud_team.convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams],
         prizes=[crud_prize_cut.convert_db_to_prize_cut_response(db_prize) for db_prize in db_tournament.prize_cuts]
     )
