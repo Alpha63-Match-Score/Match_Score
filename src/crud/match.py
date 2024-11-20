@@ -150,12 +150,26 @@ def update_match(
                     or match.start_time < datetime.now(timezone.utc)):
                 raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
 
+        if match.team1_id:
+            v.team_exists(db, match.team1_id)
+            db_match.team1.tournament_id = None
+
+        if match.team2_id:
+            v.team_exists(db, match.team2_id)
+            db_match.team2.tournament_id = None
+
         # Creating a dictionary with the updated data
         update_data = match.model_dump(exclude_unset=True)
 
         # Updating the data
         for key, value in update_data.items():
             setattr(db_match, key, value)
+
+        if match.team1_id:
+            db_match.team1.tournament_id = db_match.tournament_id
+
+        if match.team2_id:
+            db_match.team2.tournament_id = db_match.tournament_id
 
         db.commit()
         db.refresh(db_match)
@@ -212,9 +226,12 @@ def update_match_score(
                 db.flush()
 
         if all(match.is_finished for match in db_match.tournament.matches):
-            _update_current_stage(db, db_match.tournament.id)
+            if db_match.tournament.current_stage != Stage.FINISHED:
+                _update_current_stage(db, db_match.tournament.id)
+
             current_stage = db_match.tournament.current_stage
-            generate_matches(db, db_match.tournament)
+            if db_match.tournament.current_stage != Stage.FINISHED:
+                generate_matches(db, db_match.tournament)
 
         db.commit()
         db.refresh(db_match)
