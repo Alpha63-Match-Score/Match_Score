@@ -30,7 +30,7 @@ def authenticate_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password")
-    # TODO its returning 500 when no such user exists
+
     return user
 
 def create_access_token(data: dict) -> str:

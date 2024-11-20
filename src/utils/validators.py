@@ -75,6 +75,12 @@ def player_exists(db: Session, username: str) -> Type[Player]:
     return player
 
 
+def player_already_linked(db: Session, username: str) -> None:
+    player = db.query(Player).filter(Player.username == username).first()
+    if player and player.user_id:
+        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Player is already linked to a user.")
+
+
 def user_email_exists(db: Session, email: str) -> None:
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Email already exists")
