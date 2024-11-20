@@ -103,12 +103,16 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
 
 
 def check_valid_request(db: Session, current_user: User):
-    request = db.query(Request).filter(Request.user_id == current_user.id).first()
-    if request and request.status == RequestStatus.PENDING:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You have already have a pending request."
-        )
+    existing_request = db.query(Request).filter(
+        Request.user_id == current_user.id,
+        Request.status == RequestStatus.PENDING
+    ).first()
+    if existing_request and existing_request.status == RequestStatus.PENDING:
+        # if request.status == RequestStatus.PENDING or request.username is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You have already have a pending request."
+            )
 
 
 def update_request(db: Session,
@@ -122,7 +126,7 @@ def update_request(db: Session,
 
     if request.request_type == RequestType.LINK_USER_TO_PLAYER:
         player = player_exists(db, request.username)
-        pass
+        return get_link_to_player_requests(db, current_user, status, request, player)
     elif request.request_type == RequestType.PROMOTE_USER_TO_DIRECTOR:
         return get_director_requests(db, current_user, status, request)
 
@@ -175,24 +179,45 @@ def check_request_status(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Request has already been responded to."
         )
-def get_link_to_player_requests():
-    """Get all link to player requests."""
-    pass
 
 
-def accept_link_to_player_request():
-    """Change the status of the request to accepted."""
-    pass
+def get_link_to_player_requests(db, admin: User, status: str, request: Request, player: Player):
+    if status == RequestStatus.ACCEPTED:
+        return accept_link_to_player_request(db, admin, request, player)
+    elif status == RequestStatus.REJECTED:
+        return reject_link_to_player_request(db, admin, request)
 
 
-def reject_link_to_player_request():
-    """Change the status of the request to rejected."""
-    pass
+def accept_link_to_player_request(db, admin: User, request: Request, player: Player):
+    request.status = RequestStatus.ACCEPTED
+    request.admin_id = admin.id
+    request.response_date = datetime.now()
+    player.user_id = request.user_id
+    db.commit()
+    db.refresh(request)
+    db.refresh(player)
 
-# HELPER METHODS //
-# get_director_request_by_id
-# get_link_to_player_request_by_id
-# update_director_request_status
-# update_link_to_player_request_status
-# update_user_to_player
-# link_user_to_player
+    return ResponseRequest(
+        request_type=request.request_type,
+        request_date=request.request_date,
+        status=request.status,
+        response_date=request.response_date,
+    )
+
+
+def reject_link_to_player_request(db, admin: User, request: Request):
+    request.status = RequestStatus.REJECTED
+    request.admin_id = admin.id
+    request.response_date = datetime.now()
+    db.commit()
+    db.refresh(request)
+
+    return ResponseRequest(
+        request_type=request.request_type,
+        request_date=request.request_date,
+        status=request.status,
+        response_date=request.response_date,
+    )
+
+
+
