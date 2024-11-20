@@ -200,6 +200,8 @@ def update_match_score(
 
         v.match_is_finished(db_match)
 
+        v.team_has_five_players(db_match.team1)
+        v.team_has_five_players(db_match.team2)
 
         # Creating a dictionary with the updated data
         if team_to_upvote_score == "team1":

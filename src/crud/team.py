@@ -67,19 +67,20 @@ def create_teams_lst_for_tournament(
 
     teams = []
     for name in team_names:
-        db_team = v.team_exists(db, team_name=name)
+        db_team = db.query(Team).filter(Team.name == name).first()
 
-        if db_team.tournament_id is not None:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail=f"Team '{db_team.name}' already participates in another tournament")
+        if db_team is None:
+            new_team = Team(name=name)
+            db.add(new_team)
+            db.flush()
+            teams.append(new_team)
+        else:
+            if db_team.tournament_id is not None:
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail=f"Team '{db_team.name}' already participates in another tournament")
 
-        if len(db_team.players) < 5:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Team must have at least 5 players")
-
-        teams.append(db_team)
+            teams.append(db_team)
 
     for db_team in teams:
         db_team.tournament_id = tournament_id

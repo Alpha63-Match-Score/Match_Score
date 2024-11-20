@@ -134,6 +134,11 @@ def match_has_started(match: Type[Match]) -> None:
             status_code=HTTP_400_BAD_REQUEST,
             detail="Match has already started")
 
+def team_has_five_players(team: Type[Team]) -> None:
+    if len(team.players) != 5:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Team must have 5 players")
 
 # state of tournament
 def tournament_is_finished(tournament: Type[Tournament]) -> None:
