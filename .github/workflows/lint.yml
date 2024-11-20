@@ -27,8 +27,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff black
 
-#      - name: Run Ruff
-#        run: ruff check . --fix
+      - name: Run Ruff
+        run: ruff check . --fix
 
       - name: Run Black
         run: black .
