@@ -138,7 +138,7 @@ class TeamListResponse(BaseConfig):
     name: str
     logo: str | None
 
-class TeamDetailedListResponse(BaseConfig):
+class TeamDetailedResponse(BaseConfig):
     players: List[PlayerListResponse]
 
 class TeamCreate(BaseConfig):
