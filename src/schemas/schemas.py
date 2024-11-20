@@ -139,13 +139,14 @@ class TeamListResponse(BaseConfig):
     logo: str | None
 
 class TeamDetailedResponse(BaseConfig):
+    id: UUID
+    name: str
+    logo: Optional[str]
     players: List[PlayerListResponse]
-    #TODO: Please add these (needed for front-end):
-    # matches: List[MatchListResponse]
-    # tournament_id: UUID
-    # prize_cuts: List[PrizeCutResponse]
-    # ratings/statistics?
-
+    matches: List[MatchListResponse]
+    tournament_id: Optional[UUID]
+    prize_cuts: List[PrizeCutResponse]
+    team_stats: dict
 
 class TeamCreate(BaseConfig):
     # id: UUID
