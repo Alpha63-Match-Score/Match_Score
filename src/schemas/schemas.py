@@ -76,6 +76,7 @@ class UserUpdate(UserBase):
 # Player schemas
 class PlayerListResponse(BaseConfig):
     id: UUID
+    username: str
     first_name: str
     last_name: str
     country: str

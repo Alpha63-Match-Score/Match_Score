@@ -32,6 +32,25 @@ def create_player( db: Session, player: PlayerCreate, current_user: UserResponse
 
     return convert_db_to_player_list_response(db_player)
 
+def get_players(db: Session,
+               pagination: PaginationParams,
+               search: str | None = None) -> PlayerListResponse:
+
+    query = db.query(Player).order_by(Player.username.asc())
+
+    filters = []
+
+    if search:
+        filters.append(Player.username.ilike(f"%{search}%"))
+
+    if filters:
+        query = db.query(Player).filter(*filters)
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    db_players = query.all()
+    return [convert_db_to_player_list_response(db_player) for db_player in db_players]
+
 def convert_db_to_player_list_response(
         db_player: Type[Player]
 ) -> PlayerListResponse:

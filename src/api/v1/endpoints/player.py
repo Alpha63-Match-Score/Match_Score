@@ -10,5 +10,14 @@ from src.utils.pagination import PaginationParams, get_pagination
 router = APIRouter()
 
 @router.post("/", response_model=PlayerListResponse, status_code=201)
-def create_player(team: PlayerCreate, db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
+def create_player(team: PlayerCreate,
+                  db: Session = Depends(get_db),
+                  current_user: UserResponse = Depends(get_current_user)):
     return player_crud.create_player(db, team, current_user)
+
+@router.get("/")
+def get_players(db: Session = Depends(get_db),
+               pagination: PaginationParams = Depends(get_pagination),
+               search: str | None = None,
+               ):
+    return player_crud.get_players(db, pagination, search)
