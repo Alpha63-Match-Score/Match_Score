@@ -206,12 +206,13 @@ def update_tournament(
         db.begin_nested()
 
         # Validating the tournament data
+        v.director_or_admin(current_user)
+        v.is_author_of_tournament(db, current_user.id, tournament_id)
         db_tournament = v.tournament_exists(db, tournament_id)
+        v.tournament_is_finished(db_tournament)
 
-        if datetime.now() >= db_tournament.end_date:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="The tournament has already ended. You cannot update it.")
+        if current_user.role != 'admin':
+            v.tournament_has_started(db_tournament)
 
         v.director_or_admin(current_user)
         v.is_author_of_tournament(db, current_user.id, tournament_id)
