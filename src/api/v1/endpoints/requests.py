@@ -7,20 +7,19 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud.request import send_director_request, send_link_to_player_request, get_all, update_request
 from src.models import User
-from src.schemas.schemas import RequestUpdate
 from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
 
 
-@router.post("/users/{user_id}")
+@router.post("/directors/{user_id}")
 def director_request(db: Session = Depends(get_db),
                      current_user: User = Depends(get_current_user)
                      ):
     return send_director_request(db, current_user)
 
 
-@router.post("/users/{user_id}/players/{username}")
+@router.post("/players/{user_id}")
 def player_request(username: str = Path(description="player_username"),
                    db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user),
@@ -28,7 +27,7 @@ def player_request(username: str = Path(description="player_username"),
     return send_link_to_player_request(db, current_user, username)
 
 
-@router.get("/users")
+@router.get("/")
 def get_all_requests(db: Session = Depends(get_db),
                      current_user: User = Depends(get_current_user),
                      sort_by: Literal['asc', 'desc'] = "desc",
@@ -40,10 +39,10 @@ def get_all_requests(db: Session = Depends(get_db),
     return get_all(db, current_user, pagination, sort_by, status, request_type, filter_by_current_admin)
 
 
-@router.put("/request/{request_id}")
+@router.put("/{request_id}")
 def put_request(status: Literal['accepted', 'rejected'],
-                   email: str,
-                   db: Session = Depends(get_db),
-                   current_user: User = Depends(get_current_user),
-                   ):
+                email: str,
+                db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user),
+                ):
     return update_request(db, current_user, status, email)
