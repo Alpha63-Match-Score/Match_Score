@@ -12,9 +12,6 @@ from sqlalchemy.orm import Session
 router = APIRouter()
 
 
-
-
-
 @router.get("/", response_model=list[MatchListResponse])
 def read_matches(
     db: Session = Depends(get_db),
