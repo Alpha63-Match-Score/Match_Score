@@ -5,11 +5,13 @@ from dns.e164 import query
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from starlette.status import HTTP_400_BAD_REQUEST
+
+from src.crud.tournament import convert_db_to_tournament_list_response
 from src.utils import validators as v
-from src.models import Player
+from src.models import Player, Team, Tournament
 
 from src.schemas.schemas import UserResponse, PlayerCreate, \
-    PlayerListResponse
+    PlayerListResponse, PlayerDetailResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
@@ -63,4 +65,26 @@ def convert_db_to_player_list_response(
         avatar=db_player.avatar,
         team_id=db_player.team_id,
         user_id=db_player.user_id
+    )
+
+def get_player(db: Session, username: str) -> PlayerDetailResponse:
+    db_player = v.player_exists(db, username=username)
+    db_tournaments = db.query(Tournament).join(Team).join(Player).filter(Player.username == username).all()
+    return convert_db_to_player_detail_response(db_player, db_tournaments)
+
+
+def convert_db_to_player_detail_response(
+        db_player: Type[Player],
+        db_tournaments: list[Type[Tournament]]
+) -> PlayerDetailResponse:
+    return PlayerDetailResponse(
+        id=db_player.id,
+        username=db_player.username,
+        first_name=db_player.first_name,
+        last_name=db_player.last_name,
+        country=db_player.country,
+        avatar=db_player.avatar,
+        team_id=db_player.team_id,
+        user_id=db_player.user_id,
+        tournaments=[convert_db_to_tournament_list_response(db_tournament) for db_tournament in db_tournaments]
     )

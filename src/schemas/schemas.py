@@ -84,7 +84,7 @@ class PlayerListResponse(BaseConfig):
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
     team_id: UUID
-    tournaments: List["TournamentListResponse"]
+    tournaments: Optional[List["TournamentListResponse"]]
 
 class PlayerCreate(BaseConfig):
     username: str = Field(
@@ -137,12 +137,9 @@ class PlayerUpdate(BaseConfig):
 class TeamListResponse(BaseConfig):
     id: UUID
     name: str
-    logo: str | None
-
-class TeamDetailedResponse(BaseConfig):
-    id: UUID
-    name: str
     logo: Optional[str]
+
+class TeamDetailedResponse(TeamListResponse):
     players: List[PlayerListResponse]
     matches: List[MatchListResponse]
     tournament_id: Optional[UUID]

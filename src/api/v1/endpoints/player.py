@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_user, get_db
-from src.schemas.schemas import UserResponse, PlayerCreate, PlayerListResponse
+from src.schemas.schemas import UserResponse, PlayerCreate, PlayerListResponse, PlayerDetailResponse
 from src.crud import player as player_crud
 from src.utils.pagination import PaginationParams, get_pagination
 
@@ -21,3 +21,7 @@ def get_players(db: Session = Depends(get_db),
                search: str | None = None,
                ):
     return player_crud.get_players(db, pagination, search)
+
+@router.get("/{player_username}", response_model=PlayerDetailResponse, status_code = 201)
+def get_player(player_username: str, db: Session = Depends(get_db)):
+    return player_crud.get_player(db, player_username)
