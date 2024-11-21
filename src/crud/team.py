@@ -1,9 +1,15 @@
 from typing import Type
 from uuid import UUID
 
-from src.models import Tournament, Match, Team
+from src.models import Match, Team, Tournament
 from src.models.team import Team
-from src.schemas.schemas import TeamListResponse, TeamCreate, UserResponse, TeamDetailedResponse, TeamUpdate
+from src.schemas.schemas import (
+    TeamCreate,
+    TeamDetailedResponse,
+    TeamListResponse,
+    TeamUpdate,
+    UserResponse,
+)
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
@@ -62,13 +68,14 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
         "match_win_loss_ratio": {"ratio": 0.0, "wins": 0, "losses": 0},
         "most_often_played_opponent": None,
         "best_opponent": None,
-        "worst_opponent": None
-
+        "worst_opponent": None,
     }
 
-    matches = db.query(Match).filter(
-        (Match.team1_id == team_id) | (Match.team2_id == team_id)
-    ).all()
+    matches = (
+        db.query(Match)
+        .filter((Match.team1_id == team_id) | (Match.team2_id == team_id))
+        .all()
+    )
 
     opponent_stats = {}
 
@@ -80,13 +87,17 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
             stats["matches_won"] += 1
 
         opponent_id = match.team2_id if match.team1_id == team_id else match.team1_id
-        opponent_name = match.team2.name if match.team1_id == team_id else match.team1.name
+        opponent_name = (
+            match.team2.name if match.team1_id == team_id else match.team1.name
+        )
 
         if opponent_id not in opponent_stats:
-            opponent_stats[opponent_id] = {"wins": 0,
-                                           "losses": 0,
-                                           "games": 0,
-                                           "opponent_name": opponent_name}
+            opponent_stats[opponent_id] = {
+                "wins": 0,
+                "losses": 0,
+                "games": 0,
+                "opponent_name": opponent_name,
+            }
 
         opponent_stats[opponent_id]["games"] += 1
         if match.winner_team_id == team_id:
@@ -96,29 +107,49 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
 
     if matches:
         stats["tournaments_played"] = len(stats["tournaments_played"])
-        stats["tournaments_won"] = sum(1 for match in matches if match.winner_team_id == team_id and match.stage == 'FINAL')
+        stats["tournaments_won"] = sum(
+            1
+            for match in matches
+            if match.winner_team_id == team_id and match.stage == "FINAL"
+        )
 
     if opponent_stats:
-        stats["most_often_played_opponent"] = max(opponent_stats, key=lambda k: opponent_stats[k]["games"])
-        stats["best_opponent"] = max(opponent_stats,
-                                     key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"])
-        stats["worst_opponent"] = min(opponent_stats,
-                                      key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"])
+        stats["most_often_played_opponent"] = max(
+            opponent_stats, key=lambda k: opponent_stats[k]["games"]
+        )
+        stats["best_opponent"] = max(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"],
+        )
+        stats["worst_opponent"] = min(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"],
+        )
 
     stats["match_win_loss_ratio"]["wins"] = stats["matches_won"]
-    stats["match_win_loss_ratio"]["losses"] = stats["matches_played"] - stats["matches_won"]
-    stats["match_win_loss_ratio"]["ratio"] = stats["matches_won"] / stats["matches_played"] if stats[
-                                                                                                   "matches_played"] > 0 else 0.0
+    stats["match_win_loss_ratio"]["losses"] = (
+        stats["matches_played"] - stats["matches_won"]
+    )
+    stats["match_win_loss_ratio"]["ratio"] = (
+        stats["matches_won"] / stats["matches_played"]
+        if stats["matches_played"] > 0
+        else 0.0
+    )
 
     stats["tournament_win_loss_ratio"]["won"] = stats["tournaments_won"]
     stats["tournament_win_loss_ratio"]["played"] = stats["tournaments_played"]
-    stats["tournament_win_loss_ratio"]["ratio"] = stats["tournaments_won"] / stats["tournaments_played"] if stats[
-                                                                                                                "tournaments_played"] > 0 else 0.0
+    stats["tournament_win_loss_ratio"]["ratio"] = (
+        stats["tournaments_won"] / stats["tournaments_played"]
+        if stats["tournaments_played"] > 0
+        else 0.0
+    )
 
     return convert_db_to_team_detailed_response(db_team, matches, stats)
 
 
-def update_team(db: Session, team_id: UUID, team: TeamUpdate, current_user: UserResponse) -> TeamListResponse:
+def update_team(
+    db: Session, team_id: UUID, team: TeamUpdate, current_user: UserResponse
+) -> TeamListResponse:
     db_team = v.team_exists(db, team_id=team_id)
     v.director_or_admin(current_user)
 
@@ -132,9 +163,7 @@ def update_team(db: Session, team_id: UUID, team: TeamUpdate, current_user: User
 
 
 def convert_db_to_team_detailed_response(
-        db_team: Type[Team],
-        matches: list[Type[Match]],
-        stats: dict
+    db_team: Type[Team], matches: list[Type[Match]], stats: dict
 ) -> TeamDetailedResponse:
     return TeamDetailedResponse(
         id=db_team.id,
@@ -144,8 +173,9 @@ def convert_db_to_team_detailed_response(
         matches=matches,
         tournament_id=db_team.tournament_id,
         prize_cuts=db_team.prize_cuts,
-        team_stats=stats
+        team_stats=stats,
     )
+
 
 def convert_db_to_team_list_response(db_team: Type[Team]) -> TeamListResponse:
     return TeamListResponse(

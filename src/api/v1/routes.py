@@ -1,11 +1,6 @@
-from fastapi import APIRouter
+from src.api.v1.endpoints import matches, player, requests, team, tournaments, users
 
-from src.api.v1.endpoints import users
-from src.api.v1.endpoints import matches
-from src.api.v1.endpoints import tournaments
-from src.api.v1.endpoints import team
-from src.api.v1.endpoints import requests
-from src.api.v1.endpoints import player
+from fastapi import APIRouter
 
 api_router = APIRouter()
 
