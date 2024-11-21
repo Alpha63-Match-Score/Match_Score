@@ -46,7 +46,8 @@ def create_team(
 
     if v.team_exists(db, team_name=team.name):
         raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST, detail=f"Team '{team.name}' already exists"
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Team '{team.name}' already exists",
         )
 
     db_team = Team(
