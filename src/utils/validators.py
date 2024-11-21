@@ -39,7 +39,7 @@ def tournament_exists(
 
 
 def team_exists(
-    db: Session, team_id: UUID | None = None, team_name: str | None = None
+    db: Session, team_id: UUID | None = None, team_name: str | None = None, detail: str = "Team not found"
 ) -> Type[Team]:
 
     team = None
@@ -49,7 +49,7 @@ def team_exists(
         team = db.query(Team).filter(Team.name == team_name).first()
 
     if not team:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Team not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=detail)
 
     return team
 
@@ -63,7 +63,7 @@ def match_exists(db: Session, match_id: UUID) -> Type[Match]:
 
 
 def user_exists(
-    db: Session, user_id: UUID | None = None, user_email: str | None = None
+    db: Session, user_id: UUID | None = None, user_email: str | None = None, detail: str = "User not found"
 ) -> Type[User]:
     user = None
 
@@ -73,7 +73,7 @@ def user_exists(
         user = db.query(User).filter(User.email == user_email).first()
 
     if not user:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=detail)
 
     return user
 
