@@ -24,7 +24,7 @@ def delete_prize_cuts_for_tournament(
 
 def _create_prize_cut(
     place: int,
-    prize_cut: int,
+    prize_cut: float,
     tournament_id: UUID,
 ) -> PrizeCut:
 
