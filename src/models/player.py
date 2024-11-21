@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String, Integer, UUID, ForeignKey
-from sqlalchemy.orm import relationship
+from src.models.base import Base, BaseMixin
 
-from src.models.base import BaseMixin, Base
+from sqlalchemy import UUID, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 
 class Player(Base, BaseMixin):
@@ -9,6 +9,7 @@ class Player(Base, BaseMixin):
     Database model representing "player" table in the database.
     UUID and table name are inherited from BaseMixin.
     """
+
     username = Column(String(45), nullable=False, unique=True)
     first_name = Column(String(45), nullable=False)
     last_name = Column(String(45), nullable=False)
@@ -19,7 +20,9 @@ class Player(Base, BaseMixin):
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
     # user = relationship("User", back_populates="player")
-    user = relationship("User", back_populates="player", uselist=False, single_parent=True)
+    user = relationship(
+        "User", back_populates="player", uselist=False, single_parent=True
+    )
 
     team_id = Column(UUID(as_uuid=True), ForeignKey("team.id"), nullable=True)
     team = relationship("Team", back_populates="players")

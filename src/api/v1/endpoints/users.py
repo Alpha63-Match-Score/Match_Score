@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-
-from src.api.deps import get_db, get_current_user
+from src.api.deps import get_current_user, get_db
 from src.core.authentication import authenticate_user, create_access_token
 from src.crud.user import create_user, update_email
 from src.models import User
-from src.schemas.schemas import Token, UserResponse, UserCreate, UserUpdate, UserRegisterResponse
+from src.schemas.schemas import Token, UserCreate, UserRegisterResponse, UserUpdate
+
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -27,10 +27,13 @@ def login(
 
 
 @router.put("/update")
-def update_user(user: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_user(
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     msg = update_email(db, user.email, current_user)
     return msg
 
 
 # TODO eventually add logout
-

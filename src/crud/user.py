@@ -1,10 +1,10 @@
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-
 from src.core.security import get_password_hash
 from src.models.user import User
 from src.schemas.schemas import UserCreate, UserResponse
 from src.utils.validators import user_email_exists
+
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
 
 def create_user(user: UserCreate, db: Session):
@@ -40,8 +40,4 @@ def update_email(db: Session, email: str, current_user: User):
 
 
 def convert_db_to_user_response(user: User) -> UserResponse:
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        role=user.role
-    )
+    return UserResponse(id=user.id, email=user.email, role=user.role)

@@ -12,4 +12,27 @@ dependencies = [
     "python-jose>=3.3.0",
     "sqlalchemy>=2.0.36",
     "uvicorn>=0.32.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-dotenv>=1.0.1",
+    "ruff>=0.7.4",
+    "black>=24.10.0",
 ]
+
+[tool.ruff]
+select = ["E", "F", "I", "C"]
+line-length = 88
+fix = true
+extend-select = ["E301", "E302", "E303", "E305"]
+exclude = ["migrations", ".venv", "__pycache__"]
+
+extend-ignore = ["E203", "F811", "E501", "C901"]
+
+[tool.ruff.isort]
+known-first-party = ["match_score"]
+default-section = "THIRDPARTY"
+force-sort-within-sections = true
+combine-as-imports = true
+
+[tools.black]
+line-length = 88
+target-version = ["py312"]
