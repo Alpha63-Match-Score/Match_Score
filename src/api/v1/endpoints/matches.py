@@ -4,24 +4,30 @@ from uuid import UUID
 from src.api.deps import get_current_user, get_db
 from src.crud import match as match_crud
 from src.models.enums import Stage
-from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate
+from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate, UserResponse
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
 
 
 @router.get("/", response_model=list[MatchListResponse])
 def read_matches(
+    pagination: PaginationParams = Depends(get_pagination),
     db: Session = Depends(get_db),
-    tournament_id: UUID | None = None,
+    current_user: UserResponse = Depends(get_current_user),
+    tournament_title: str | None = None,
     stage: Stage | None = None,
     is_finished: bool | None = None,
-    team_id: UUID | None = None,
+    team_name: str | None = None,
+    author: Literal["true", "false"] | None = None
 ):
 
-    return match_crud.get_all_matches(db, tournament_id, stage, is_finished, team_id)
+    return match_crud.get_all_matches(
+        db, current_user, pagination, tournament_title, stage, is_finished, team_name, author)
 
 
 @router.get("/{match_id}", response_model=MatchDetailResponse)
@@ -46,7 +52,7 @@ def update_match_score(
     match_id: UUID,
     team_to_upvote_score: Literal["team1", "team2"],
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user = Depends(get_current_user),
 ):
 
     return match_crud.update_match_score(

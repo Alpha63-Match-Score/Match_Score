@@ -29,11 +29,12 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 def get_tournaments(
     db: Session,
+    current_user: UserResponse,
     pagination: PaginationParams,
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
-    director_id: UUID | None = None,
+    author: Literal["true", "false"] | None = None
 ) -> list[TournamentListResponse]:
 
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
@@ -73,9 +74,8 @@ def get_tournaments(
     if search is not None:
         filters.append(Tournament.title.ilike(f"%{search}%"))
 
-    if director_id:
-        v.user_exists(db, director_id)
-        filters.append(Tournament.director_id == director_id)
+    if author:
+        filters.append(Tournament.director_id == current_user.id)
 
     if filters:
         query = query.filter(*filters)

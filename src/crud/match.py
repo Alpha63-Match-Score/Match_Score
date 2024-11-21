@@ -6,7 +6,7 @@ from src.crud import constants as c, team as crud_team
 from src.models import Team, Tournament
 from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.models.match import Match
-from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate
+from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate, UserResponse
 from src.utils import validators as v
 
 from fastapi import HTTPException
@@ -14,31 +14,40 @@ from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
+from src.utils.pagination import PaginationParams
+
 
 def get_all_matches(
     db: Session,
-    tournament_id: UUID | None = None,
+    current_user: UserResponse,
+    pagination: PaginationParams,
+    tournament_title: str | None = None,
     stage: Stage | None = None,
     is_finished: bool | None = None,
-    team_id: UUID | None = None,
+    team_name: str | None = None,
+    author: Literal["true", "false"] | None = None
 ) -> list[MatchListResponse]:
 
     query = db.query(Match).order_by(Match.start_time.asc())
 
     filters = []
-    if tournament_id:
-        v.tournament_exists(db, tournament_id)
-        filters.append(Match.tournament_id == tournament_id)
+    if tournament_title:
+        v.tournament_exists(db, tournament_title=tournament_title)
+        filters.append(Match.tournament.title == tournament_title)
     if stage is not None:
         filters.append(Match.stage == stage)
     if is_finished is not None:
         filters.append(Match.is_finished == is_finished)
-    if team_id:
-        v.team_exists(db, team_id)
-        filters.append(or_(Match.team1_id == team_id, Match.team2_id == team_id))
+    if team_name:
+        v.team_exists(db, team_name=team_name)
+        filters.append(or_(Match.team1_id == team_name, Match.team2_id == team_name))
+    if author:
+        filters.append(Match.tournament.director_id == current_user.id)
 
     if filters:
         query = query.filter(*filters)
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_matches = query.all()
 

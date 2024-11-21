@@ -25,11 +25,12 @@ def read_tournaments(
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
-    director_id: UUID | None = None,
+    author: Literal["true", "false"] | None = None,
     db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
 ):
     return tournament_crud.get_tournaments(
-        db, pagination, status, period, search, director_id
+        db, current_user, pagination, period, status, search, author
     )
 
 

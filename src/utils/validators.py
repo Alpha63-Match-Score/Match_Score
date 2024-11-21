@@ -18,12 +18,20 @@ from starlette.status import (
 
 
 # existing validators
-def tournament_exists(db: Session, tournament_id: UUID) -> Type[Tournament]:
-    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+def tournament_exists(
+        db: Session,
+        tournament_id: UUID | None = None,
+        tournament_title: str | None = None
+) -> Type[Tournament]:
+
+    tournament = None
+    if tournament_id:
+        tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    elif tournament_title:
+        tournament = db.query(Tournament).filter(Tournament.title == tournament_title).first()
+
     if not tournament:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND, detail="Tournament not found"
-        )
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Tournament not found")
 
     return tournament
 
