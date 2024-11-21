@@ -39,7 +39,10 @@ def tournament_exists(
 
 
 def team_exists(
-    db: Session, team_id: UUID | None = None, team_name: str | None = None, detail: str = "Team not found"
+    db: Session,
+    team_id: UUID | None = None,
+    team_name: str | None = None,
+    detail: str = "Team not found",
 ) -> Type[Team]:
 
     team = None
@@ -63,7 +66,10 @@ def match_exists(db: Session, match_id: UUID) -> Type[Match]:
 
 
 def user_exists(
-    db: Session, user_id: UUID | None = None, user_email: str | None = None, detail: str = "User not found"
+    db: Session,
+    user_id: UUID | None = None,
+    user_email: str | None = None,
+    detail: str = "User not found",
 ) -> Type[User]:
     user = None
 
