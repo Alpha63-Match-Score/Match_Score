@@ -83,12 +83,27 @@ def request_exists(db: Session, user: User) -> Type[Request]:
     return request
 
 
-def player_exists(db: Session, username: str) -> Type[Player]:
-    player = db.query(Player).filter(Player.username == username).first()
+def player_exists(
+        db: Session,
+        player_id: UUID | None = None,
+        username: str | None = None) -> Type[Player]:
+
+    player = None
+    if player_id:
+        player = db.query(Player).filter(Player.id == player_id).first()
+    else:
+        player = db.query(Player).filter(Player.username == username).first()
+
     if not player:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Player not found")
 
     return player
+
+def player_username_unique(db: Session, username: str) -> None:
+    if db.query(Player).filter(Player.username == username).first():
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail="Player with this username already exists"
+        )
 
 
 def player_already_linked(db: Session, username: str) -> None:

@@ -1,4 +1,5 @@
 from typing import Type
+from uuid import UUID
 
 from src.crud.tournament import convert_db_to_tournament_list_response
 from src.models import Player, Team, Tournament
@@ -19,7 +20,7 @@ from sqlalchemy.orm import Session
 def create_player(
     db: Session, player: PlayerCreate, current_user: UserResponse
 ) -> PlayerListResponse:
-    v.player_exists(db, username=player.username)
+    v.player_username_unique(db, username=player.username)
     v.director_or_admin(current_user)
 
     db_player = Player(
@@ -70,13 +71,13 @@ def convert_db_to_player_list_response(db_player: Type[Player]) -> PlayerListRes
     )
 
 
-def get_player(db: Session, username: str) -> PlayerDetailResponse:
-    db_player = v.player_exists(db, username=username)
+def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
+    db_player = v.player_exists(db, player_id)
     db_tournaments = (
         db.query(Tournament)
         .join(Team)
         .join(Player)
-        .filter(Player.username == username)
+        .filter(Player.id == player_id)
         .all()
     )
     return convert_db_to_player_detail_response(db_player, db_tournaments)
@@ -102,9 +103,9 @@ def convert_db_to_player_detail_response(
 
 
 def update_player(
-    db: Session, username: str, player: PlayerUpdate, current_user: UserResponse
+    db: Session, player_id: UUID, player: PlayerUpdate, current_user: UserResponse
 ) -> PlayerListResponse:
-    db_player = v.player_exists(db, username=username)
+    db_player = v.player_exists(db, player_id=player_id)
     v.director_or_admin(current_user)
 
     db_player.username = (player.username,)
@@ -115,11 +116,12 @@ def update_player(
     db_player.team_id = (player.team_id,)
     db_player.user_id = player.user_id
 
-    try:
-        db.commit()
-        db.refresh(db_player)
-    except IntegrityError as e:
-        db.rollback()
-        raise ValueError(f"Foreign key constraint failed: {e}")
+    v.user_exists(db, user_id=player.user_id)
+    v.team_exists(db, team_id=player.team_id)
+
+
+    db.commit()
+    db.refresh(db_player)
+
 
     return convert_db_to_player_list_response(db_player)

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from src.api.deps import get_current_user, get_db
 from src.crud import player as player_crud
 from src.schemas.schemas import (
@@ -33,16 +35,18 @@ def get_players(
     return player_crud.get_players(db, pagination, search)
 
 
-@router.get("/{player_username}", response_model=PlayerDetailResponse, status_code=201)
-def get_player(player_username: str, db: Session = Depends(get_db)):
-    return player_crud.get_player(db, player_username)
+@router.get("/{player_id}", response_model=PlayerDetailResponse)
+def get_player(player_id: UUID,
+               db: Session = Depends(get_db)
+):
+    return player_crud.get_player(db, player_id)
 
 
-@router.put("/{player_username}", response_model=PlayerListResponse, status_code=201)
+@router.put("/{player_id}", response_model=PlayerListResponse)
 def update_player(
-    player_username: str,
+    player_id: UUID,
     player: PlayerUpdate,
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return player_crud.update_player(db, player_username, player, current_user)
+    return player_crud.update_player(db, player_id, player, current_user)
