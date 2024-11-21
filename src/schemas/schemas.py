@@ -80,11 +80,13 @@ class PlayerListResponse(BaseConfig):
     first_name: str
     last_name: str
     country: str
+    user_email: EmailStr | None = None
+    team_name: str | None = None
 
 
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
-    team_id: UUID
+    # team_id: UUID
     tournaments: list["TournamentListResponse"] | None
 
 
@@ -128,8 +130,8 @@ class PlayerUpdate(BaseConfig):
     last_name: str | None = None
     country: str | None = None
     avatar: str | None = None
-    user_id: UUID | None = None
-    team_id: UUID | None = None
+    user_email: EmailStr | None = None
+    team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")
     def capitalize_names(cls, value):
