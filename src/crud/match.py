@@ -6,15 +6,19 @@ from src.crud import constants as c, team as crud_team
 from src.models import Team, Tournament
 from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.models.match import Match
-from src.schemas.schemas import MatchDetailResponse, MatchListResponse, MatchUpdate, UserResponse
+from src.schemas.schemas import (
+    MatchDetailResponse,
+    MatchListResponse,
+    MatchUpdate,
+    UserResponse,
+)
 from src.utils import validators as v
+from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
 from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
-
-from src.utils.pagination import PaginationParams
 
 
 def get_all_matches(
@@ -25,7 +29,7 @@ def get_all_matches(
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    author: Literal["true", "false"] | None = None
+    author: Literal["true", "false"] | None = None,
 ) -> list[MatchListResponse]:
 
     query = db.query(Match).order_by(Match.start_time.asc())

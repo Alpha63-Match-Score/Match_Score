@@ -34,7 +34,7 @@ def get_tournaments(
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
-    author: Literal["true", "false"] | None = None
+    author: Literal["true", "false"] | None = None,
 ) -> list[TournamentListResponse]:
 
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
