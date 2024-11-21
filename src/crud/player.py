@@ -24,6 +24,8 @@ def create_player(
 ) -> PlayerListResponse:
     v.player_username_unique(db, username=player.username)
     v.director_or_admin(current_user)
+    v.user_exists(db, user_email=player.user_email)
+    v.team_exists(db, team_name=player.team_name)
 
     db_player = Player(
         username=player.username,
