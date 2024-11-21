@@ -25,6 +25,10 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = os.getenv("DATABASE_URL")
 
+    EMAIL_SENDER: str = os.getenv("EMAIL_SENDER")
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER")
+
     class Config:
         case_sensitive = True
         env_file = ".env"
