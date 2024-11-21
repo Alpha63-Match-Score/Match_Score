@@ -6,7 +6,6 @@ from src.models.enums import RequestStatus, RequestType, Role
 from src.schemas.schemas import RequestListResponse, ResponseRequest
 from src.utils.pagination import PaginationParams
 from src.utils.validators import (
-    get_user_by_email,
     player_already_linked,
     player_exists,
     request_exists,
@@ -129,7 +128,7 @@ def update_request(
     db: Session, current_user: User, status: Literal["accepted", "rejected"], email: str
 ):
     user_role_is_admin(current_user)
-    user = get_user_by_email(db, email)
+    user = user_exists(db, email=email)
     request = request_exists(db, user)
     check_request_status(request)
 
