@@ -62,8 +62,14 @@ def match_exists(db: Session, match_id: UUID) -> Type[Match]:
     return match
 
 
-def user_exists(db: Session, user_id: UUID) -> Type[User]:
-    user = db.query(User).filter(User.id == user_id).first()
+def user_exists(db: Session, user_id: UUID | None = None, user_email: str | None = None) -> Type[User]:
+    user = None
+
+    if user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+    if user_email:
+        user = db.query(User).filter(User.email == user_email).first()
+
     if not user:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -123,12 +129,7 @@ def user_email_exists(db: Session, email: str) -> None:
         )
 
 
-def get_user_by_email(db: Session, email: str) -> Type[User]:
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="User not found")
 
-    return user
 
 
 def tournament_title_unique(db: Session, title: str) -> None:
