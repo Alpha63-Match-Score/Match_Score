@@ -62,7 +62,9 @@ def match_exists(db: Session, match_id: UUID) -> Type[Match]:
     return match
 
 
-def user_exists(db: Session, user_id: UUID | None = None, user_email: str | None = None) -> Type[User]:
+def user_exists(
+    db: Session, user_id: UUID | None = None, user_email: str | None = None
+) -> Type[User]:
     user = None
 
     if user_id:
@@ -127,9 +129,6 @@ def user_email_exists(db: Session, email: str) -> None:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail="Email already exists"
         )
-
-
-
 
 
 def tournament_title_unique(db: Session, title: str) -> None:
