@@ -1,11 +1,8 @@
 from typing import Type
 from uuid import UUID
 
-from fastapi import HTTPException
-from starlette.status import HTTP_404_NOT_FOUND
-
 from src.crud.tournament import convert_db_to_tournament_list_response
-from src.models import Player, Team, Tournament, User
+from src.models import Player, Team, Tournament
 from src.schemas.schemas import (
     PlayerCreate,
     PlayerDetailResponse,
