@@ -116,8 +116,8 @@ class PlayerCreate(BaseConfig):
         examples=["Example"],
     )
     avatar: Optional[str]
-    user_id: UUID | None = None
-    team_id: UUID | None = None
+    user_email: EmailStr | None = None
+    team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")
     def capitalize_names(cls, value):
