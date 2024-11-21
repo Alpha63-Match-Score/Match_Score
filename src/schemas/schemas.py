@@ -13,8 +13,6 @@ from src.models.enums import (
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # Forward References
-PlayerListResponse = ForwardRef("PlayerListResponse")
-TeamListResponse = ForwardRef("TeamListResponse")
 MatchListResponse = ForwardRef("MatchListResponse")
 TournamentListResponse = ForwardRef("TournamentListResponse")
 PrizeCutResponse = ForwardRef("PrizeCutResponse")
@@ -47,11 +45,11 @@ class UserCreate(UserBase):
     @field_validator("password")
     def validate_password(cls, value):
         if not (
-            any(c.isupper() for c in value)
-            and any(c.islower() for c in value)
-            and any(c.isdigit() for c in value)
-            and any(c in "@$!%*?&" for c in value)
-            and not any(c.isspace() for c in value)
+                any(c.isupper() for c in value)
+                and any(c.islower() for c in value)
+                and any(c.isdigit() for c in value)
+                and any(c in "@$!%*?&" for c in value)
+                and not any(c.isspace() for c in value)
         ):
             raise ValueError(
                 "Password must contain at least one uppercase letter, one lowercase letter, "
@@ -87,7 +85,7 @@ class PlayerListResponse(BaseConfig):
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
     team_id: UUID
-    tournaments: Optional[List["TournamentListResponse"]]
+    tournaments: list["TournamentListResponse"] | None
 
 
 class PlayerCreate(BaseConfig):
@@ -146,10 +144,10 @@ class TeamListResponse(BaseConfig):
 
 
 class TeamDetailedResponse(TeamListResponse):
-    players: List[PlayerListResponse]
-    matches: List[MatchListResponse]
+    players: list[PlayerListResponse]
+    matches: list["MatchListResponse"]
     tournament_id: UUID | None
-    prize_cuts: List[PrizeCutResponse]
+    prize_cuts: list["PrizeCutResponse"]
     team_stats: dict
 
 
@@ -161,7 +159,7 @@ class TeamCreate(BaseConfig):
         pattern="^[a-zA-Z0-9_-]+$",
         examples=["example_team"],
     )
-    logo: Optional[str]
+    logo: str | None
 
 
 class TeamUpdate(BaseConfig):
@@ -211,9 +209,9 @@ class TournamentListResponse(BaseConfig):
 
 
 class TournamentDetailResponse(TournamentListResponse):
-    matches_of_current_stage: List[MatchListResponse]
-    teams: List[TeamListResponse]
-    prizes: List[PrizeCutResponse]
+    matches_of_current_stage: list[MatchListResponse]
+    teams: list[TeamListResponse]
+    prizes: list[PrizeCutResponse]
 
 
 class TournamentCreate(BaseConfig):
@@ -255,11 +253,11 @@ class PrizeCutUpdate(BaseConfig):
 
 # Request schemas
 class RequestBase(BaseConfig):
-    response_date: Optional[str] = None
+    response_date: str | None = None
     user_id: UUID
     request_type: RequestType
-    player_id: Optional[UUID] = None
-    admin_id: Optional[UUID] = None
+    player_id: str | None = None
+    admin_id: str | None = None
 
 
 class RequestUpdate(BaseConfig):
@@ -285,6 +283,6 @@ class RequestListResponse(BaseConfig):
 
 
 # Updating forward references
-PlayerListResponse.model_rebuild()
-TournamentDetailResponse.model_rebuild()
-TeamDetailedResponse.model_rebuild()
+MatchListResponse.model_rebuild()
+TournamentListResponse.model_rebuild()
+PrizeCutResponse.model_rebuild()
