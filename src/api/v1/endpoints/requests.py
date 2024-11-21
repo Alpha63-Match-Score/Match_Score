@@ -24,7 +24,7 @@ def director_request(
     return send_director_request(db, current_user)
 
 
-@router.post("/players/{user_id}")
+@router.post("/players/{username}")
 def player_request(
     username: str = Path(description="player_username"),
     db: Session = Depends(get_db),
