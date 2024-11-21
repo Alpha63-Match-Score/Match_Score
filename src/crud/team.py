@@ -41,8 +41,13 @@ def get_teams(
 def create_team(
     db: Session, team: TeamCreate, current_user: UserResponse
 ) -> TeamListResponse:
-    # v.team_exists(db, team_name=team.name)
+
     v.director_or_admin(current_user)
+
+    if v.team_exists(db, team_name=team.name):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail=f"Team '{team.name}' already exists"
+        )
 
     db_team = Team(
         name=team.name,
