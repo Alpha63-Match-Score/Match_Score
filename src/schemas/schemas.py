@@ -45,11 +45,11 @@ class UserCreate(UserBase):
     @field_validator("password")
     def validate_password(cls, value):
         if not (
-                any(c.isupper() for c in value)
-                and any(c.islower() for c in value)
-                and any(c.isdigit() for c in value)
-                and any(c in "@$!%*?&" for c in value)
-                and not any(c.isspace() for c in value)
+            any(c.isupper() for c in value)
+            and any(c.islower() for c in value)
+            and any(c.isdigit() for c in value)
+            and any(c in "@$!%*?&" for c in value)
+            and not any(c.isspace() for c in value)
         ):
             raise ValueError(
                 "Password must contain at least one uppercase letter, one lowercase letter, "
