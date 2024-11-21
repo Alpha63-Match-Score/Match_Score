@@ -84,9 +84,8 @@ def request_exists(db: Session, user: User) -> Type[Request]:
 
 
 def player_exists(
-        db: Session,
-        player_id: UUID | None = None,
-        username: str | None = None) -> Type[Player]:
+    db: Session, player_id: UUID | None = None, username: str | None = None
+) -> Type[Player]:
 
     player = None
     if player_id:
@@ -99,10 +98,12 @@ def player_exists(
 
     return player
 
+
 def player_username_unique(db: Session, username: str) -> None:
     if db.query(Player).filter(Player.username == username).first():
         raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST, detail="Player with this username already exists"
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Player with this username already exists",
         )
 
 

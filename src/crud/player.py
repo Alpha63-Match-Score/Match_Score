@@ -13,7 +13,6 @@ from src.schemas.schemas import (
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 
@@ -119,9 +118,7 @@ def update_player(
     v.user_exists(db, user_id=player.user_id)
     v.team_exists(db, team_id=player.team_id)
 
-
     db.commit()
     db.refresh(db_player)
-
 
     return convert_db_to_player_list_response(db_player)

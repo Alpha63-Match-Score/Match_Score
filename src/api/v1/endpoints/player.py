@@ -36,9 +36,7 @@ def get_players(
 
 
 @router.get("/{player_id}", response_model=PlayerDetailResponse)
-def get_player(player_id: UUID,
-               db: Session = Depends(get_db)
-):
+def get_player(player_id: UUID, db: Session = Depends(get_db)):
     return player_crud.get_player(db, player_id)
 
 
