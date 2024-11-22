@@ -4,6 +4,7 @@ from uuid import UUID
 from src.crud.convert_db_to_response import convert_db_to_player_detail_response, convert_db_to_player_list_response
 from src.crud.tournament import convert_db_to_tournament_list_response
 from src.models import Player, Team, Tournament
+from src.models.enums import Role
 from src.schemas.schemas import (
     PlayerCreate,
     PlayerDetailResponse,
@@ -22,8 +23,9 @@ def create_player(
 ) -> PlayerListResponse:
     v.player_username_unique(db, username=player.username)
     v.director_or_admin(current_user)
-    v.user_exists(db, user_email=player.user_email)
-    v.team_exists(db, team_name=player.team_name)
+
+    if player.team_name:
+        db_team = v.team_exists(db, team_name=player.team_name)
 
     db_player = Player(
         username=player.username,
@@ -31,11 +33,13 @@ def create_player(
         last_name=player.last_name,
         country=player.country,
         avatar=player.avatar,
+        team_id=db_team.id if player.team_name else None,
     )
 
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
+
 
     return convert_db_to_player_list_response(db_player)
 
@@ -63,14 +67,12 @@ def get_players(
 
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     db_player = v.player_exists(db, player_id)
-    db_tournaments = (
-        db.query(Tournament)
-        .join(Team)
-        .join(Player)
-        .filter(Player.id == player_id)
-        .all()
-    )
-    return convert_db_to_player_detail_response(db_player, db_tournaments)
+
+    tournament_title = None
+    if db_player.team_id and db_player.team.tournament_id:
+        tournament_title = db_player.team.tournament.title
+
+    return convert_db_to_player_detail_response(db_player, tournament_title)
 
 
 
@@ -80,16 +82,20 @@ def update_player(
     db_player = v.player_exists(db, player_id=player_id)
     v.director_or_admin(current_user)
 
-    user = v.user_exists(db, user_email=player.user_email)
-    team = v.team_exists(db, team_name=player.team_name)
 
-    db_player.username = (player.username,)
-    db_player.first_name = (player.first_name,)
-    db_player.last_name = (player.last_name,)
-    db_player.country = (player.country,)
-    db_player.avatar = (player.avatar,)
-    db_player.team_id = (team.id,)
-    db_player.user_id = user.id
+    if player.username:
+        db_player.username = (player.username,)
+    if player.first_name:
+        db_player.first_name = (player.first_name,)
+    if player.last_name:
+        db_player.last_name = (player.last_name,)
+    if player.country:
+        db_player.country = (player.country,)
+    if player.avatar:
+        db_player.avatar = (player.avatar,)
+    if player.team_name:
+        team = v.team_exists(db, team_name=player.team_name)
+        db_player.team_id = (team.id,)
 
     db.commit()
     db.refresh(db_player)

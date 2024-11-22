@@ -86,8 +86,7 @@ class PlayerListResponse(BaseConfig):
 
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
-    # team_id: UUID
-    tournaments: list["TournamentListResponse"] | None
+    current_tournament_title: str | None
 
 
 class PlayerCreate(BaseConfig):
@@ -115,8 +114,7 @@ class PlayerCreate(BaseConfig):
         pattern="^[a-zA-Z]+(?:-[a-zA-Z]+)?$",
         examples=["Example"],
     )
-    avatar: Optional[str]
-    user_email: EmailStr | None = None
+    avatar: str | None = None
     team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")
@@ -130,7 +128,6 @@ class PlayerUpdate(BaseConfig):
     last_name: str | None = None
     country: str | None = None
     avatar: str | None = None
-    user_email: EmailStr | None = None
     team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")

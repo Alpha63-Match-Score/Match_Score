@@ -60,7 +60,7 @@ def convert_db_to_player_list_response(db_player: Type[Player]) -> PlayerListRes
 
 
 def convert_db_to_player_detail_response(
-    db_player: Type[Player], db_tournaments: list[Type[Tournament]]
+    db_player: Type[Player], tournament_title: str | None
 ) -> PlayerDetailResponse:
     team_name = db_player.team.name if db_player.team else None
     user_email = db_player.user.email if db_player.user else None
@@ -73,10 +73,7 @@ def convert_db_to_player_detail_response(
         avatar=db_player.avatar,
         user_email=user_email,
         team_name=team_name,
-        tournaments=[
-            convert_db_to_tournament_list_response(db_tournament)
-            for db_tournament in db_tournaments
-        ],
+        current_tournament_title=tournament_title,
     )
 
 
