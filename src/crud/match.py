@@ -109,7 +109,8 @@ def generate_matches(db: Session, db_tournament: Tournament):
                 send_email_notification(
                     email=player.user.email,
                     subject="Match Created",
-                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. You will be playing against {team2.name} on {current_time.strftime(time_format)}.",
+                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. "
+                            f"You will be playing against {team2.name} on {current_time.strftime(time_format)}.",
                 )
 
         for player in team2.players:
@@ -117,7 +118,8 @@ def generate_matches(db: Session, db_tournament: Tournament):
                 send_email_notification(
                     email=player.user.email,
                     subject="Match Created",
-                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. You will be playing against {team1.name} on {current_time.strftime(time_format)}.",
+                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. "
+                            f"You will be playing against {team1.name} on {current_time.strftime(time_format)}.",
                 )
 
         current_time += timedelta(minutes=c.MATCH_DURATION_PLUS_BUFFER)
@@ -198,7 +200,8 @@ def update_match(
             send_email_notification(
                 email=db_match.tournament.director.email,
                 subject="Match Updated",
-                message=f"Match's date has been updated from {db_match.start_time.strftime(time_format)} to {match.start_time.strftime(time_format)}",
+                message=f"Match's date has been updated from {db_match.start_time.strftime(time_format)} "
+                        f"to {match.start_time.strftime(time_format)}",
             )
         if match.team1_id:
             v.team_exists(db, match.team1_id)
@@ -222,7 +225,9 @@ def update_match(
                     send_email_notification(
                         email=player.user.email,
                         subject="Match Updated",
-                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. You will be playing against {db_match.team2.name} on {db_match.start_time.strftime(time_format)}",
+                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. "
+                                f"You will be playing against {db_match.team2.name} "
+                                f"on {db_match.start_time.strftime(time_format)}",
                     )
 
         if match.team2_id:
@@ -232,7 +237,9 @@ def update_match(
                     send_email_notification(
                         email=player.user.email,
                         subject="Match Updated",
-                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. You will be playing against {db_match.team1.name} on {db_match.start_time.strftime(time_format)}",
+                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. "
+                                f"You will be playing against {db_match.team1.name} "
+                                f"on {db_match.start_time.strftime(time_format)}",
                     )
 
         db.commit()
@@ -314,7 +321,8 @@ def _update_current_stage(db: Session, tournament_id: UUID) -> None:
 
     db_tournament = v.tournament_exists(db, tournament_id)
 
-    # If tournament is robin round, the top teams will be selected to move to the next stage
+    # If tournament is robin round,
+    # the top teams will be selected to move to the next stage
     if db_tournament.current_stage == Stage.GROUP_STAGE:
         crud_team.leave_top_teams_from_robin_round(db, db_tournament)
 

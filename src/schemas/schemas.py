@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import ForwardRef, List
+from typing import List
 from uuid import UUID
 
 from src.models.enums import (
@@ -11,11 +11,6 @@ from src.models.enums import (
 )
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
-
-# Forward References
-MatchListResponse = ForwardRef("MatchListResponse")
-TournamentListResponse = ForwardRef("TournamentListResponse")
-PrizeCutResponse = ForwardRef("PrizeCutResponse")
 
 
 # Base configs
@@ -52,8 +47,10 @@ class UserCreate(UserBase):
             and not any(c.isspace() for c in value)
         ):
             raise ValueError(
-                "Password must contain at least one uppercase letter, one lowercase letter, "
-                "one number, one special character, and must not contain any spaces"
+                "Password must contain at least "
+                "one uppercase letter, one lowercase letter, "
+                "one number, one special character, "
+                "and must not contain any spaces"
             )
         return value
 
@@ -210,7 +207,7 @@ class TournamentListResponse(BaseConfig):
 class TournamentDetailResponse(TournamentListResponse):
     matches_of_current_stage: list[MatchListResponse]
     teams: list[TeamListResponse]
-    prizes: list[PrizeCutResponse]
+    prizes: list["PrizeCutResponse"]
 
 
 class TournamentCreate(BaseConfig):
@@ -290,9 +287,3 @@ class RequestListResponse(BaseConfig):
         if v.tzinfo is None:
             v = v.replace(tzinfo=timezone.utc)
         return v.astimezone()
-
-
-# Updating forward references
-MatchListResponse.model_rebuild()
-TournamentListResponse.model_rebuild()
-PrizeCutResponse.model_rebuild()

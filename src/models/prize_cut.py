@@ -23,5 +23,6 @@ class PrizeCut(Base, BaseMixin):
     )
     team = relationship("Team", back_populates="prize_cuts")
 
-    # Unique constraint to prevent multiple prize cuts for the same place in the same tournament.
+    # Unique constraint to prevent
+    # multiple prize cuts for the same place in the same tournament.
     __table_args__ = (UniqueConstraint("tournament_id", "place"),)

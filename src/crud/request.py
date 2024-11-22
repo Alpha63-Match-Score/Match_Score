@@ -211,7 +211,8 @@ def get_link_to_player_requests(
         send_email_notification(
             email=user.email,
             subject="Request Accepted",
-            message=f"Your request to be linked to the player '{player.username}' has been accepted.",
+            message=f"Your request to be linked "
+                    f"to the player '{player.username}' has been accepted.",
         )
         return accept_link_to_player_request(db, admin, user, request, player)
 
@@ -219,7 +220,8 @@ def get_link_to_player_requests(
         send_email_notification(
             email=user.email,
             subject="Request Rejected",
-            message=f"Your request to be linked to the player '{player.username}' has been rejected.",
+            message=f"Your request to be linked "
+                    f"to the player '{player.username}' has been rejected.",
         )
         return reject_link_to_player_request(db, admin, request)
 

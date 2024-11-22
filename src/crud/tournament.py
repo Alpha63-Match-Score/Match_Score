@@ -179,7 +179,8 @@ def _get_tournament_current_stage(
         if number_of_teams not in c.SINGLE_ELIMINATION_TEAMS:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
-                detail="Invalid number of teams for single elimination - must be 4, 8 or 16",
+                detail="Invalid number of teams for single elimination "
+                       "- must be 4, 8 or 16",
             )
 
         if number_of_teams == 4:

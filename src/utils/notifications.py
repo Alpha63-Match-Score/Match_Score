@@ -23,19 +23,25 @@ def send_email_notification(email: str, subject: str, message: str):
 
         html_message = f"""
         <html>
-          <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; text-align: center;">
+          <body style="font-family: Arial, sans-serif; 
+          max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; border-radius: 
+            10px; padding: 20px; text-align: center;">
               <h1 style="color: {color}; margin-bottom: 20px;">{subject} 🐾</h1>
 
-              <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="background-color: 
+              white; border-radius: 8px; padding: 20px; 
+              margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <p style="font-size: 16px; color: #333; line-height: 1.5;">
                   {message}
                 </p>
               </div>
 
-              <div style="margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 8px;">
+              <div style="margin-top: 20px; padding: 15px; 
+              background-color: #e9ecef; border-radius: 8px;">
                 <p style="color: #6c757d; font-size: 14px; margin: 0;">
-                  This is an automated notification from Kittens Strike Match Score website
+                  This is an automated notification from 
+                  Kittens Strike Match Score website
                 </p>
               </div>
             </div>

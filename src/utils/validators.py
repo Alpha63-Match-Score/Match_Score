@@ -169,12 +169,6 @@ def is_author_of_tournament(db: Session, tournament_id: UUID, user_id: UUID) -> 
         )
 
 
-# role validators
-# def user_role_is_director(current_user: User) -> None:
-#     if current_user.role == Role.DIRECTOR:
-#         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a director.")
-
-
 def user_role_is_admin(current_user: User) -> None:
     if current_user.role != Role.ADMIN:
         raise HTTPException(
@@ -188,11 +182,6 @@ def user_role_is_user(current_user: User) -> None:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN, detail="Only users can send requests."
         )
-
-
-# def user_role_is_player(current_user: User) -> None:
-#     if current_user.role == Role.PLAYER:
-#         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="User is already a player.")
 
 
 # datetime validators
@@ -212,7 +201,8 @@ def validate_old_vs_new_end_date(old_end_date, new_end_date) -> None:
     if old_end_date > new_end_date:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=f"New end date must be after {old_end_date.strftime('%Y-%m-%d %H:%M:%S')}",
+            detail=f"New end date must be after "
+                   f"{old_end_date.strftime('%Y-%m-%d %H:%M:%S')}",
         )
 
 
