@@ -127,6 +127,7 @@ def convert_db_to_team_list_response(db_team: Type[Team]) -> TeamListResponse:
         id=db_team.id,
         name=db_team.name,
         logo=db_team.logo,
+        game_win_ratio=f"{db_team.won_games / db_team.played_games * 100:.0f}%" if db_team.played_games > 0 else "0%"
     )
 
 

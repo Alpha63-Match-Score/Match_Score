@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from src.api.deps import get_current_user, get_db
@@ -22,8 +23,9 @@ def get_teams(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination),
     search: str | None = None,
+    sort_by: Literal["asc", "desc"] = "asc",
 ):
-    return team_crud.get_teams(db, pagination, search)
+    return team_crud.get_teams(db, pagination, search, sort_by)
 
 
 @router.get("/{team_id}", response_model=TeamDetailedResponse)

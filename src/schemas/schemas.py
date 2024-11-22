@@ -138,6 +138,7 @@ class TeamListResponse(BaseConfig):
     id: UUID
     name: str
     logo: str | None
+    game_win_ratio: str | None
 
 
 class TeamDetailedResponse(TeamListResponse):

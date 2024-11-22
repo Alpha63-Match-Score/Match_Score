@@ -1,4 +1,7 @@
+from typing import Literal
 from uuid import UUID
+
+from sqlalchemy import case
 
 from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
@@ -21,24 +24,54 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
+# def get_teams(
+#     db: Session, pagination: PaginationParams, search: str | None = None
+# ) -> list[TeamListResponse]:
+#
+#     query = db.query(Team).order_by(Team.name.asc())
+#
+#     filters = []
+#
+#     if search:
+#         filters.append(Team.name.ilike(f"%{search}%"))
+#
+#     if filters:
+#         query = db.query(Team).filter(*filters)
+#
+#     query = query.offset(pagination.offset).limit(pagination.limit)
+#
+#     db_teams = query.all()
+#     return [convert_db_to_team_list_response(db_team) for db_team in db_teams]
+
 def get_teams(
-    db: Session, pagination: PaginationParams, search: str | None = None
+    db: Session,
+    pagination: PaginationParams,
+    search: str | None = None,
+    sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
 
-    query = db.query(Team).order_by(Team.name.asc())
+    team_win_ratio = case(
+        [(Team.played_games > 0, Team.won_games / Team.played_games)],
+        else_=0
+    ).label("team_win_ratio")
 
-    filters = []
+
+    query = db.query(Team, team_win_ratio)
 
     if search:
-        filters.append(Team.name.ilike(f"%{search}%"))
+        query = query.filter(Team.name.ilike(f"%{search}%"))
 
-    if filters:
-        query = db.query(Team).filter(*filters)
+    if sort_by == "asc":
+        query = query.order_by(team_win_ratio.asc())
+    elif sort_by == "desc":
+        query = query.order_by(team_win_ratio.desc())
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
-    db_teams = query.all()
-    return [convert_db_to_team_list_response(db_team) for db_team in db_teams]
+    db_results = query.all()
+
+    db_teams = [result[0] for result in db_results]
+    return [convert_db_to_team_list_response(team) for team in db_teams]
 
 
 def create_team(
