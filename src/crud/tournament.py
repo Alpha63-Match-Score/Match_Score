@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 from typing import Literal
 from uuid import UUID
@@ -13,7 +13,7 @@ from src.crud.convert_db_to_response import (
     convert_db_to_tournament_list_response,
     convert_db_to_tournament_response,
 )
-from src.models import Tournament
+from src.models import Tournament, Match
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
     TournamentCreate,
@@ -26,8 +26,8 @@ from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, func
+from sqlalchemy.orm import Session, joinedload
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
@@ -40,6 +40,7 @@ def get_tournaments(
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
     author: Literal["true", "false"] | None = None,
+    current_match_only: bool = False,
 ) -> list[TournamentListResponse]:
 
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
@@ -52,6 +53,25 @@ def get_tournaments(
 
     if filters:
         query = query.filter(*filters)
+
+    if current_match_only:
+        subquery = (db.query(Match.tournament_id,
+                     func.min(Match.start_time).label('next_match_time'))
+            .filter(and_(
+                    Match.is_finished == False,
+                    Match.start_time >= datetime.now(timezone.utc)))
+            .group_by(Match.tournament_id).subquery()
+        )
+
+        query = (query.outerjoin(subquery, Tournament.id == subquery.c.tournament_id)
+            .options(joinedload(Tournament.matches).filter(
+                    and_(Match.is_finished == False,
+                        Match.start_time >= datetime.now(timezone.utc)))).
+                 order_by(subquery.c.next_match_time)
+        )
+    else:
+        query = query.options(joinedload(Tournament.matches))
+
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
@@ -142,6 +162,9 @@ def create_tournament(
         v.tournament_title_unique(db, tournament.title)
         v.director_or_admin(current_user)
         v.validate_start_date(tournament.start_date)
+        tournament.start_date = (
+            tournament.start_date.replace(
+                hour=11, minute=0, second=0, microsecond=0, tzinfo=timezone.utc))
 
         # get current stage for tournament
         total_teams = len(tournament.team_names)
@@ -241,7 +264,9 @@ def _calculate_tournament_end_date(
     else:
         required_days = c.STAGE_DAYS[current_stage]
 
-    return start_date + timedelta(days=required_days)
+    end_date = start_date + timedelta(days=required_days)
+    end_date = end_date.replace(hour=23, minute=59, second=59)
+    return end_date
 
 
 def update_tournament(
