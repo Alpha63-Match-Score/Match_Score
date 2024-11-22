@@ -21,20 +21,19 @@ from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
-from sqlalchemy import UUID, or_
+from sqlalchemy import UUID, or_, and_, func
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
 def get_all_matches(
     db: Session,
-    current_user: UserResponse,
     pagination: PaginationParams,
     tournament_title: str | None = None,
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    author: Literal["true", "false"] | None = None,
+    one_per_tournament: bool = False,
 ) -> list[MatchListResponse]:
 
     query = db.query(Match).order_by(Match.start_time.asc())
@@ -50,8 +49,22 @@ def get_all_matches(
     if team_name:
         v.team_exists(db, team_name=team_name)
         filters.append(or_(Match.team1_id == team_name, Match.team2_id == team_name))
-    if author:
-        filters.append(Match.tournament.director_id == current_user.id)
+
+    if one_per_tournament:
+        # get tournament id and min start time for each tournament
+        subquery = (
+            db.query(Match.tournament_id, func.min(Match.start_time).label('min_start_time'))
+            .group_by(Match.tournament_id)
+            .subquery()
+        )
+        # join the subquery to the main query to get the first match for each tournament
+        query = query.join(
+            subquery,
+            and_(
+                Match.tournament_id == subquery.c.tournament_id,
+                Match.start_time == subquery.c.min_start_time
+            )
+        )
 
     if filters:
         query = query.filter(*filters)
@@ -178,7 +191,8 @@ def update_match(db: Session, match_id: UUID, match: MatchUpdate, current_user) 
         db.begin_nested()
 
         db_match = _validate_match_update(db, match_id, current_user)
-        _validate_and_update_start_time(db_match, match, time_format)
+        if match.start_time:
+            _validate_and_update_start_time(db_match, match, time_format)
 
         update_data = match.model_dump(exclude_unset=True)
         for key, value in update_data.items():
@@ -208,10 +222,14 @@ def _validate_match_update(db: Session, match_id: UUID, current_user):
 
 
 def _validate_and_update_start_time(db_match, match, time_format):
-    if match.start_time:
-        if (match.start_time < db_match.tournament.start_date or
-                match.start_time > db_match.tournament.end_date or
-                match.start_time < datetime.now(timezone.utc)):
+    match_start_time = match.start_time.replace(tzinfo=timezone.utc)
+    tournament_start_date = db_match.tournament.start_date.replace(tzinfo=timezone.utc)
+    tournament_end_date = db_match.tournament.end_date.replace(tzinfo=timezone.utc)
+
+    if match_start_time:
+        if (match_start_time < tournament_start_date or
+                match_start_time > tournament_end_date or
+                match_start_time < datetime.now(timezone.utc)):
             raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
 
         send_email_notification(

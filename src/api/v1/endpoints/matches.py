@@ -22,23 +22,21 @@ router = APIRouter()
 def read_matches(
     pagination: PaginationParams = Depends(get_pagination),
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user),
     tournament_title: str | None = None,
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    author: Literal["true", "false"] | None = None,
+    one_per_tournament: bool = False,
 ):
 
     return match_crud.get_all_matches(
         db,
-        current_user,
         pagination,
         tournament_title,
         stage,
         is_finished,
         team_name,
-        author,
+        one_per_tournament,
     )
 
 

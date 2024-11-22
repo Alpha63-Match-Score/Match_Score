@@ -34,13 +34,11 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 def get_tournaments(
     db: Session,
-    current_user: UserResponse,
     pagination: PaginationParams,
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
-    author: Literal["true", "false"] | None = None,
-    current_match_only: bool = False,
+    author_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
 
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
@@ -49,26 +47,11 @@ def get_tournaments(
     filters.extend(_get_period_filter(period))
     filters.extend(_get_status_filter(status))
     filters.extend(_get_search_filter(search))
-    filters.extend(_get_author_filter(author, current_user))
+    filters.extend(_get_author_filter(author_id))
 
     if filters:
         query = query.filter(*filters)
 
-    if current_match_only:
-        subquery = (db.query(Match.tournament_id,
-                     func.min(Match.start_time).label('next_match_time'))
-            .filter(and_(
-                    Match.is_finished == False,
-                    Match.start_time >= datetime.now(timezone.utc)))
-            .group_by(Match.tournament_id).subquery()
-        )
-
-        query = (query.outerjoin(subquery, Tournament.id == subquery.c.tournament_id)
-            .options(joinedload(Tournament.matches).filter(
-                    and_(Match.is_finished == False,
-                        Match.start_time >= datetime.now(timezone.utc)))).
-                 order_by(subquery.c.next_match_time)
-        )
     else:
         query = query.options(joinedload(Tournament.matches))
 
@@ -128,11 +111,11 @@ def _get_search_filter(search: str | None):
     return [Tournament.title.ilike(f"%{search}%")]
 
 
-def _get_author_filter(author: Literal["true", "false"] | None, current_user: UserResponse):
-    if not author:
+def _get_author_filter(author_id: UUID | None):
+    if not author_id:
         return []
 
-    return [Tournament.director_id == current_user.id]
+    return [Tournament.director_id == author_id]
 
 
 def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
