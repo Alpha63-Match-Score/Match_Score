@@ -1,5 +1,8 @@
-from src.api.deps import get_current_user, get_db
+from starlette.requests import Request
+
+from src.api.deps import get_current_user, get_db, oauth2_scheme
 from src.core.authentication import authenticate_user, create_access_token
+from src.core.config import settings
 from src.crud.user import create_user, update_email
 from src.models import User
 from src.schemas.schemas import Token, UserCreate, UserRegisterResponse, UserUpdate
@@ -36,4 +39,7 @@ def update_user(
     return msg
 
 
-# TODO eventually add logout
+@router.get("/logout")
+def logout(token: str = Depends(oauth2_scheme)):
+    settings.BLACKLISTED_TOKENS.append(token)
+    return {"message": "Logout successful."}

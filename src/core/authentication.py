@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Type[User]:
-
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
@@ -29,7 +28,6 @@ def authenticate_user(db: Session, email: str, password: str) -> Type[User]:
 
 
 def create_access_token(data: dict) -> str:
-
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRATION)
@@ -39,3 +37,8 @@ def create_access_token(data: dict) -> str:
     )
 
     return encoded_jwt
+
+
+def is_token_blacklisted(token: str) -> bool:
+    return token in settings.BLACKLISTED_TOKENS
+

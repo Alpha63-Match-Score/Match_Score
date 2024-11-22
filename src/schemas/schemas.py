@@ -275,6 +275,7 @@ class ResponseRequest(BaseConfig):
 
 
 class RequestListResponse(BaseConfig):
+    id: UUID
     email: str
     request_type: RequestType
     status: RequestStatus

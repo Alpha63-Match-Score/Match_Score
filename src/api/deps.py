@@ -1,5 +1,6 @@
 from typing import Generator
 
+from src.core.authentication import is_token_blacklisted
 from src.core.config import settings
 from src.crud.user import get_by_id
 from src.database.session import SessionLocal
@@ -35,6 +36,12 @@ def get_current_user(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
+
+    if is_token_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is logged out. Please log in again.",
+        )
 
     try:
         payload = jwt.decode(

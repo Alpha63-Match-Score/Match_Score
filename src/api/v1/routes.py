@@ -1,9 +1,10 @@
-from src.api.v1.endpoints import matches, player, requests, team, tournaments, users
+from src.api.v1.endpoints import matches, player, requests, team, tournaments, users, google_oauth
 
 from fastapi import APIRouter
 
 api_router = APIRouter()
 
+# api_router.include_router(google_oauth.router, prefix="/google", tags=["google"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(requests.router, prefix="/requests", tags=["requests"])
 api_router.include_router(

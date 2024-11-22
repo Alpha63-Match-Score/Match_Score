@@ -82,11 +82,10 @@ def user_exists(
     return user
 
 
-def request_exists(db: Session, user: Type[User]) -> Type[Request]:
+def request_exists(db: Session, request_id: UUID) -> Type[Request]:
     request = (
         db.query(Request)
-        .filter(Request.user_id == user.id)
-        .order_by(desc(Request.request_date))
+        .filter(Request.id == request_id)
         .first()
     )
     if not request:
