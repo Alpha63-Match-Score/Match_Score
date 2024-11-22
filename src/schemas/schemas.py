@@ -81,10 +81,10 @@ class PlayerListResponse(BaseConfig):
     team_name: str | None = None
     game_win_ratio: str | None
 
+
 class PlayerDetailResponse(PlayerListResponse):
     avatar: str | None
     current_tournament_title: str | None
-
 
 
 class PlayerCreate(BaseConfig):

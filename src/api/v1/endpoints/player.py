@@ -35,7 +35,9 @@ def get_players(
     search_by_team: str | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ):
-    return player_crud.get_players(db, pagination, search_by_player, search_by_team, sort_by)
+    return player_crud.get_players(
+        db, pagination, search_by_player, search_by_team, sort_by
+    )
 
 
 @router.get("/{player_id}", response_model=PlayerDetailResponse)

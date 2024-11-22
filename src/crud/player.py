@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from sqlalchemy import case
-
 from src.crud.convert_db_to_response import (
     convert_db_to_player_detail_response,
     convert_db_to_player_list_response,
@@ -46,10 +44,11 @@ def create_player(
 
 
 def get_players(
-        db: Session, pagination: PaginationParams,
-        search_by_player: str | None = None,
-        search_by_team: str | None = None,
-        sort_by: str = "asc",
+    db: Session,
+    pagination: PaginationParams,
+    search_by_player: str | None = None,
+    search_by_team: str | None = None,
+    sort_by: str = "asc",
 ) -> list[PlayerListResponse]:
 
     query = db.query(Player).order_by(Player.username.asc())
@@ -68,11 +67,14 @@ def get_players(
 
     sorted_players = sorted(
         db_players,
-        key=lambda player: player.won_games / player.played_games if player.played_games > 0 else 0,
-        reverse=(sort_by == "desc")
+        key=lambda player: (
+            player.won_games / player.played_games if player.played_games > 0 else 0
+        ),
+        reverse=(sort_by == "desc"),
     )
 
     return [convert_db_to_player_list_response(player) for player in sorted_players]
+
 
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     db_player = v.player_exists(db, player_id)
