@@ -22,12 +22,17 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = os.getenv("SECRET_KEY")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
     JWT_EXPIRATION: int = os.getenv("JWT_EXPIRATION")
+    BLACKLISTED_TOKENS: list[str] = []
 
     DATABASE_URL: str = os.getenv("DATABASE_URL")
 
     EMAIL_SENDER: str = os.getenv("EMAIL_SENDER")
     EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")
     SMTP_SERVER: str = os.getenv("SMTP_SERVER")
+
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
 
     class Config:
         case_sensitive = True
