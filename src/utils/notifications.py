@@ -4,10 +4,6 @@ from email.mime.text import MIMEText
 
 from src.core.config import settings
 
-# updated email -> send notification to old and new email
-# you are added to a tournament -> if you have email -> send email
-# match changed date or finished -> to director email
-
 
 def send_email_notification(email: str, subject: str, message: str):
     try:

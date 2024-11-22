@@ -13,6 +13,7 @@ from src.schemas.schemas import (
     UserResponse,
 )
 from src.utils import validators as v
+from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
@@ -67,6 +68,7 @@ def get_match(db: Session, match_id: UUID) -> MatchDetailResponse:
 
 def generate_matches(db: Session, db_tournament: Tournament):
     matches = []
+    time_format = "%B %d, %Y at %H:%M"
 
     # Get the team pairs and the first match datetime
     if (
@@ -97,6 +99,22 @@ def generate_matches(db: Session, db_tournament: Tournament):
             tournament_id=db_tournament.id,
         )
         matches.append(match)
+
+        for player in team1.players:
+            if player.user_id is not None:
+                send_email_notification(
+                    email=player.user.email,
+                    subject="Match Created",
+                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. You will be playing against {team2.name} on {current_time.strftime(time_format)}.",
+                )
+
+        for player in team2.players:
+            if player.user_id is not None:
+                send_email_notification(
+                    email=player.user.email,
+                    subject="Match Created",
+                    message=f"Your match for the '{db_tournament.title}' tournament has been scheduled. You will be playing against {team1.name} on {current_time.strftime(time_format)}.",
+                )
 
         current_time += timedelta(minutes=c.MATCH_DURATION_PLUS_BUFFER)
 
@@ -147,6 +165,7 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
 def update_match(
     db: Session, match_id: UUID, match: MatchUpdate, current_user
 ) -> MatchDetailResponse:
+    time_format = "%B %d, %Y at %H:%M"
 
     try:
         db.begin_nested()
@@ -172,6 +191,11 @@ def update_match(
                     status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time"
                 )
 
+            send_email_notification(
+                email=db_match.tournament.director.email,
+                subject="Match Updated",
+                message=f"Match's date has been updated from {db_match.start_time.strftime(time_format)} to {match.start_time.strftime(time_format)}",
+            )
         if match.team1_id:
             v.team_exists(db, match.team1_id)
             db_match.team1.tournament_id = None
@@ -189,9 +213,23 @@ def update_match(
 
         if match.team1_id:
             db_match.team1.tournament_id = db_match.tournament_id
+            for player in db_match.team1.players:
+                if player.user_id is not None:
+                    send_email_notification(
+                        email=player.user.email,
+                        subject="Match Updated",
+                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. You will be playing against {db_match.team2.name} on {db_match.start_time.strftime(time_format)}",
+                    )
 
         if match.team2_id:
             db_match.team2.tournament_id = db_match.tournament_id
+            for player in db_match.team2.players:
+                if player.user_id is not None:
+                    send_email_notification(
+                        email=player.user.email,
+                        subject="Match Updated",
+                        message=f"Your match for the '{db_match.tournament.title}'tournament has been scheduled. You will be playing against {db_match.team1.name} on {db_match.start_time.strftime(time_format)}",
+                    )
 
         db.commit()
         db.refresh(db_match)
