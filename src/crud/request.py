@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Type
 
 from src.models import Player, Request, User
 from src.models.enums import RequestStatus, RequestType, Role
 from src.schemas.schemas import RequestListResponse, ResponseRequest
+from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
 from src.utils.validators import (
     player_already_linked,
@@ -89,7 +90,7 @@ def send_director_request(db: Session, current_user: User):
 
 def send_link_to_player_request(db: Session, current_user: User, username: str):
     user_role_is_user(current_user)
-    player_exists(db, username)
+    player_exists(db, username=username)
     player_already_linked(db, username)
     check_valid_request(db, current_user)
 
@@ -128,15 +129,16 @@ def update_request(
     db: Session, current_user: User, status: Literal["accepted", "rejected"], email: str
 ):
     user_role_is_admin(current_user)
-    user = user_exists(db, email=email)
+    user = user_exists(db, user_email=email)
     request = request_exists(db, user)
     check_request_status(request)
 
     if request.request_type == RequestType.LINK_USER_TO_PLAYER:
-        player = player_exists(db, request.username)
+        player = player_exists(db, username=request.username)
         return get_link_to_player_requests(
             db, current_user, user, status, request, player
         )
+
     elif request.request_type == RequestType.PROMOTE_USER_TO_DIRECTOR:
         return get_director_requests(db, current_user, status, request)
 
@@ -146,8 +148,17 @@ def get_director_requests(db, admin: User, status: str, request: Request):
     user = user_exists(db, user_id)
 
     if status == RequestStatus.ACCEPTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Accepted",
+            message=f"Your request to be promoted to director has been accepted.")
         return accept_director_request(db, admin, user, request)
+
     elif status == RequestStatus.REJECTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Rejected",
+            message=f"Your request to be promoted to director has been rejected.")
         return reject_director_request(db, admin, request)
 
 
@@ -183,7 +194,7 @@ def reject_director_request(db, admin: User, request: Request):
     )
 
 
-def check_request_status(request: Request):
+def check_request_status(request: Type[Request]):
     if request.response_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -195,9 +206,19 @@ def get_link_to_player_requests(
     db, admin: User, user: User, status: str, request: Request, player: Player
 ):
     if status == RequestStatus.ACCEPTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Accepted",
+            message=f"Your request to be linked to the player '{player.username}' has been accepted.")
         return accept_link_to_player_request(db, admin, user, request, player)
+
     elif status == RequestStatus.REJECTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Rejected",
+            message=f"Your request to be linked to the player '{player.username}' has been rejected.")
         return reject_link_to_player_request(db, admin, request)
+
 
 
 def accept_link_to_player_request(

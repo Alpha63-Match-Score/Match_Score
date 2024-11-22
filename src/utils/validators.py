@@ -82,7 +82,7 @@ def user_exists(
     return user
 
 
-def request_exists(db: Session, user: User) -> Type[Request]:
+def request_exists(db: Session, user: Type[User]) -> Type[Request]:
     request = (
         db.query(Request)
         .filter(Request.user_id == user.id)
