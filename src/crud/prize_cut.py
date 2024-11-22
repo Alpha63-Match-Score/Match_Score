@@ -1,8 +1,6 @@
-from typing import Type
 from uuid import UUID
 
 from src.models import PrizeCut
-from src.schemas.schemas import PrizeCutResponse
 
 
 def create_prize_cuts_for_tournament(db, db_tournament, new_prize_pool: int) -> None:
@@ -33,4 +31,3 @@ def _create_prize_cut(
     )
 
     return db_prize
-

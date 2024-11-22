@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import math
-from typing import Literal, Type
+from typing import Literal
 from uuid import UUID
 
 from src.crud import (
@@ -9,8 +9,11 @@ from src.crud import (
     prize_cut as crud_prize_cut,
     team as crud_team,
 )
-from src.crud.convert_db_to_response import convert_db_to_tournament_response, convert_db_to_tournament_list_response
-from src.models import Tournament, Match
+from src.crud.convert_db_to_response import (
+    convert_db_to_tournament_list_response,
+    convert_db_to_tournament_response,
+)
+from src.models import Tournament
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
     TournamentCreate,

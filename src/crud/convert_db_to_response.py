@@ -1,8 +1,17 @@
 from typing import Type
 
-from src.models import Match, Player, Tournament, PrizeCut, Team
-from src.schemas.schemas import MatchDetailResponse, MatchListResponse, PlayerDetailResponse, PlayerListResponse, \
-    PrizeCutResponse, TeamDetailedResponse, TeamListResponse, TournamentListResponse, TournamentDetailResponse
+from src.models import Match, Player, PrizeCut, Team, Tournament
+from src.schemas.schemas import (
+    MatchDetailResponse,
+    MatchListResponse,
+    PlayerDetailResponse,
+    PlayerListResponse,
+    PrizeCutResponse,
+    TeamDetailedResponse,
+    TeamListResponse,
+    TournamentDetailResponse,
+    TournamentListResponse,
+)
 
 
 def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
@@ -92,7 +101,6 @@ def convert_db_to_prize_cut_response(
     )
 
 
-
 def convert_db_to_team_detailed_response(
     db_team: Type[Team], matches: list[Type[Match]], stats: dict
 ) -> TeamDetailedResponse:
@@ -103,7 +111,10 @@ def convert_db_to_team_detailed_response(
         players=db_team.players,
         matches=[convert_db_to_match_list_response(match) for match in matches],
         tournament_id=db_team.tournament_id,
-        prize_cuts=[convert_db_to_prize_cut_response(prize_cut) for prize_cut in db_team.prize_cuts],
+        prize_cuts=[
+            convert_db_to_prize_cut_response(prize_cut)
+            for prize_cut in db_team.prize_cuts
+        ],
         team_stats=stats,
     )
 
@@ -114,8 +125,6 @@ def convert_db_to_team_list_response(db_team: Type[Team]) -> TeamListResponse:
         name=db_team.name,
         logo=db_team.logo,
     )
-
-
 
 
 def convert_db_to_tournament_list_response(
@@ -151,8 +160,7 @@ def convert_db_to_tournament_response(
             if db_match.stage == db_tournament.current_stage
         ],
         teams=[
-            convert_db_to_team_list_response(db_team)
-            for db_team in db_tournament.teams
+            convert_db_to_team_list_response(db_team) for db_team in db_tournament.teams
         ],
         prizes=[
             convert_db_to_prize_cut_response(db_prize)
