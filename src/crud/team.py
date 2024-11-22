@@ -156,6 +156,7 @@ def update_team(
     db: Session, team_id: UUID, team: TeamUpdate, current_user: UserResponse
 ) -> TeamListResponse:
     db_team = v.team_exists(db, team_id=team_id)
+    v.team_name_unique(db, team_name=team.name)
     v.director_or_admin(current_user)
 
     db_team.name = team.name

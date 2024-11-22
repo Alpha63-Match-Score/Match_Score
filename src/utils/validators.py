@@ -120,6 +120,14 @@ def player_username_unique(db: Session, username: str) -> None:
         )
 
 
+def team_name_unique(db: Session, team_name: str) -> None:
+    if db.query(Team).filter(Team.name == team_name).first():
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Team with this name already exists",
+        )
+
+
 def player_already_linked(db: Session, username: str) -> None:
     player = db.query(Player).filter(Player.username == username).first()
     if player and player.user_id:
