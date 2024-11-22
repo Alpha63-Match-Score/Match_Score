@@ -31,7 +31,6 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
-
 def get_tournaments(
     db: Session,
     current_user: UserResponse,
@@ -108,7 +107,9 @@ def _get_search_filter(search: str | None):
     return [Tournament.title.ilike(f"%{search}%")]
 
 
-def _get_author_filter(author: Literal["true", "false"] | None, current_user: UserResponse):
+def _get_author_filter(
+    author: Literal["true", "false"] | None, current_user: UserResponse
+):
     if not author:
         return []
 

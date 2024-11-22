@@ -171,7 +171,10 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
 
     return team_pairs, first_match_datetime
 
-def update_match(db: Session, match_id: UUID, match: MatchUpdate, current_user) -> MatchDetailResponse:
+
+def update_match(
+    db: Session, match_id: UUID, match: MatchUpdate, current_user
+) -> MatchDetailResponse:
     time_format = "%B %d, %Y at %H:%M"
 
     try:
@@ -184,8 +187,12 @@ def update_match(db: Session, match_id: UUID, match: MatchUpdate, current_user) 
         for key, value in update_data.items():
             setattr(db_match, key, value)
 
-        _update_team_and_notify_players(db, db_match, match.team1_id, db_match.team2, time_format, True)
-        _update_team_and_notify_players(db, db_match, match.team2_id, db_match.team1, time_format, False)
+        _update_team_and_notify_players(
+            db, db_match, match.team1_id, db_match.team2, time_format, True
+        )
+        _update_team_and_notify_players(
+            db, db_match, match.team2_id, db_match.team1, time_format, False
+        )
 
         db.commit()
         db.refresh(db_match)
@@ -194,7 +201,6 @@ def update_match(db: Session, match_id: UUID, match: MatchUpdate, current_user) 
     except Exception as e:
         db.rollback()
         raise e
-
 
 
 def _validate_match_update(db: Session, match_id: UUID, current_user):
@@ -209,21 +215,27 @@ def _validate_match_update(db: Session, match_id: UUID, current_user):
 
 def _validate_and_update_start_time(db_match, match, time_format):
     if match.start_time:
-        if (match.start_time < db_match.tournament.start_date or
-                match.start_time > db_match.tournament.end_date or
-                match.start_time < datetime.now(timezone.utc)):
-            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
+        if (
+            match.start_time < db_match.tournament.start_date
+            or match.start_time > db_match.tournament.end_date
+            or match.start_time < datetime.now(timezone.utc)
+        ):
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time"
+            )
 
         send_email_notification(
             email=db_match.tournament.director.email,
             subject="Match Updated",
             message=f"Match's date has been updated "
-                    f"from {db_match.start_time.strftime(time_format)} "
-                    f"to {match.start_time.strftime(time_format)}"
+            f"from {db_match.start_time.strftime(time_format)} "
+            f"to {match.start_time.strftime(time_format)}",
         )
 
 
-def _update_team_and_notify_players(db, db_match, team_id, opponent_team, time_format, is_team1=True):
+def _update_team_and_notify_players(
+    db, db_match, team_id, opponent_team, time_format, is_team1=True
+):
     if team_id:
         v.team_exists(db, team_id)
         current_team = db_match.team1 if is_team1 else db_match.team2
@@ -236,14 +248,18 @@ def _update_team_and_notify_players(db, db_match, team_id, opponent_team, time_f
                     email=player.user.email,
                     subject="Match Updated",
                     message=f"Your match for the '{db_match.tournament.title}' "
-                            f"tournament has been scheduled. "
-                            f"You will be playing against {opponent_team.name} "
-                            f"on {db_match.start_time.strftime(time_format)}"
+                    f"tournament has been scheduled. "
+                    f"You will be playing against {opponent_team.name} "
+                    f"on {db_match.start_time.strftime(time_format)}",
                 )
 
 
-def update_match_score(db: Session, match_id: UUID, team_to_upvote_score: Literal["team1", "team2"],
-                       current_user) -> MatchDetailResponse:
+def update_match_score(
+    db: Session,
+    match_id: UUID,
+    team_to_upvote_score: Literal["team1", "team2"],
+    current_user,
+) -> MatchDetailResponse:
     try:
         db.begin_nested()
 
@@ -252,9 +268,11 @@ def update_match_score(db: Session, match_id: UUID, team_to_upvote_score: Litera
 
         db.flush()
 
-        losing_team = (_check_for_winner_for_mr15(db, db_match)
-                       if db_match.match_format == MatchFormat.MR15
-                       else _check_for_winner_for_mr12(db, db_match))
+        losing_team = (
+            _check_for_winner_for_mr15(db, db_match)
+            if db_match.match_format == MatchFormat.MR15
+            else _check_for_winner_for_mr12(db, db_match)
+        )
 
         db.flush()
         db.refresh(db_match)
@@ -309,6 +327,7 @@ def _check_tournament_progress(db: Session, db_match: Match):
 
             if db_match.tournament.current_stage != Stage.FINISHED:
                 generate_matches(db, db_match.tournament)
+
 
 def _update_current_stage(db: Session, tournament_id: UUID) -> None:
     db.begin_nested()
