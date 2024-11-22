@@ -14,7 +14,7 @@ class User(Base, BaseMixin):
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(Enum(Role), default=Role.USER, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
     # player_id = Column(UUID(as_uuid=True), ForeignKey("player.id"), nullable=True)
 

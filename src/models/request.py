@@ -12,8 +12,8 @@ class Request(Base, BaseMixin):
     """
 
     status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
-    request_date = Column(DateTime, default=func.now(), nullable=False)
-    response_date = Column(DateTime, nullable=True)
+    request_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    response_date = Column(DateTime(timezone=True), nullable=True)
     request_type = Column(Enum(RequestType), nullable=False)
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)

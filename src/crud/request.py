@@ -4,6 +4,7 @@ from typing import Literal, Type
 from src.models import Player, Request, User
 from src.models.enums import RequestStatus, RequestType, Role
 from src.schemas.schemas import RequestListResponse, ResponseRequest
+from src.utils.local_time import get_local_time
 from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
 from src.utils.validators import (
@@ -104,7 +105,7 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
     db.refresh(db_request)
     return ResponseRequest(
         request_type=db_request.request_type,
-        request_date=db_request.request_date,
+        request_date=get_local_time(db_request.request_date),
         status=db_request.status,
         response_date=db_request.response_date,
     )
