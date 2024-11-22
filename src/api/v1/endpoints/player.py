@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from src.api.deps import get_current_user, get_db
@@ -30,9 +31,11 @@ def create_player(
 def get_players(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination),
-    search: str | None = None,
+    search_by_player: str | None = None,
+    search_by_team: str | None = None,
+    sort_by: Literal["asc", "desc"] = "asc",
 ):
-    return player_crud.get_players(db, pagination, search)
+    return player_crud.get_players(db, pagination, search_by_player, search_by_team, sort_by)
 
 
 @router.get("/{player_id}", response_model=PlayerDetailResponse)

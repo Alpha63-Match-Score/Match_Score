@@ -65,6 +65,7 @@ def convert_db_to_player_list_response(db_player: Type[Player]) -> PlayerListRes
         avatar=db_player.avatar,
         user_email=user_email,
         team_name=team_name,
+        game_win_ratio=f"{db_player.won_games / db_player.played_games * 100:.0f}%" if db_player.played_games > 0 else "0%"
     )
 
 
@@ -82,12 +83,9 @@ def convert_db_to_player_detail_response(
         avatar=db_player.avatar,
         user_email=user_email,
         team_name=team_name,
+        game_win_ratio=f"{db_player.won_games / db_player.played_games * 100:.0f}%" if db_player.played_games > 0 else "0%",
         current_tournament_title=tournament_title,
-        game_win_ratio=(
-            f"{db_player.won_games / db_player.played_games * 100:.0f}%"
-            if db_player.played_games > 0
-            else "0%"
-        ),
+
     )
 
 
