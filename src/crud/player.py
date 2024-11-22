@@ -1,6 +1,8 @@
 from http.client import HTTPException
 from uuid import UUID
 
+from sqlalchemy import case
+
 from src.crud.convert_db_to_response import (
     convert_db_to_player_detail_response,
     convert_db_to_player_list_response,
@@ -46,24 +48,33 @@ def create_player(
 
 
 def get_players(
-    db: Session, pagination: PaginationParams, search: str | None = None
+        db: Session, pagination: PaginationParams,
+        search_by_player: str | None = None,
+        search_by_team: str | None = None,
+        sort_by: str = "asc",
 ) -> list[PlayerListResponse]:
 
     query = db.query(Player).order_by(Player.username.asc())
 
     filters = []
-
-    if search:
-        filters.append(Player.username.ilike(f"%{search}%"))
-
+    if search_by_player:
+        filters.append(Player.username.ilike(f"%{search_by_player}%"))
+    if search_by_team:
+        filters.append(Player.team.has(name=search_by_team))
     if filters:
-        query = db.query(Player).filter(*filters)
+        query = query.filter(*filters)
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_players = query.all()
-    return [convert_db_to_player_list_response(db_player) for db_player in db_players]
 
+    sorted_players = sorted(
+        db_players,
+        key=lambda player: player.won_games / player.played_games if player.played_games > 0 else 0,
+        reverse=(sort_by == "desc")
+    )
+
+    return [convert_db_to_player_list_response(player) for player in sorted_players]
 
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     db_player = v.player_exists(db, player_id)
