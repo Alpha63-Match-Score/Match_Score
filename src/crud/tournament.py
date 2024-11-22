@@ -13,7 +13,7 @@ from src.crud.convert_db_to_response import (
     convert_db_to_tournament_list_response,
     convert_db_to_tournament_response,
 )
-from src.models import Tournament, Match
+from src.models import Tournament
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
     TournamentCreate,
@@ -26,10 +26,9 @@ from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette.status import HTTP_400_BAD_REQUEST
-
 
 
 def get_tournaments(
@@ -54,7 +53,6 @@ def get_tournaments(
 
     else:
         query = query.options(joinedload(Tournament.matches))
-
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
@@ -145,9 +143,9 @@ def create_tournament(
         v.tournament_title_unique(db, tournament.title)
         v.director_or_admin(current_user)
         v.validate_start_date(tournament.start_date)
-        tournament.start_date = (
-            tournament.start_date.replace(
-                hour=11, minute=0, second=0, microsecond=0, tzinfo=timezone.utc))
+        tournament.start_date = tournament.start_date.replace(
+            hour=11, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
+        )
 
         # get current stage for tournament
         total_teams = len(tournament.team_names)

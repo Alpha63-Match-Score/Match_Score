@@ -8,7 +8,6 @@ from src.schemas.schemas import (
     MatchDetailResponse,
     MatchListResponse,
     MatchUpdate,
-    UserResponse,
 )
 from src.utils.pagination import PaginationParams, get_pagination
 

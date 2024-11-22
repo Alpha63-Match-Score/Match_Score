@@ -29,7 +29,12 @@ def read_tournaments(
     db: Session = Depends(get_db),
 ):
     return tournament_crud.get_tournaments(
-        db, pagination, period, status, search, author_id,
+        db,
+        pagination,
+        period,
+        status,
+        search,
+        author_id,
     )
 
 
