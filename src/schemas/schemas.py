@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import ForwardRef, List, Optional
 from uuid import UUID
 
@@ -273,6 +273,12 @@ class ResponseRequest(BaseConfig):
     request_date: datetime
     response_date: datetime | None
 
+    @field_validator('request_date')
+    def convert_utc_to_local(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.astimezone()
+
 
 class RequestListResponse(BaseConfig):
     email: str
@@ -282,6 +288,12 @@ class RequestListResponse(BaseConfig):
     response_date: datetime | None
     admin_id: UUID | None
     username: str | None
+
+    @field_validator('request_date')
+    def convert_utc_to_local(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.astimezone()
 
 
 # Updating forward references
