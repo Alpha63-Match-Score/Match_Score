@@ -8,7 +8,6 @@ from src.models.team import Team
 from src.schemas.schemas import UserResponse
 
 from fastapi import HTTPException
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
@@ -83,11 +82,7 @@ def user_exists(
 
 
 def request_exists(db: Session, request_id: UUID) -> Type[Request]:
-    request = (
-        db.query(Request)
-        .filter(Request.id == request_id)
-        .first()
-    )
+    request = db.query(Request).filter(Request.id == request_id).first()
     if not request:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Request not found.")
 

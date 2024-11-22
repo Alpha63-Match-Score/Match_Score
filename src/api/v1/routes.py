@@ -1,4 +1,11 @@
-from src.api.v1.endpoints import matches, player, requests, team, tournaments, users, google_oauth
+from src.api.v1.endpoints import (
+    matches,
+    player,
+    requests,
+    team,
+    tournaments,
+    users,
+)
 
 from fastapi import APIRouter
 

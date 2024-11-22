@@ -41,4 +41,3 @@ def create_access_token(data: dict) -> str:
 
 def is_token_blacklisted(token: str) -> bool:
     return token in settings.BLACKLISTED_TOKENS
-

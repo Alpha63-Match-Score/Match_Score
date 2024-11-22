@@ -128,7 +128,10 @@ def check_valid_request(db: Session, current_user: User):
 
 
 def update_request(
-    db: Session, current_user: User, status: Literal["accepted", "rejected"], request_id: UUID
+    db: Session,
+    current_user: User,
+    status: Literal["accepted", "rejected"],
+    request_id: UUID,
 ):
     user_role_is_admin(current_user)
     request = request_exists(db, request_id)

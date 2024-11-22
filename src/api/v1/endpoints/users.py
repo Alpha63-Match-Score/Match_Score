@@ -1,4 +1,3 @@
-from starlette.requests import Request
 
 from src.api.deps import get_current_user, get_db, oauth2_scheme
 from src.core.authentication import authenticate_user, create_access_token

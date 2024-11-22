@@ -87,6 +87,3 @@
 # async def logout(request: Request):
 #     request.session.pop("user", None)
 #     return JSONResponse({"message": "Successfully logged out"})
-
-
-
