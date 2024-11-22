@@ -45,7 +45,7 @@ dependencies = [
     "uvicorn>=0.32.1",
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = ["E", "F", "I", "C"]
 line-length = 88
 fix = true
@@ -54,12 +54,12 @@ exclude = ["migrations", ".venv", "__pycache__"]
 
 #extend-ignore = ["E203", "F811", "E501", "C901"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["match_score"]
 default-section = "THIRDPARTY"
 force-sort-within-sections = true
 combine-as-imports = true
 
-[tools.black]
+[tool.black]
 line-length = 88
 target-version = ["py312"]

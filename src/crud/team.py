@@ -6,7 +6,6 @@ from src.crud.convert_db_to_response import (
 )
 from src.models import Match, Team, Tournament
 from src.models.enums import Stage
-from src.models.team import Team
 from src.schemas.schemas import (
     TeamCreate,
     TeamDetailedResponse,
