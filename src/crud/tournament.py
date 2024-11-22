@@ -9,6 +9,7 @@ from src.crud import (
     prize_cut as crud_prize_cut,
     team as crud_team,
 )
+from src.crud.convert_db_to_response import convert_db_to_tournament_response, convert_db_to_tournament_list_response
 from src.models import Tournament, Match
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
@@ -265,46 +266,3 @@ def update_tournament(
     except Exception as e:
         db.rollback()
         raise e
-
-
-def convert_db_to_tournament_list_response(
-    db_tournament: Tournament | Type[Tournament],
-) -> TournamentListResponse:
-
-    return TournamentListResponse(
-        id=db_tournament.id,
-        title=db_tournament.title,
-        tournament_format=db_tournament.tournament_format,
-        start_date=db_tournament.start_date,
-        end_date=db_tournament.end_date,
-        current_stage=db_tournament.current_stage,
-        number_of_teams=len(db_tournament.teams),
-    )
-
-
-def convert_db_to_tournament_response(
-    db_tournament: Tournament | Type[Tournament],
-) -> TournamentDetailResponse:
-
-    return TournamentDetailResponse(
-        id=db_tournament.id,
-        title=db_tournament.title,
-        tournament_format=db_tournament.tournament_format,
-        start_date=db_tournament.start_date,
-        end_date=db_tournament.end_date,
-        current_stage=db_tournament.current_stage,
-        number_of_teams=len(db_tournament.teams),
-        matches_of_current_stage=[
-            crud_match.convert_db_to_match_list_response(db_match)
-            for db_match in db_tournament.matches
-            if db_match.stage == db_tournament.current_stage
-        ],
-        teams=[
-            crud_team.convert_db_to_team_list_response(db_team)
-            for db_team in db_tournament.teams
-        ],
-        prizes=[
-            crud_prize_cut.convert_db_to_prize_cut_response(db_prize)
-            for db_prize in db_tournament.prize_cuts
-        ],
-    )

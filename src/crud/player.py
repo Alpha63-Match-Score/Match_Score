@@ -1,6 +1,7 @@
 from typing import Type
 from uuid import UUID
 
+from src.crud.convert_db_to_response import convert_db_to_player_detail_response, convert_db_to_player_list_response
 from src.crud.tournament import convert_db_to_tournament_list_response
 from src.models import Player, Team, Tournament
 from src.schemas.schemas import (
@@ -41,7 +42,7 @@ def create_player(
 
 def get_players(
     db: Session, pagination: PaginationParams, search: str | None = None
-) -> PlayerListResponse:
+) -> list[PlayerListResponse]:
 
     query = db.query(Player).order_by(Player.username.asc())
 
@@ -59,20 +60,6 @@ def get_players(
     return [convert_db_to_player_list_response(db_player) for db_player in db_players]
 
 
-def convert_db_to_player_list_response(db_player: Type[Player]) -> PlayerListResponse:
-    team_name = db_player.team.name if db_player.team else None
-    user_email = db_player.user.email if db_player.user else None
-    return PlayerListResponse(
-        id=db_player.id,
-        username=db_player.username,
-        first_name=db_player.first_name,
-        last_name=db_player.last_name,
-        country=db_player.country,
-        avatar=db_player.avatar,
-        user_email=user_email,
-        team_name=team_name,
-    )
-
 
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     db_player = v.player_exists(db, player_id)
@@ -85,26 +72,6 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     )
     return convert_db_to_player_detail_response(db_player, db_tournaments)
 
-
-def convert_db_to_player_detail_response(
-    db_player: Type[Player], db_tournaments: list[Type[Tournament]]
-) -> PlayerDetailResponse:
-    team_name = db_player.team.name if db_player.team else None
-    user_email = db_player.user.email if db_player.user else None
-    return PlayerDetailResponse(
-        id=db_player.id,
-        username=db_player.username,
-        first_name=db_player.first_name,
-        last_name=db_player.last_name,
-        country=db_player.country,
-        avatar=db_player.avatar,
-        user_email=user_email,
-        team_name=team_name,
-        tournaments=[
-            convert_db_to_tournament_list_response(db_tournament)
-            for db_tournament in db_tournaments
-        ],
-    )
 
 
 def update_player(

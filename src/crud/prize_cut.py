@@ -34,17 +34,3 @@ def _create_prize_cut(
 
     return db_prize
 
-
-def convert_db_to_prize_cut_response(
-    db_prize: PrizeCut | Type[PrizeCut],
-) -> PrizeCutResponse:
-
-    return PrizeCutResponse(
-        id=db_prize.id,
-        place=db_prize.place,
-        prize_cut=db_prize.prize_cut,
-        tournament_id=db_prize.tournament_id,
-        tournament_name=db_prize.tournament.title,
-        team_id=db_prize.team_id,
-        team_name=db_prize.team.name if db_prize.team else None,
-    )

@@ -1,7 +1,9 @@
 from typing import Type
 from uuid import UUID
 
+from src.crud.convert_db_to_response import convert_db_to_team_detailed_response, convert_db_to_team_list_response
 from src.models import Match, Team, Tournament
+from src.models.enums import Stage
 from src.models.team import Team
 from src.schemas.schemas import (
     TeamCreate,
@@ -20,7 +22,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 def get_teams(
     db: Session, pagination: PaginationParams, search: str | None = None
-) -> TeamListResponse:
+) -> list[TeamListResponse]:
 
     query = db.query(Team).order_by(Team.name.asc())
 
@@ -69,8 +71,8 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
         "tournaments_played": set(),
         "tournaments_won": 0,
         "tournament_win_loss_ratio": {"ratio": 0, "won": 0, "played": 0},
-        "matches_played": 0,
-        "matches_won": 0,
+        "matches_played": db_team.played_games,
+        "matches_won": db_team.won_games,
         "match_win_loss_ratio": {"ratio": 0, "wins": 0, "losses": 0},
         "most_often_played_opponent": None,
         "best_opponent": None,
@@ -86,11 +88,8 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     opponent_stats = {}
 
     for match in matches:
-        stats["matches_played"] += 1
-        stats["tournaments_played"].add(match.tournament_id)
-
-        if match.winner_team_id == team_id:
-            stats["matches_won"] += 1
+        if match.tournament.current_stage == Stage.FINISHED:
+            stats["tournaments_played"].add(match.tournament_id)
 
         opponent_id = match.team2_id if match.team1_id == team_id else match.team1_id
         opponent_name = (
@@ -116,7 +115,7 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
         stats["tournaments_won"] = sum(
             1
             for match in matches
-            if match.winner_team_id == team_id and match.stage == "FINAL"
+            if match.winner_team_id == team_id and match.stage == Stage.FINAL
         )
 
     if opponent_stats:
@@ -166,29 +165,6 @@ def update_team(
     db.refresh(db_team)
 
     return convert_db_to_team_list_response(db_team)
-
-
-def convert_db_to_team_detailed_response(
-    db_team: Type[Team], matches: list[Type[Match]], stats: dict
-) -> TeamDetailedResponse:
-    return TeamDetailedResponse(
-        id=db_team.id,
-        name=db_team.name,
-        logo=db_team.logo,
-        players=db_team.players,
-        matches=matches,
-        tournament_id=db_team.tournament_id,
-        prize_cuts=db_team.prize_cuts,
-        team_stats=stats,
-    )
-
-
-def convert_db_to_team_list_response(db_team: Type[Team]) -> TeamListResponse:
-    return TeamListResponse(
-        id=db_team.id,
-        name=db_team.name,
-        logo=db_team.logo,
-    )
 
 
 def create_teams_lst_for_tournament(
