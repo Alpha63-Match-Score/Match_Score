@@ -42,13 +42,13 @@ def update_email(db: Session, email: str, current_user: User):
     send_email_notification(
         email=old_email,
         subject="Email Updated",
-        message=f"Your email has been changed from {old_email} to {email}"
+        message=f"Your email has been changed from {old_email} to {email}",
     )
 
     send_email_notification(
         email=email,
         subject="Email Updated",
-        message=f"Your email has been changed from {old_email} to {email}"
+        message=f"Your email has been changed from {old_email} to {email}",
     )
     return {"message": "Email updated successfully."}
 
