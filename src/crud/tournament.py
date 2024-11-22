@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 from typing import Literal
 from uuid import UUID
@@ -13,7 +13,7 @@ from src.crud.convert_db_to_response import (
     convert_db_to_tournament_list_response,
     convert_db_to_tournament_response,
 )
-from src.models import Tournament
+from src.models import Tournament, Match
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
     TournamentCreate,
@@ -26,19 +26,19 @@ from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, func
+from sqlalchemy.orm import Session, joinedload
 from starlette.status import HTTP_400_BAD_REQUEST
+
 
 
 def get_tournaments(
     db: Session,
-    current_user: UserResponse,
     pagination: PaginationParams,
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
     search: str | None = None,
-    author: Literal["true", "false"] | None = None,
+    author_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
 
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
@@ -47,10 +47,14 @@ def get_tournaments(
     filters.extend(_get_period_filter(period))
     filters.extend(_get_status_filter(status))
     filters.extend(_get_search_filter(search))
-    filters.extend(_get_author_filter(author, current_user))
+    filters.extend(_get_author_filter(author_id))
 
     if filters:
         query = query.filter(*filters)
+
+    else:
+        query = query.options(joinedload(Tournament.matches))
+
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
@@ -107,13 +111,11 @@ def _get_search_filter(search: str | None):
     return [Tournament.title.ilike(f"%{search}%")]
 
 
-def _get_author_filter(
-    author: Literal["true", "false"] | None, current_user: UserResponse
-):
-    if not author:
+def _get_author_filter(author_id: UUID | None):
+    if not author_id:
         return []
 
-    return [Tournament.director_id == current_user.id]
+    return [Tournament.director_id == author_id]
 
 
 def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
@@ -143,6 +145,9 @@ def create_tournament(
         v.tournament_title_unique(db, tournament.title)
         v.director_or_admin(current_user)
         v.validate_start_date(tournament.start_date)
+        tournament.start_date = (
+            tournament.start_date.replace(
+                hour=11, minute=0, second=0, microsecond=0, tzinfo=timezone.utc))
 
         # get current stage for tournament
         total_teams = len(tournament.team_names)
@@ -242,7 +247,9 @@ def _calculate_tournament_end_date(
     else:
         required_days = c.STAGE_DAYS[current_stage]
 
-    return start_date + timedelta(days=required_days)
+    end_date = start_date + timedelta(days=required_days)
+    end_date = end_date.replace(hour=23, minute=59, second=59)
+    return end_date
 
 
 def update_tournament(
