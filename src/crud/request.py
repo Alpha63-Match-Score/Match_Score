@@ -148,8 +148,17 @@ def get_director_requests(db, admin: User, status: str, request: Request):
     user = user_exists(db, user_id)
 
     if status == RequestStatus.ACCEPTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Accepted",
+            message=f"Your request to be promoted to director has been accepted.")
         return accept_director_request(db, admin, user, request)
+
     elif status == RequestStatus.REJECTED:
+        send_email_notification(
+            email=user.email,
+            subject="Request Rejected",
+            message=f"Your request to be promoted to director has been rejected.")
         return reject_director_request(db, admin, request)
 
 

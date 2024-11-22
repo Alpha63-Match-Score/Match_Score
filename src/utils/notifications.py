@@ -4,40 +4,6 @@ from email.mime.text import MIMEText
 
 from src.core.config import settings
 
-#
-# def send_email_notification(email: str, subject: str, message: str):
-#     """
-#     Send a notification to the user's email.
-#         Parameters:
-#             email (str): The email of the user.
-#             subject (str): The subject of the email.
-#             message (str): The message to send.
-#     """
-#     try:
-#         email_sender = getenv("EMAIL_SENDER")
-#         password = getenv("EMAIL_PASSWORD")
-#         smtp_server = getenv("SMTP_SERVER")
-#
-#
-#         msg = MIMEMultipart()
-#         msg["From"] = email_sender
-#         msg["To"] = email
-#         msg["Subject"] = subject
-#
-#         msg.attach(MIMEText(message, "plain"))
-#
-#         server = smtplib.SMTP(smtp_server, 587)
-#         server.ehlo()
-#         server.starttls()
-#         server.login(msg["From"], password)
-#         server.sendmail(msg["From"], msg["To"], msg.as_string())
-#         server.quit()
-#
-#     except Exception as e:
-#         return f"Error sending email notification: {e}"
-
-
-# request response -> accepted -> rejected
 # updated email -> send notification to old and new email
 # you are added to a tournament -> if you have email -> send email
 # match changed date or finished -> to director email
