@@ -1,10 +1,10 @@
-from typing import Type
 from uuid import UUID
 
-from src.crud.convert_db_to_response import convert_db_to_player_detail_response, convert_db_to_player_list_response
-from src.crud.tournament import convert_db_to_tournament_list_response
-from src.models import Player, Team, Tournament
-from src.models.enums import Role
+from src.crud.convert_db_to_response import (
+    convert_db_to_player_detail_response,
+    convert_db_to_player_list_response,
+)
+from src.models import Player
 from src.schemas.schemas import (
     PlayerCreate,
     PlayerDetailResponse,
@@ -40,7 +40,6 @@ def create_player(
     db.commit()
     db.refresh(db_player)
 
-
     return convert_db_to_player_list_response(db_player)
 
 
@@ -64,7 +63,6 @@ def get_players(
     return [convert_db_to_player_list_response(db_player) for db_player in db_players]
 
 
-
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     db_player = v.player_exists(db, player_id)
 
@@ -75,13 +73,11 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     return convert_db_to_player_detail_response(db_player, tournament_title)
 
 
-
 def update_player(
     db: Session, player_id: UUID, player: PlayerUpdate, current_user: UserResponse
 ) -> PlayerListResponse:
     db_player = v.player_exists(db, player_id=player_id)
     v.director_or_admin(current_user)
-
 
     if player.username:
         db_player.username = (player.username,)

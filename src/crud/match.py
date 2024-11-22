@@ -3,7 +3,10 @@ import random
 from typing import Literal, Type
 
 from src.crud import constants as c, team as crud_team
-from src.crud.convert_db_to_response import convert_db_to_match_response, convert_db_to_match_list_response
+from src.crud.convert_db_to_response import (
+    convert_db_to_match_list_response,
+    convert_db_to_match_response,
+)
 from src.models import Team, Tournament
 from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.models.match import Match
@@ -430,4 +433,3 @@ def _mark_match_as_finished(db: Session, db_match: Match, winner_team_id: UUID) 
 
     db.flush()
     db.refresh(db_match)
-

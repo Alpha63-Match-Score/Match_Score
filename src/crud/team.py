@@ -1,7 +1,9 @@
-from typing import Type
 from uuid import UUID
 
-from src.crud.convert_db_to_response import convert_db_to_team_detailed_response, convert_db_to_team_list_response
+from src.crud.convert_db_to_response import (
+    convert_db_to_team_detailed_response,
+    convert_db_to_team_list_response,
+)
 from src.models import Match, Team, Tournament
 from src.models.enums import Stage
 from src.models.team import Team

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import ForwardRef, List, Optional
+from typing import ForwardRef, List
 from uuid import UUID
 
 from src.models.enums import (
@@ -269,7 +269,7 @@ class ResponseRequest(BaseConfig):
     request_date: datetime
     response_date: datetime | None
 
-    @field_validator('request_date')
+    @field_validator("request_date")
     def convert_utc_to_local(cls, v: datetime) -> datetime:
         if v.tzinfo is None:
             v = v.replace(tzinfo=timezone.utc)
@@ -285,7 +285,7 @@ class RequestListResponse(BaseConfig):
     admin_id: UUID | None
     username: str | None
 
-    @field_validator('request_date')
+    @field_validator("request_date")
     def convert_utc_to_local(cls, v: datetime) -> datetime:
         if v.tzinfo is None:
             v = v.replace(tzinfo=timezone.utc)
