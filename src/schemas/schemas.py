@@ -233,7 +233,6 @@ class TournamentUpdate(BaseConfig):
         pattern="^[a-zA-Z0-9_-]+$",
         examples=["Example Tournament Title"],
     )
-    start_date: datetime | None = None
     end_date: datetime | None = None
     prize_pool: int | None = None
 

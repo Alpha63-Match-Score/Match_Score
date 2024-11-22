@@ -6,6 +6,7 @@ from src.models import Match, Player, Request, Tournament, User
 from src.models.enums import Role, Stage
 from src.models.team import Team
 from src.schemas.schemas import UserResponse
+from src.crud import constants as c
 
 from fastapi import HTTPException
 from sqlalchemy import desc
@@ -197,6 +198,14 @@ def validate_start_date(start_date) -> None:
             detail="Start date must be at least 1 day in the future",
         )
 
+def validate_old_vs_new_end_date(old_end_date, new_end_date) -> None:
+    old_end_date = old_end_date.replace(tzinfo=timezone.utc)
+    new_end_date = new_end_date.replace(tzinfo=timezone.utc)
+    if old_end_date > new_end_date:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"New end date must be after {old_end_date.strftime('%Y-%m-%d %H:%M:%S')}",
+        )
 
 def unique_teams_in_tournament(teams: list[str]) -> None:
     if len(teams) != len(set(teams)):
@@ -227,7 +236,7 @@ def match_has_started(match: Type[Match]) -> None:
 def team_has_five_players(team: Type[Team]) -> None:
     if len(team.players) != 5:
         raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST, detail="Team must have 5 players"
+            status_code=HTTP_400_BAD_REQUEST, detail=f"Team '{team.name}' must have 5 players"
         )
 
 
@@ -244,7 +253,12 @@ def tournament_is_finished(tournament: Type[Tournament]) -> None:
 
 def tournament_has_started(tournament: Type[Tournament]) -> None:
     tournament_start = tournament.start_date.replace(tzinfo=timezone.utc)
-    if tournament_start < datetime.now(timezone.utc):
+    flag = False
+    for match in tournament.matches:
+        if match.team1_score != 0 or match.team2_score != 0:
+            flag = True
+
+    if (tournament_start < datetime.now(timezone.utc)) or flag:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail="Tournament has already started"
         )

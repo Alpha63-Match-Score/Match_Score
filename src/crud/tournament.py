@@ -9,7 +9,7 @@ from src.crud import (
     prize_cut as crud_prize_cut,
     team as crud_team,
 )
-from src.models import Tournament
+from src.models import Tournament, Match
 from src.models.enums import Role, Stage, TournamentFormat
 from src.schemas.schemas import (
     TournamentCreate,
@@ -239,17 +239,14 @@ def update_tournament(
         if current_user.role == Role.DIRECTOR:
             v.is_author_of_tournament(db, tournament_id, current_user.id)
 
+        if tournament.end_date:
+            v.validate_old_vs_new_end_date(db_tournament.end_date, tournament.end_date)
+
         if tournament.prize_pool:
             crud_prize_cut.delete_prize_cuts_for_tournament(db, db_tournament)
 
         # Creating a dictionary with the updated data
         update_data = tournament.model_dump(exclude_unset=True)
-
-        if db_tournament.start_date >= db_tournament.end_date:
-            raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
-                detail="Start date must be before end date",
-            )
 
         if tournament.prize_pool:
             crud_prize_cut.create_prize_cuts_for_tournament(
