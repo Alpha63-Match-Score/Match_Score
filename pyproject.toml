@@ -78,7 +78,7 @@ exclude = ["migrations", ".venv", "__pycache__"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["match_score"]
-#section-order = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+section-order = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 default-section = "THIRDPARTY"
 force-sort-within-sections = true
 combine-as-imports = true
