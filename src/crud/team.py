@@ -1,8 +1,6 @@
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import case
-
 from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
     convert_db_to_team_list_response,
@@ -20,9 +18,9 @@ from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
-
 
 # def get_teams(
 #     db: Session, pagination: PaginationParams, search: str | None = None
@@ -43,6 +41,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 #     db_teams = query.all()
 #     return [convert_db_to_team_list_response(db_team) for db_team in db_teams]
 
+
 def get_teams(
     db: Session,
     pagination: PaginationParams,
@@ -51,10 +50,8 @@ def get_teams(
 ) -> list[TeamListResponse]:
 
     team_win_ratio = case(
-        [(Team.played_games > 0, Team.won_games / Team.played_games)],
-        else_=0
+        [(Team.played_games > 0, Team.won_games / Team.played_games)], else_=0
     ).label("team_win_ratio")
-
 
     query = db.query(Team, team_win_ratio)
 
