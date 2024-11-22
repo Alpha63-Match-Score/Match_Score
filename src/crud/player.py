@@ -1,4 +1,3 @@
-from http.client import HTTPException
 from uuid import UUID
 
 from src.crud.convert_db_to_response import (
@@ -6,7 +5,6 @@ from src.crud.convert_db_to_response import (
     convert_db_to_player_list_response,
 )
 from src.models import Player
-from src.models.enums import Role
 from src.schemas.schemas import (
     PlayerCreate,
     PlayerDetailResponse,
@@ -84,7 +82,6 @@ def update_player(
         v.player_update_current_user_authorization(db_player, current_user)
     else:
         v.director_or_admin(current_user)
-
 
     if player.username:
         db_player.username = player.username

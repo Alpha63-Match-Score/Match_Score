@@ -83,7 +83,11 @@ def convert_db_to_player_detail_response(
         user_email=user_email,
         team_name=team_name,
         current_tournament_title=tournament_title,
-        game_win_ratio = f"{db_player.won_games / db_player.played_games * 100:.0f}%" if db_player.played_games > 0 else "0%"
+        game_win_ratio=(
+            f"{db_player.won_games / db_player.played_games * 100:.0f}%"
+            if db_player.played_games > 0
+            else "0%"
+        ),
     )
 
 
