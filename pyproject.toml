@@ -52,7 +52,7 @@ fix = true
 extend-select = ["E301", "E302", "E303", "E305"]
 exclude = ["migrations", ".venv", "__pycache__"]
 
-#extend-ignore = ["E203", "F811", "E501", "C901"]
+extend-ignore = ["C901"]
 
 [tool.ruff.isort]
 known-first-party = ["match_score"]
