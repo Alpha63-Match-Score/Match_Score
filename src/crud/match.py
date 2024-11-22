@@ -171,87 +171,24 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
 
     return team_pairs, first_match_datetime
 
-
-def update_match(
-    db: Session, match_id: UUID, match: MatchUpdate, current_user
-) -> MatchDetailResponse:
+def update_match(db: Session, match_id: UUID, match: MatchUpdate, current_user) -> MatchDetailResponse:
     time_format = "%B %d, %Y at %H:%M"
 
     try:
         db.begin_nested()
 
-        # Validating the match data
-        v.director_or_admin(current_user)
-        db_match = v.match_exists(db, match_id)
+        db_match = _validate_match_update(db, match_id, current_user)
+        _validate_and_update_start_time(db_match, match, time_format)
 
-        if current_user.role == Role.DIRECTOR:
-            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
-
-        v.match_is_finished(db_match)
-        v.match_has_started(db_match)
-
-        # Validating the start time
-        if match.start_time:
-            if (
-                match.start_time < db_match.tournament.start_date
-                or match.start_time > db_match.tournament.end_date
-                or match.start_time < datetime.now(timezone.utc)
-            ):
-                raise HTTPException(
-                    status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time"
-                )
-
-            send_email_notification(
-                email=db_match.tournament.director.email,
-                subject="Match Updated",
-                message=f"Match's date has been updated from "
-                f"{db_match.start_time.strftime(time_format)} "
-                f"to {match.start_time.strftime(time_format)}",
-            )
-        if match.team1_id:
-            v.team_exists(db, match.team1_id)
-            db_match.team1.tournament_id = None
-
-        if match.team2_id:
-            v.team_exists(db, match.team2_id)
-            db_match.team2.tournament_id = None
-
-        # Creating a dictionary with the updated data
         update_data = match.model_dump(exclude_unset=True)
-
-        # Updating the data
         for key, value in update_data.items():
             setattr(db_match, key, value)
 
-        if match.team1_id:
-            db_match.team1.tournament_id = db_match.tournament_id
-            for player in db_match.team1.players:
-                if player.user_id is not None:
-                    send_email_notification(
-                        email=player.user.email,
-                        subject="Match Updated",
-                        message=f"Your match for the '{db_match.tournament.title}' "
-                        f"tournament has been scheduled. "
-                        f"You will be playing against {db_match.team2.name} "
-                        f"on {db_match.start_time.strftime(time_format)}",
-                    )
-
-        if match.team2_id:
-            db_match.team2.tournament_id = db_match.tournament_id
-            for player in db_match.team2.players:
-                if player.user_id is not None:
-                    send_email_notification(
-                        email=player.user.email,
-                        subject="Match Updated",
-                        message=f"Your match for the '{db_match.tournament.title}' "
-                        f"tournament has been scheduled. "
-                        f"You will be playing against {db_match.team1.name} "
-                        f"on {db_match.start_time.strftime(time_format)}",
-                    )
+        _update_team_and_notify_players(db, db_match, match.team1_id, db_match.team2, time_format, True)
+        _update_team_and_notify_players(db, db_match, match.team2_id, db_match.team1, time_format, False)
 
         db.commit()
         db.refresh(db_match)
-
         return convert_db_to_match_response(db_match)
 
     except Exception as e:
@@ -259,58 +196,67 @@ def update_match(
         raise e
 
 
-def update_match_score(
-    db: Session,
-    match_id: UUID,
-    team_to_upvote_score: Literal["team1", "team2"],
-    current_user,
-) -> MatchDetailResponse:
 
+def _validate_match_update(db: Session, match_id: UUID, current_user):
+    v.director_or_admin(current_user)
+    db_match = v.match_exists(db, match_id)
+    if current_user.role == Role.DIRECTOR:
+        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+    v.match_is_finished(db_match)
+    v.match_has_started(db_match)
+    return db_match
+
+
+def _validate_and_update_start_time(db_match, match, time_format):
+    if match.start_time:
+        if (match.start_time < db_match.tournament.start_date or
+                match.start_time > db_match.tournament.end_date or
+                match.start_time < datetime.now(timezone.utc)):
+            raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid start time")
+
+        send_email_notification(
+            email=db_match.tournament.director.email,
+            subject="Match Updated",
+            message=f"Match's date has been updated from {db_match.start_time.strftime(time_format)} to {match.start_time.strftime(time_format)}"
+        )
+
+
+def _update_team_and_notify_players(db, db_match, team_id, opponent_team, time_format, is_team1=True):
+    if team_id:
+        v.team_exists(db, team_id)
+        current_team = db_match.team1 if is_team1 else db_match.team2
+        current_team.tournament_id = None
+        current_team.tournament_id = db_match.tournament_id
+
+        for player in current_team.players:
+            if player.user_id:
+                send_email_notification(
+                    email=player.user.email,
+                    subject="Match Updated",
+                    message=f"Your match for the '{db_match.tournament.title}' tournament has been scheduled. "
+                            f"You will be playing against {opponent_team.name} on {db_match.start_time.strftime(time_format)}"
+                )
+
+
+def update_match_score(db: Session, match_id: UUID, team_to_upvote_score: Literal["team1", "team2"],
+                       current_user) -> MatchDetailResponse:
     try:
         db.begin_nested()
 
-        # Validating the match data
-        v.director_or_admin(current_user)
-        db_match = v.match_exists(db, match_id)
-
-        if current_user.role == Role.DIRECTOR:
-            v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
-
-        v.match_is_finished(db_match)
-
-        v.team_has_five_players(db_match.team1)
-        v.team_has_five_players(db_match.team2)
-
-        # Creating a dictionary with the updated data
-        if team_to_upvote_score == "team1":
-            db_match.team1_score += 1
-        else:
-            db_match.team2_score += 1
+        db_match = _validate_match_score_update(db, match_id, current_user)
+        _update_score(db_match, team_to_upvote_score)
 
         db.flush()
 
-        # Check if the match is finished
-        if db_match.match_format == MatchFormat.MR15:
-            losing_team = _check_for_winner_for_mr15(db, db_match)
-        elif db_match.match_format == MatchFormat.MR12:
-            losing_team = _check_for_winner_for_mr12(db, db_match)
+        losing_team = (_check_for_winner_for_mr15(db, db_match)
+                       if db_match.match_format == MatchFormat.MR15
+                       else _check_for_winner_for_mr12(db, db_match))
 
         db.flush()
         db.refresh(db_match)
 
-        if db_match.is_finished:
-            if db_match.stage == Stage.FINAL:
-                _match_team_prizes(db, db_match)
-            elif db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN:
-                losing_team.tournament_id = None
-                db.flush()
-
-        if all(match.is_finished for match in db_match.tournament.matches):
-            if db_match.tournament.current_stage != Stage.FINISHED:
-                _update_current_stage(db, db_match.tournament.id)
-
-            if db_match.tournament.current_stage != Stage.FINISHED:
-                generate_matches(db, db_match.tournament)
+        _handle_finished_match(db, db_match, losing_team)
+        _check_tournament_progress(db, db_match)
 
         db.commit()
         db.refresh(db_match)
@@ -322,6 +268,43 @@ def update_match_score(
         db.rollback()
         raise e
 
+
+def _validate_match_score_update(db: Session, match_id: UUID, current_user):
+    v.director_or_admin(current_user)
+    db_match = v.match_exists(db, match_id)
+
+    if current_user.role == Role.DIRECTOR:
+        v.is_author_of_tournament(db, db_match.tournament.id, current_user.id)
+
+    v.match_is_finished(db_match)
+    v.team_has_five_players(db_match.team1)
+    v.team_has_five_players(db_match.team2)
+
+    return db_match
+
+
+def _update_score(db_match: Type[Match], team_to_upvote: Literal["team1", "team2"]):
+    if team_to_upvote == "team1":
+        db_match.team1_score += 1
+    else:
+        db_match.team2_score += 1
+
+
+def _handle_finished_match(db: Session, db_match: Match, losing_team: Team):
+    if db_match.is_finished:
+        if db_match.stage == Stage.FINAL:
+            _match_team_prizes(db, db_match)
+        elif db_match.tournament.tournament_format != TournamentFormat.ROUND_ROBIN:
+            losing_team.tournament_id = None
+
+
+def _check_tournament_progress(db: Session, db_match: Match):
+    if all(match.is_finished for match in db_match.tournament.matches):
+        if db_match.tournament.current_stage != Stage.FINISHED:
+            _update_current_stage(db, db_match.tournament.id)
+
+            if db_match.tournament.current_stage != Stage.FINISHED:
+                generate_matches(db, db_match.tournament)
 
 def _update_current_stage(db: Session, tournament_id: UUID) -> None:
     db.begin_nested()
@@ -341,7 +324,7 @@ def _update_current_stage(db: Session, tournament_id: UUID) -> None:
     db.refresh(db_tournament)
 
 
-def _match_team_prizes(db: Session, db_match: Type[Match]) -> None:
+def _match_team_prizes(db: Session, db_match: Match) -> None:
     for prize in db_match.tournament.prize_cuts:
         if prize.place == 1:
             prize.team_id = db_match.winner_team_id

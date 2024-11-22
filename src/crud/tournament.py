@@ -31,6 +31,7 @@ from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 
+
 def get_tournaments(
     db: Session,
     current_user: UserResponse,
@@ -44,42 +45,10 @@ def get_tournaments(
     query = db.query(Tournament).order_by(Tournament.start_date.asc())
 
     filters = []
-
-    if period:
-        if period == "past":
-            filters.append(
-                or_(
-                    Tournament.end_date < datetime.now(),
-                    Tournament.current_stage == Stage.FINISHED,
-                )
-            )
-        elif period == "present":
-            filters.append(
-                and_(
-                    Tournament.start_date <= datetime.now(),
-                    Tournament.end_date >= datetime.now(),
-                    Tournament.current_stage != Stage.FINISHED,
-                )
-            )
-        elif period == "future":
-            filters.append(
-                and_(
-                    Tournament.start_date > datetime.now(),
-                    Tournament.current_stage != Stage.FINISHED,
-                )
-            )
-
-    if status is not None:
-        if status == "active":
-            filters.append(Tournament.current_stage != Stage.FINISHED)
-        elif status == "finished":
-            filters.append(Tournament.current_stage == Stage.FINISHED)
-
-    if search is not None:
-        filters.append(Tournament.title.ilike(f"%{search}%"))
-
-    if author:
-        filters.append(Tournament.director_id == current_user.id)
+    filters.extend(_get_period_filter(period))
+    filters.extend(_get_status_filter(status))
+    filters.extend(_get_search_filter(search))
+    filters.extend(_get_author_filter(author, current_user))
 
     if filters:
         query = query.filter(*filters)
@@ -92,6 +61,58 @@ def get_tournaments(
         convert_db_to_tournament_list_response(db_tournament)
         for db_tournament in db_tournaments
     ]
+
+
+def _get_period_filter(period: Literal["past", "present", "future"] | None):
+    if not period:
+        return []
+
+    if period == "past":
+        return [
+            or_(
+                Tournament.end_date < datetime.now(),
+                Tournament.current_stage == Stage.FINISHED,
+            )
+        ]
+    elif period == "present":
+        return [
+            and_(
+                Tournament.start_date <= datetime.now(),
+                Tournament.end_date >= datetime.now(),
+                Tournament.current_stage != Stage.FINISHED,
+            )
+        ]
+    elif period == "future":
+        return [
+            and_(
+                Tournament.start_date > datetime.now(),
+                Tournament.current_stage != Stage.FINISHED,
+            )
+        ]
+
+
+def _get_status_filter(status: Literal["active", "finished"] | None):
+    if not status:
+        return []
+
+    if status == "active":
+        return [Tournament.current_stage != Stage.FINISHED]
+    elif status == "finished":
+        return [Tournament.current_stage == Stage.FINISHED]
+
+
+def _get_search_filter(search: str | None):
+    if not search:
+        return []
+
+    return [Tournament.title.ilike(f"%{search}%")]
+
+
+def _get_author_filter(author: Literal["true", "false"] | None, current_user: UserResponse):
+    if not author:
+        return []
+
+    return [Tournament.director_id == current_user.id]
 
 
 def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
