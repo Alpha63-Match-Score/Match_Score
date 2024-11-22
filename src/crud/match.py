@@ -217,7 +217,9 @@ def _validate_and_update_start_time(db_match, match, time_format):
         send_email_notification(
             email=db_match.tournament.director.email,
             subject="Match Updated",
-            message=f"Match's date has been updated from {db_match.start_time.strftime(time_format)} to {match.start_time.strftime(time_format)}"
+            message=f"Match's date has been updated "
+                    f"from {db_match.start_time.strftime(time_format)} "
+                    f"to {match.start_time.strftime(time_format)}"
         )
 
 
@@ -233,8 +235,10 @@ def _update_team_and_notify_players(db, db_match, team_id, opponent_team, time_f
                 send_email_notification(
                     email=player.user.email,
                     subject="Match Updated",
-                    message=f"Your match for the '{db_match.tournament.title}' tournament has been scheduled. "
-                            f"You will be playing against {opponent_team.name} on {db_match.start_time.strftime(time_format)}"
+                    message=f"Your match for the '{db_match.tournament.title}' "
+                            f"tournament has been scheduled. "
+                            f"You will be playing against {opponent_team.name} "
+                            f"on {db_match.start_time.strftime(time_format)}"
                 )
 
 
