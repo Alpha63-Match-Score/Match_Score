@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Literal, Type
+from uuid import UUID
 
 from src.models import Player, Request, User
 from src.models.enums import RequestStatus, RequestType, Role
@@ -57,6 +58,7 @@ def get_all(
 
     result = [
         RequestListResponse(
+            id=request.id,
             email=request.user.email,
             request_type=request.request_type,
             status=request.status,
@@ -126,11 +128,11 @@ def check_valid_request(db: Session, current_user: User):
 
 
 def update_request(
-    db: Session, current_user: User, status: Literal["accepted", "rejected"], email: str
+    db: Session, current_user: User, status: Literal["accepted", "rejected"], request_id: UUID
 ):
     user_role_is_admin(current_user)
-    user = user_exists(db, user_email=email)
-    request = request_exists(db, user)
+    request = request_exists(db, request_id)
+    user = user_exists(db, request.user_id)
     check_request_status(request)
 
     if request.request_type == RequestType.LINK_USER_TO_PLAYER:

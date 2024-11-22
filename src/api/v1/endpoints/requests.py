@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 
 from src.api.deps import get_current_user, get_db
 from src.crud.request import (
@@ -59,8 +60,8 @@ def get_all_requests(
 @router.put("/{request_id}")
 def put_request(
     status: Literal["accepted", "rejected"],
-    email: str,
+    request_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return update_request(db, current_user, status, email)
+    return update_request(db, current_user, status, request_id)
