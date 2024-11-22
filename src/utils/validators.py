@@ -5,7 +5,7 @@ from uuid import UUID
 from src.models import Match, Player, Request, Tournament, User
 from src.models.enums import Role, Stage
 from src.models.team import Team
-from src.schemas.schemas import UserResponse
+from src.schemas.schemas import UserResponse, PlayerUpdate
 
 from fastapi import HTTPException
 from sqlalchemy import desc
@@ -126,7 +126,6 @@ def team_name_unique(db: Session, team_name: str) -> None:
             detail=f"Team '{team_name}' already exists",
         )
 
-
 def player_already_linked(db: Session, username: str) -> None:
     player = db.query(Player).filter(Player.username == username).first()
     if player and player.user_id:
@@ -181,6 +180,12 @@ def user_role_is_user(current_user: User) -> None:
     if current_user.role != Role.USER:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN, detail="Only users can send requests."
+        )
+def player_update_current_user_authorization(db_player, current_user) -> None:
+    if db_player.user_id != current_user.id and current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="You are not allowed to update this player",
         )
 
 

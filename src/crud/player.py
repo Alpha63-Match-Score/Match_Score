@@ -1,3 +1,4 @@
+from http.client import HTTPException
 from uuid import UUID
 
 from src.crud.convert_db_to_response import (
@@ -5,6 +6,7 @@ from src.crud.convert_db_to_response import (
     convert_db_to_player_list_response,
 )
 from src.models import Player
+from src.models.enums import Role
 from src.schemas.schemas import (
     PlayerCreate,
     PlayerDetailResponse,
@@ -77,21 +79,26 @@ def update_player(
     db: Session, player_id: UUID, player: PlayerUpdate, current_user: UserResponse
 ) -> PlayerListResponse:
     db_player = v.player_exists(db, player_id=player_id)
-    v.director_or_admin(current_user)
+
+    if db_player.user_id:
+        v.player_update_current_user_authorization(db_player, current_user)
+    else:
+        v.director_or_admin(current_user)
+
 
     if player.username:
-        db_player.username = (player.username,)
+        db_player.username = player.username
     if player.first_name:
-        db_player.first_name = (player.first_name,)
+        db_player.first_name = player.first_name
     if player.last_name:
-        db_player.last_name = (player.last_name,)
+        db_player.last_name = player.last_name
     if player.country:
-        db_player.country = (player.country,)
+        db_player.country = player.country
     if player.avatar:
-        db_player.avatar = (player.avatar,)
+        db_player.avatar = player.avatar
     if player.team_name:
         team = v.team_exists(db, team_name=player.team_name)
-        db_player.team_id = (team.id,)
+        db_player.team_id = team.id
 
     db.commit()
     db.refresh(db_player)
