@@ -184,7 +184,7 @@ def create_teams_lst_for_tournament(
                 raise HTTPException(
                     status_code=HTTP_400_BAD_REQUEST,
                     detail=f"Team '{db_team.name}' already "
-                           f"participates in another tournament",
+                    f"participates in another tournament",
                 )
 
             teams.append(db_team)

@@ -110,9 +110,9 @@ def generate_matches(db: Session, db_tournament: Tournament):
                     email=player.user.email,
                     subject="Match Created",
                     message=f"Your match for the '{db_tournament.title}' "
-                            f"tournament has been scheduled. "
-                            f"You will be playing against {team2.name} "
-                            f"on {current_time.strftime(time_format)}.",
+                    f"tournament has been scheduled. "
+                    f"You will be playing against {team2.name} "
+                    f"on {current_time.strftime(time_format)}.",
                 )
 
         for player in team2.players:
@@ -121,9 +121,9 @@ def generate_matches(db: Session, db_tournament: Tournament):
                     email=player.user.email,
                     subject="Match Created",
                     message=f"Your match for the '{db_tournament.title}' "
-                            f"tournament has been scheduled. "
-                            f"You will be playing against {team1.name} "
-                            f"on {current_time.strftime(time_format)}.",
+                    f"tournament has been scheduled. "
+                    f"You will be playing against {team1.name} "
+                    f"on {current_time.strftime(time_format)}.",
                 )
 
         current_time += timedelta(minutes=c.MATCH_DURATION_PLUS_BUFFER)
@@ -205,8 +205,8 @@ def update_match(
                 email=db_match.tournament.director.email,
                 subject="Match Updated",
                 message=f"Match's date has been updated from "
-                        f"{db_match.start_time.strftime(time_format)} "
-                        f"to {match.start_time.strftime(time_format)}",
+                f"{db_match.start_time.strftime(time_format)} "
+                f"to {match.start_time.strftime(time_format)}",
             )
         if match.team1_id:
             v.team_exists(db, match.team1_id)
@@ -231,9 +231,9 @@ def update_match(
                         email=player.user.email,
                         subject="Match Updated",
                         message=f"Your match for the '{db_match.tournament.title}' "
-                                f"tournament has been scheduled. "
-                                f"You will be playing against {db_match.team2.name} "
-                                f"on {db_match.start_time.strftime(time_format)}",
+                        f"tournament has been scheduled. "
+                        f"You will be playing against {db_match.team2.name} "
+                        f"on {db_match.start_time.strftime(time_format)}",
                     )
 
         if match.team2_id:
@@ -244,9 +244,9 @@ def update_match(
                         email=player.user.email,
                         subject="Match Updated",
                         message=f"Your match for the '{db_match.tournament.title}' "
-                                f"tournament has been scheduled. "
-                                f"You will be playing against {db_match.team1.name} "
-                                f"on {db_match.start_time.strftime(time_format)}",
+                        f"tournament has been scheduled. "
+                        f"You will be playing against {db_match.team1.name} "
+                        f"on {db_match.start_time.strftime(time_format)}",
                     )
 
         db.commit()

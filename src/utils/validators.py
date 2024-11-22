@@ -202,7 +202,7 @@ def validate_old_vs_new_end_date(old_end_date, new_end_date) -> None:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=f"New end date must be after "
-                   f"{old_end_date.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"{old_end_date.strftime('%Y-%m-%d %H:%M:%S')}",
         )
 
 
