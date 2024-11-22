@@ -46,11 +46,7 @@ def create_team(
 
     v.director_or_admin(current_user)
 
-    if v.team_exists(db, team_name=team.name):
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=f"Team '{team.name}' already exists",
-        )
+    v.team_name_unique(db, team_name=team.name)
 
     db_team = Team(
         name=team.name,
@@ -177,6 +173,7 @@ def create_teams_lst_for_tournament(
         db_team = db.query(Team).filter(Team.name == name).first()
 
         if db_team is None:
+            v.team_name_unique(db, team_name=name)
             new_team = Team(name=name)
             db.add(new_team)
             db.flush()

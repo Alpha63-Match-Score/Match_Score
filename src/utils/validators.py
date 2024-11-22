@@ -124,7 +124,7 @@ def team_name_unique(db: Session, team_name: str) -> None:
     if db.query(Team).filter(Team.name == team_name).first():
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="Team with this name already exists",
+            detail=f"Team '{team_name}' already exists",
         )
 
 
