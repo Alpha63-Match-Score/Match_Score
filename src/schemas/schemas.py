@@ -159,7 +159,7 @@ class TeamCreate(BaseConfig):
     # id: UUID
     name: str = Field(
         min_length=5,
-        max_length=15,
+        max_length=25,
         pattern="^[a-zA-Z0-9_-]+$",
         examples=["example_team"],
     )
