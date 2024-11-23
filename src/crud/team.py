@@ -18,7 +18,6 @@ from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 
 from fastapi import HTTPException
-from sqlalchemy import case
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
@@ -49,8 +48,9 @@ def get_teams(
     sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
 
-
-    query = db.query(Team,)
+    query = db.query(
+        Team,
+    )
 
     if search:
         query = query.filter(Team.name.ilike(f"%{search}%"))
@@ -70,7 +70,6 @@ def get_teams(
         ),
         reverse=(sort_by == "desc"),
     )
-
 
     return [convert_db_to_team_list_response(team) for team in sorted_teams]
 
