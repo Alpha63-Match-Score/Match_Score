@@ -1,6 +1,8 @@
 from typing import Literal
 from uuid import UUID
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import match as match_crud
 from src.models.enums import Stage
@@ -10,9 +12,6 @@ from src.schemas.schemas import (
     MatchUpdate,
 )
 from src.utils.pagination import PaginationParams, get_pagination
-
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 

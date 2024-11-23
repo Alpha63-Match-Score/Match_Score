@@ -3,6 +3,9 @@ import math
 from typing import Literal
 from uuid import UUID
 
+from fastapi import HTTPException
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session, joinedload
 from src.crud import (
     constants as c,
     match as crud_match,
@@ -24,10 +27,6 @@ from src.schemas.schemas import (
 )
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
-
-from fastapi import HTTPException
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session, joinedload
 from starlette.status import HTTP_400_BAD_REQUEST
 
 

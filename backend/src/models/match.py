@@ -1,8 +1,7 @@
-from src.models.base import Base, BaseMixin
-from src.models.enums import MatchFormat, Stage
-
 from sqlalchemy import UUID, Boolean, Column, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+from src.models.base import Base, BaseMixin
+from src.models.enums import MatchFormat, Stage
 
 
 class Match(Base, BaseMixin):

@@ -1,16 +1,15 @@
 from typing import Generator
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 from src.core.authentication import is_token_blacklisted
 from src.core.config import settings
 from src.crud.user import get_by_id
 from src.database.session import SessionLocal
 from src.models import User
 from src.schemas.schemas import UserResponse
-
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from sqlalchemy.orm import Session
 
 
 def get_db() -> Generator:

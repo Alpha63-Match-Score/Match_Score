@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
 
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from src.models.enums import (
     MatchFormat,
     RequestStatus,
@@ -9,8 +10,6 @@ from src.models.enums import (
     Stage,
     TournamentFormat,
 )
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 # Base configs

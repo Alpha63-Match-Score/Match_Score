@@ -1,6 +1,8 @@
 from typing import Literal
 from uuid import UUID
 
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
     convert_db_to_team_list_response,
@@ -16,9 +18,6 @@ from src.schemas.schemas import (
 )
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
-
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 # def get_teams(

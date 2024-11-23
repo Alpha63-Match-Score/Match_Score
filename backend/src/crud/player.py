@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
     convert_db_to_player_detail_response,
     convert_db_to_player_list_response,
@@ -14,8 +15,6 @@ from src.schemas.schemas import (
 )
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
-
-from sqlalchemy.orm import Session
 
 
 def create_player(

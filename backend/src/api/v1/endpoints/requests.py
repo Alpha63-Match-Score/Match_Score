@@ -1,6 +1,9 @@
 from typing import Literal
 from uuid import UUID
 
+from fastapi import APIRouter, Depends
+from fastapi.params import Path
+from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud.request import (
     get_all,
@@ -10,10 +13,6 @@ from src.crud.request import (
 )
 from src.models import User
 from src.utils.pagination import PaginationParams, get_pagination
-
-from fastapi import APIRouter, Depends
-from fastapi.params import Path
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 

@@ -1,7 +1,6 @@
-from src.models.base import Base, BaseMixin
-
 from sqlalchemy import UUID, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+from src.models.base import Base, BaseMixin
 
 
 class Player(Base, BaseMixin):

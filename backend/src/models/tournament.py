@@ -1,8 +1,7 @@
-from src.models.base import Base, BaseMixin
-from src.models.enums import Stage, TournamentFormat
-
 from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+from src.models.base import Base, BaseMixin
+from src.models.enums import Stage, TournamentFormat
 
 
 class Tournament(Base, BaseMixin):

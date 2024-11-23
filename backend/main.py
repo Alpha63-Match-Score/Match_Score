@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.v1.routes import api_router
 from src.core.config import Settings, settings
 from src.database.session import init_db
-
-from fastapi import APIRouter, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 

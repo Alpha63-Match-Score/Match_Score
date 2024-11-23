@@ -1,13 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from typing import Type
 
-from src.core.config import settings
-from src.core.security import verify_password
-from src.models.user import User
-
 from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
+from src.core.config import settings
+from src.core.security import verify_password
+from src.models.user import User
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Type[User]:

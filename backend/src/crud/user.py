@@ -1,11 +1,10 @@
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 from src.core.security import get_password_hash
 from src.models.user import User
 from src.schemas.schemas import UserCreate, UserResponse
 from src.utils.notifications import send_email_notification
 from src.utils.validators import user_email_exists
-
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
 
 
 def create_user(user: UserCreate, db: Session):

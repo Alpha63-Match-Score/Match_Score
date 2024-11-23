@@ -2,6 +2,9 @@ from datetime import datetime, timedelta, timezone
 import random
 from typing import Literal, Type
 
+from fastapi import HTTPException
+from sqlalchemy import UUID, and_, func, or_
+from sqlalchemy.orm import Session
 from src.crud import constants as c, team as crud_team
 from src.crud.convert_db_to_response import (
     convert_db_to_match_list_response,
@@ -18,10 +21,6 @@ from src.schemas.schemas import (
 from src.utils import validators as v
 from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
-
-from fastapi import HTTPException
-from sqlalchemy import UUID, and_, func, or_
-from sqlalchemy.orm import Session
 from starlette.status import HTTP_400_BAD_REQUEST
 
 

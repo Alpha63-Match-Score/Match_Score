@@ -2,6 +2,9 @@ from datetime import datetime
 from typing import Literal, Type
 from uuid import UUID
 
+from fastapi import HTTPException, status
+from sqlalchemy import asc, desc
+from sqlalchemy.orm import Session
 from src.models import Player, Request, User
 from src.models.enums import RequestStatus, RequestType, Role
 from src.schemas.schemas import RequestListResponse, ResponseRequest
@@ -15,10 +18,6 @@ from src.utils.validators import (
     user_role_is_admin,
     user_role_is_user,
 )
-
-from fastapi import HTTPException, status
-from sqlalchemy import asc, desc
-from sqlalchemy.orm import Session
 
 
 def get_all(
