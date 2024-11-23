@@ -69,6 +69,7 @@ class UserRegisterResponse(BaseConfig):
 class UserUpdate(UserBase):
     pass
 
+
 class PlayerBaseResponse(BaseConfig):
     id: UUID
     username: str
@@ -79,11 +80,10 @@ class PlayerBaseResponse(BaseConfig):
     team_name: str | None = None
     avatar: str | None
 
+
 # Player schemas
 class PlayerListResponse(PlayerBaseResponse):
     game_win_ratio: str | None
-
-
 
 
 class PlayerDetailResponse(PlayerListResponse):
