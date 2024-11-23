@@ -69,9 +69,7 @@ class UserRegisterResponse(BaseConfig):
 class UserUpdate(UserBase):
     pass
 
-
-# Player schemas
-class PlayerListResponse(BaseConfig):
+class PlayerBaseResponse(BaseConfig):
     id: UUID
     username: str
     first_name: str
@@ -79,8 +77,13 @@ class PlayerListResponse(BaseConfig):
     country: str
     user_email: EmailStr | None = None
     team_name: str | None = None
-    game_win_ratio: str | None
     avatar: str | None
+
+# Player schemas
+class PlayerListResponse(PlayerBaseResponse):
+    game_win_ratio: str | None
+
+
 
 
 class PlayerDetailResponse(PlayerListResponse):
@@ -141,8 +144,11 @@ class TeamListResponse(BaseConfig):
     game_win_ratio: str | None
 
 
-class TeamDetailedResponse(TeamListResponse):
-    players: list[PlayerListResponse]
+class TeamDetailedResponse(BaseConfig):
+    id: UUID
+    name: str
+    logo: str | None
+    players: list[PlayerBaseResponse]
     matches: list["MatchListResponse"]
     tournament_id: UUID | None
     prize_cuts: list["PrizeCutResponse"]
