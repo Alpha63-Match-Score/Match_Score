@@ -96,6 +96,8 @@ def update_player(
     else:
         v.director_or_admin(current_user)
 
+    v.player_username_unique(db, username=player.username)
+
     if player.username:
         db_player.username = player.username
     if player.first_name:

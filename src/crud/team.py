@@ -49,26 +49,30 @@ def get_teams(
     sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
 
-    team_win_ratio = case(
-        [(Team.played_games > 0, Team.won_games / Team.played_games)], else_=0
-    ).label("team_win_ratio")
 
-    query = db.query(Team, team_win_ratio)
+    query = db.query(Team,)
 
     if search:
         query = query.filter(Team.name.ilike(f"%{search}%"))
 
-    if sort_by == "asc":
-        query = query.order_by(team_win_ratio.asc())
-    elif sort_by == "desc":
-        query = query.order_by(team_win_ratio.desc())
+    # if sort_by == "asc":
+    #     query = query.order_by(team_win_ratio.asc())
+    # elif sort_by == "desc":
+    #     query = query.order_by(team_win_ratio.desc())
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_results = query.all()
+    sorted_teams = sorted(
+        db_results,
+        key=lambda team: (
+            team.won_games / team.played_games if team.played_games > 0 else 0
+        ),
+        reverse=(sort_by == "desc"),
+    )
 
-    db_teams = [result[0] for result in db_results]
-    return [convert_db_to_team_list_response(team) for team in db_teams]
+
+    return [convert_db_to_team_list_response(team) for team in sorted_teams]
 
 
 def create_team(

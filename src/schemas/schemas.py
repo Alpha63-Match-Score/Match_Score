@@ -80,10 +80,10 @@ class PlayerListResponse(BaseConfig):
     user_email: EmailStr | None = None
     team_name: str | None = None
     game_win_ratio: str | None
+    avatar: str | None
 
 
 class PlayerDetailResponse(PlayerListResponse):
-    avatar: str | None
     current_tournament_title: str | None
 
 
