@@ -30,3 +30,5 @@ npm -v
 4. Then run => npm install -g @vue/cli
 
 check if installed => vue --version
+
+5. For Cat Animations => npm install axios lucide-vue-next
