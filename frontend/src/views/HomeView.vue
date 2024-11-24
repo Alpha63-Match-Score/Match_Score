@@ -1,28 +1,676 @@
 <template>
   <div class="home-wrapper">
-    <h3>Home Page</h3>
+<!--     Header with fade effect-->
+    <div class="header-image"></div>
+    <div class="header-overlay"></div>
+
+
+    <div class="content-wrapper">
+      <v-container class="matches-container">
+        <!-- Loading -->
+        <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
+          <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+        </div>
+
+        <!-- Error -->
+        <div v-else-if="error" class="text-center pa-4">
+          {{ error }}
+        </div>
+
+        <!-- When data is present -->
+        <v-row v-else no-gutters>
+          <v-col
+            v-for="match in matches"
+            :key="match.id"
+            cols="12"
+            sm="4"
+          >
+            <v-sheet class="ma-2 pa-2 transparent">
+              <v-card class="match-card">
+                <div class="match-background"></div>
+                <div class="match-content">
+                  <div class="tournament-tag">Tournament {{ match.tournament_title }}</div>
+                  <v-card-text>
+                    <div class="match-layout">
+                      <div class="team-left">
+                        <span class="team-name text-right">{{ match.team1_name }}</span>
+                        <span class="team-score">{{match.team1_score}}</span>
+                      </div>
+
+                      <div class="score-divider">:</div>
+
+                      <div class="team-right">
+                        <span class="team-score">{{match.team2_score}}</span>
+                        <span class="team-name text-left">{{ match.team2_name }}</span>
+                      </div>
+                    </div>
+                  </v-card-text>
+
+                  <v-divider class="match-divider"></v-divider>
+
+                  <v-card-actions class="justify-center pa-4">
+                    <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                    <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                  </v-card-actions>
+                </div>
+              </v-card>
+            </v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>
+
+
+      <!-- Bottom containers -->
+      <div class="bottom-containers">
+        <!-- Teams -->
+        <v-container class="side-container">
+          <div class="container-title">Top Teams</div>
+
+          <!-- Loading state -->
+          <div v-if="isLoadingTeams" class="d-flex justify-center align-center" style="height: 200px">
+            <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="teamsError" class="text-center pa-4">
+            {{ teamsError }}
+          </div>
+
+          <!-- Teams list -->
+          <v-list v-else class="team-list">
+            <v-list-item v-for="team in teams" :key="team.id" class="team-item">
+              <div class="team-info-left">
+                <v-avatar class="team-avatar" size="40">
+                  <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                  <v-icon v-else icon="mdi-account" color="#00ff9d"></v-icon>
+                </v-avatar>
+                <div class="team-name">{{ team.name }}</div>
+              </div>
+
+              <div class="progress-wrapper">
+                <v-progress-linear
+                  :model-value="parseInt(team.game_win_ratio)"
+                  color="#00ff9d"
+                  height="6"
+                  rounded
+                  class="progress-bar"
+                ></v-progress-linear>
+                <span class="win-ratio">{{ team.game_win_ratio }}</span>
+              </div>
+            </v-list-item>
+          </v-list>
+        </v-container>
+
+        <!-- Tournaments container -->
+        <v-container class="side-container">
+          <div class="container-title">Tournaments</div>
+
+          <!-- Loading state -->
+          <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
+            <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="tournamentsError" class="text-center pa-4">
+            {{ tournamentsError }}
+          </div>
+
+          <!-- Tournaments list -->
+          <div v-else class="tournaments-list">
+            <div v-for="tournament in tournaments" :key="tournament.id" class="tournament-item">
+              <div class="tournament-header">
+                <div class="tournament-title">{{ tournament.title }}</div>
+                <div class="format-tag">{{ formatText(tournament.tournament_format) }}</div>
+              </div>
+
+              <div class="tournament-dates">
+                {{ formatDateRange(tournament.start_date, tournament.end_date) }}
+              </div>
+
+              <div class="tournament-footer">
+                <div class="stage-tag">
+                  Stage: {{ formatStage(tournament.current_stage) }}
+                </div>
+                <div class="teams-count">
+                  <span class="count-circle">{{ tournament.number_of_teams }}</span>
+                  teams
+                </div>
+              </div>
+            </div>
+          </div>
+        </v-container>
+      </div>
+    </div>
   </div>
 </template>
 
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { API_URL } from '@/config'
+import { format } from 'date-fns'
+
+interface Match {
+  id: string
+  match_format: string
+  start_time: string
+  is_finished: boolean
+  stage: string
+  team1_id: string
+  team2_id: string
+  team1_score: number
+  team2_score: number
+  team1_name: string
+  team2_name: string
+  winner_id: string | null
+  tournament_id: string
+  tournament_title: string
+  tournament_format: string
+}
+
+interface Team {
+  id: string
+  name: string
+  logo: string | null
+  game_win_ratio: string
+}
+
+
+interface Tournament {
+  id: string
+  title: string
+  tournament_format: string
+  start_date: string
+  end_date: string
+  current_stage: string
+  number_of_teams: number
+}
+
+const matches = ref<Match[]>([])
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+
+const teams = ref<Team[]>([])
+const isLoadingTeams = ref(true)
+const teamsError = ref<string | null>(null)
+
+const tournaments = ref<Tournament[]>([])
+const isLoadingTournaments = ref(true)
+const tournamentsError = ref<string | null>(null)
+
+const formatText = (text: string) => {
+  return text.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
+const formatDateRange = (startDate: string, endDate: string) => {
+  const start = format(new Date(startDate), 'dd MMM yyyy')
+  const end = format(new Date(endDate), 'dd MMM yyyy')
+  return `${start} / ${end}`
+}
+
+const formatStage = (stage: string) => {
+  return stage.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
+const fetchMatches = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    const response = await fetch(
+      `${API_URL}/matches/?is_finished=false&one_per_tournament=true&offset=0&limit=3`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    matches.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (e) {
+    console.error('Error fetching matches:', e)
+    error.value = 'Failed to load matches. Please try again later.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const fetchTeams = async () => {
+  try {
+    isLoadingTeams.value = true
+    teamsError.value = null
+    const response = await fetch(
+      `${API_URL}/teams/?sort_by=desc&offset=0&limit=5`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    teams.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+    teamsError.value = 'Failed to load teams. Please try again later.'
+  } finally {
+    isLoadingTeams.value = false
+  }
+}
+
+const fetchTournaments = async () => {
+  try {
+    isLoadingTournaments.value = true
+    tournamentsError.value = null
+    const response = await fetch(
+      `${API_URL}/tournaments/?status=active&offset=0&limit=5`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    tournaments.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (e) {
+    console.error('Error fetching tournaments:', e)
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.'
+  } finally {
+    isLoadingTournaments.value = false
+  }
+}
+
+onMounted(() => {
+  fetchMatches()
+  fetchTeams()
+  fetchTournaments()
+})
+</script>
+
 <style scoped>
 .home-wrapper {
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
-  background-color: #40e7ed;
+  background-color: #171c26 !important;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin: 0;
   padding: 0;
-  position: fixed;
+  position: relative;
+  overflow-y: auto;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
 }
 
-h3 {
-  max-width: 80%;
+.matches-container {
+  background: rgba(30, 30, 30, 0);
+  border-radius: 20px;
+  border: 2px solid #00ff9d;
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+  backdrop-filter: blur(10px);
+  height: 250px;
+}
+
+.transparent {
+  background: transparent !important;
+}
+
+.match-card {
+  height: 210px;
+  margin-top: -16px;
+  position: relative;
+  border-radius: 15px;
+  overflow: hidden;
+  background: rgba(45, 55, 75, 0.8);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 20px;
+}
+
+.match-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.1;
+  z-index: 1;
+}
+.match-content {
+  position: relative;
+  z-index: 2;
+}
+
+.match-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+  gap: 8px;
+}
+
+.team-left, .team-right {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+}
+
+.team-left {
+  justify-content: flex-end;
+}
+
+.team-right {
+  justify-content: flex-start;
+}
+
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.tournament-tag {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 290px;
+  transform: translateX(-50%);
+  background: rgb(45, 55, 75);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0);
+  font-weight: bold;
   text-align: center;
+}
+
+.team-name {
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.team-score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #00ff9d;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+}
+
+.score-divider {
+  font-size: 2rem;
+  color: #00ff9d;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  margin: 0 8px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  background-color: #00ff9d;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 255, 157, 0.6);
+}
+
+.match-divider {
+  opacity: 0.2;
+  margin: 5px 0;
+}
+
+.neon-text {
+  color: #00ff9d !important;
+}
+
+.time-text {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+
+.bottom-containers {
+  display: flex;
+  gap: 20px;
+  margin: 20px auto 0;
+  width: 89%;
+  padding: 0 20px;
+  align-items: center;
+}
+
+.side-container {
+  flex: 1;
+  background: rgba(30, 30, 30, 0);
+  border-radius: 20px;
+  border: 2px solid #00ff9d;
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.container-title {
+  color: #00ff9d;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}
+
+.team-list {
+  background: transparent !important;
+}
+
+.team-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 24px !important;
+  padding: 16px !important;
+  background: rgba(45, 55, 75, 0.8) !important;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border-radius: 10px !important;
+  margin-bottom: 12px !important;
+  transition: all 0.2s !important;
+  height: auto !important;
+  min-height: unset !important;
+}
+
+.team-item:hover {
+  background: rgb(45, 55, 75) !important;
+  border-color: #00ff9d !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 255, 157, 0.2) !important;
+}
+
+.team-avatar {
+  border: 2px solid #00ff9d;
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.team-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-info-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: auto;
+}
+
+.team-name {
+  color: white;
+  font-weight: 500;
+}
+
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.progress-bar {
+  width: 200px;
+}
+
+.win-ratio {
+  color: #00ff9d;
+  font-size: 0.9rem;
+  min-width: 45px;
+  text-align: right;
+}
+
+
+/* Scrollbar */
+.side-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.side-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.side-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 157, 0.3);
+  border-radius: 3px;
+}
+
+.side-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 157, 0.5);
+}
+
+
+.tournaments-list {
+  margin-top: 27px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tournament-item {
+  background: rgba(45, 55, 75, 0.8);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.tournament-item:hover {
+  background: rgb(45, 55, 75);
+  border-color: #00ff9d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 255, 157, 0.2);
+}
+
+.tournament-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tournament-title {
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.format-tag {
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+.tournament-dates {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.tournament-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stage-tag {
+  color: #00ff9d;
+  font-size: 0.9rem;
+}
+
+.teams-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.count-circle {
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  font-weight: bold;
+}
+
+
+.header-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 400px; /* Adjust height as needed */
+  background-image: url('@/assets/top-image.png');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+.header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 400px; /* Same as header-image */
+  background: linear-gradient(
+    to bottom,
+    rgba(23, 28, 38, 0) 0%,
+    rgba(23, 28, 38, 0.8) 80%,
+    rgba(23, 28, 38, 1) 100%
+  );
+  z-index: 2;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 3;
+  padding-top: 600px; /* Adjust based on your needs */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 100px;
 }
 </style>

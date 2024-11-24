@@ -181,16 +181,17 @@ class MatchListResponse(BaseConfig):
     team2_id: UUID
     team1_score: int
     team2_score: int
+    team1_name: str
+    team2_name: str
     winner_id: UUID | None = None
     tournament_id: UUID
+    tournament_title: str
+    tournament_format: TournamentFormat
 
 
 class MatchDetailResponse(MatchListResponse):
-    team1_name: str
-    team2_name: str
     team1_logo: str | None = None
     team2_logo: str | None = None
-    tournament_title: str
 
 
 class MatchUpdate(BaseConfig):

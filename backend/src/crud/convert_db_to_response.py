@@ -48,8 +48,12 @@ def convert_db_to_match_list_response(
         team2_id=db_match.team2_id,
         team1_score=db_match.team1_score,
         team2_score=db_match.team2_score,
+        team1_name=db_match.team1.name,
+        team2_name=db_match.team2.name,
         winner_id=db_match.winner_team_id,
         tournament_id=db_match.tournament_id,
+        tournament_title=db_match.tournament.title,
+        tournament_format=db_match.tournament.tournament_format,
     )
 
 

@@ -10,6 +10,21 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/events',
+      name: 'events',
+      component: () => import('../views/TournamentList.vue'),
+    },
+    {
+      path: '/matches',
+      name: 'matches',
+      component: () => import('../views/MatchList.vue'),
+    },
+    {
+      path: '/teams',
+      name: 'teams',
+      component: () => import('../views/TeamList.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       // route level code-splitting
@@ -17,6 +32,21 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/Dashboard.vue'),
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LogIn.vue')
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('../views/Register.vue')
+    }
   ],
 })
 

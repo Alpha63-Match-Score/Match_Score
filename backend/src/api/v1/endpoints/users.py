@@ -35,8 +35,8 @@ def update_user(
     msg = update_email(db, user.email, current_user)
     return msg
 
-
-@router.get("/logout")
+# get or post?
+@router.post("/logout")
 def logout(token: str = Depends(oauth2_scheme)):
     settings.BLACKLISTED_TOKENS.append(token)
     return {"message": "Logout successful."}
