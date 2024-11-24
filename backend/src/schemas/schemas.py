@@ -141,13 +141,13 @@ class TeamListResponse(BaseConfig):
     name: str
     logo: str | None
     game_win_ratio: str | None
+    players: list[PlayerBaseResponse]
 
 
 class TeamDetailedResponse(BaseConfig):
     id: UUID
     name: str
     logo: str | None
-    players: list[PlayerBaseResponse]
     matches: list["MatchListResponse"]
     tournament_id: UUID | None
     prize_cuts: list["PrizeCutResponse"]

@@ -113,12 +113,6 @@
           <v-btn icon variant="text">
             <v-icon>mdi-github</v-icon>
           </v-btn>
-          <v-btn icon variant="text">
-            <v-icon>mdi-discord</v-icon>
-          </v-btn>
-          <v-btn icon variant="text">
-            <v-icon>mdi-twitter</v-icon>
-          </v-btn>
         </div>
       </div>
     </v-footer>
@@ -159,12 +153,16 @@ const handleLogout = async () => {
 .v-application {
     background-color: #171c26 !important;
     display: flex;
-    min-height: 100vh;
+    min-height: 100vh !important;
+    width: 100vw !important;
     flex-direction: column;
+    overflow-x: hidden;
+    margin-left: -140px;
 }
 
 .v-main {
-  height: 100%;
+  min-height: calc(100vh - 64px) !important;
+  height: auto !important;
   overflow-y: auto;
 }
 
@@ -245,9 +243,10 @@ const handleLogout = async () => {
 
 
 .app-footer {
-  background: rgba(45, 55, 75, 0.8) !important;
+  background: rgba(45, 55, 75, 0.5) !important;
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(0, 255, 157, 0.2);
+  min-height: 64px !important;
   padding: 12px 24px !important;
   position: relative;
   z-index: 1000;
@@ -258,12 +257,8 @@ const handleLogout = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.footer-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  margin-left: 40px;
+  margin-right: 40px;
 }
 
 .footer-text {

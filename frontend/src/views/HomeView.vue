@@ -79,12 +79,26 @@
           <!-- Teams list -->
           <v-list v-else class="team-list">
             <v-list-item v-for="team in teams" :key="team.id" class="team-item">
-              <div class="team-info-left">
-                <v-avatar class="team-avatar" size="40">
-                  <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                  <v-icon v-else icon="mdi-account" color="#00ff9d"></v-icon>
-                </v-avatar>
-                <div class="team-name">{{ team.name }}</div>
+              <div class="team-header">
+                <div class="team-info-left">
+                  <v-avatar class="team-avatar" size="40">
+                    <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                    <v-icon v-else icon="mdi-account" color="#00ff9d"></v-icon>
+                  </v-avatar>
+                  <div class="team-name">{{ team.name }}</div>
+                </div>
+
+                  <div class="players-avatars">
+                    <v-avatar
+                      v-for="player in team.players"
+                      :key="player.id"
+                      size="30"
+                      class="player-avatar"
+                    >
+                      <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
+                      <v-icon v-else icon="mdi-account" color="#00ff9d" size="20"></v-icon>
+                    </v-avatar>
+                  </div>
               </div>
 
               <div class="progress-wrapper">
@@ -97,6 +111,10 @@
                 ></v-progress-linear>
                 <span class="win-ratio">{{ team.game_win_ratio }}</span>
               </div>
+
+
+
+
             </v-list-item>
           </v-list>
         </v-container>
@@ -167,13 +185,24 @@ interface Match {
   tournament_format: string
 }
 
+interface Player {
+  id: string
+  username: string
+  first_name: string
+  last_name: string
+  country: string
+  user_email: string | null
+  team_name: string
+  avatar: string | null
+}
+
 interface Team {
   id: string
   name: string
   logo: string | null
   game_win_ratio: string
+  players: Player[]
 }
-
 
 interface Tournament {
   id: string
@@ -280,21 +309,8 @@ onMounted(() => {
 
 <style scoped>
 .home-wrapper {
-  min-height: 100%;
-  width: 100%;
-  background-color: #171c26 !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
   position: relative;
   overflow-y: auto;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 .matches-container {
@@ -450,7 +466,7 @@ onMounted(() => {
   box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
   backdrop-filter: blur(10px);
   padding: 20px;
-  height: 300px;
+  height: 820px;
   overflow-y: auto;
 }
 
@@ -464,22 +480,37 @@ onMounted(() => {
 }
 
 .team-list {
+  margin-top: 27px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: transparent !important;
 }
 
 .team-item {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 24px !important;
   padding: 16px !important;
   background: rgba(45, 55, 75, 0.8) !important;
   border: 1px solid rgba(0, 255, 157, 0.2) !important;
   border-radius: 10px !important;
-  margin-bottom: 12px !important;
   transition: all 0.2s !important;
-  height: auto !important;
-  min-height: unset !important;
+  height: 130px;
+}
+
+.players-avatars {
+  display: flex;
+  gap: 4px;
+  max-width: 200px;
+}
+
+.player-avatar {
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.left-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .team-item:hover {
@@ -494,12 +525,13 @@ onMounted(() => {
   background: rgba(0, 255, 157, 0.1);
 }
 
-.team-info {
-  flex: 1;
+.team-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
+
 
 .team-info-left {
   display: flex;
@@ -532,28 +564,8 @@ onMounted(() => {
 }
 
 
-/* Scrollbar */
-.side-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.side-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.side-container::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 157, 0.3);
-  border-radius: 3px;
-}
-
-.side-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 157, 0.5);
-}
-
-
 .tournaments-list {
-  margin-top: 27px;
+  margin-top: 37px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -565,6 +577,7 @@ onMounted(() => {
   border-radius: 10px;
   padding: 16px;
   transition: all 0.2s;
+  height: 130px;
 }
 
 .tournament-item:hover {
@@ -636,11 +649,11 @@ onMounted(() => {
 
 
 .header-image {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px; /* Adjust height as needed */
+  height: 600px; /* Adjust height as needed */
   background-image: url('@/assets/top-image.png');
   background-size: cover;
   background-position: center;
@@ -649,11 +662,11 @@ onMounted(() => {
 }
 
 .header-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px; /* Same as header-image */
+  height: 600px; /* Same as header-image */
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
@@ -666,7 +679,7 @@ onMounted(() => {
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 600px; /* Adjust based on your needs */
+  padding-top: 400px; /* Adjust based on your needs */
   display: flex;
   flex-direction: column;
   gap: 20px;
