@@ -1,11 +1,10 @@
 <template>
   <v-app>
-    <!-- App Bar for opening drawer -->
-    <v-app-bar>
+    <!-- App Bar -->
+    <v-app-bar flat>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Kitten Strike</v-toolbar-title>
+      <v-app-bar-title>Kitten Strike</v-app-bar-title>
     </v-app-bar>
-
 
     <!-- Navigation Drawer -->
     <v-navigation-drawer v-model="drawer">
@@ -20,14 +19,16 @@
         <v-list-item
           v-for="(item, index) in menuItems"
           :key="index"
-          :title="item.title"
           :to="item.path"
           :prepend-icon="item.icon"
           link
-        ></v-list-item>
+        >
+          {{ item.title }}
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
+    <!-- Main Content -->
     <v-main>
       <router-view></router-view>
     </v-main>
@@ -37,24 +38,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-interface MenuItem {
-  title: string
-  path: string
-  icon: string
-}
-
-const drawer = ref<boolean | null>(null)
-
-const menuItems = ref<MenuItem[]>([
-  {
-    title: 'Home',
-    path: '/',
-    icon: 'mdi-home'
-  },
-  {
-    title: 'About',
-    path: '/about',
-    icon: 'mdi-information'
-  },
+const drawer = ref(true)
+const menuItems = ref([
+  { title: 'Home', path: '/', icon: 'mdi-home' },
+  { title: 'About', path: '/about', icon: 'mdi-information' }
 ])
 </script>
+
+<style>
+.v-application {
+  height: 100vh;
+}
+
+.v-main {
+  height: calc(100vh - 64px); /* 64px е височината на app bar */
+  padding-top: 0 !important;
+}
+
+.v-navigation-drawer {
+  top: 64px !important; /* Започва след app bar */
+  height: calc(100vh - 64px) !important;
+}
+</style>
