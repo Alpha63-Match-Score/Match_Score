@@ -35,6 +35,7 @@ def update_user(
     msg = update_email(db, user.email, current_user)
     return msg
 
+
 # get or post?
 @router.post("/logout")
 def logout(token: str = Depends(oauth2_scheme)):
