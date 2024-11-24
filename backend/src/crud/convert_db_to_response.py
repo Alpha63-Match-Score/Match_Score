@@ -143,7 +143,9 @@ def convert_db_to_team_list_response(db_team: Type[Team]) -> TeamListResponse:
             if db_team.played_games > 0
             else "0%"
         ),
-        players=[convert_db_to_player_list_response(player) for player in db_team.players],
+        players=[
+            convert_db_to_player_list_response(player) for player in db_team.players
+        ],
     )
 
 
