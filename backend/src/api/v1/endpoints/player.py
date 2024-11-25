@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import player as player_crud
-from src.schemas.schemas import (
+from src.schemas.player import (
     PlayerCreate,
     PlayerDetailResponse,
     PlayerListResponse,
-    PlayerUpdate,
-    UserResponse,
+    PlayerUpdate
 )
+from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post("/", response_model=PlayerListResponse, status_code=201)
 def create_player(
     player: PlayerCreate = Depends(),
-    avatar: UploadFile = File(None),
+    avatar: UploadFile | str = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
@@ -31,12 +31,13 @@ def create_player(
 def get_players(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination),
-    search_by_player: str | None = None,
-    search_by_team: str | None = None,
+    search: str | None = None,
+    team: str | None = None,
+    country: str | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ):
     return player_crud.get_players(
-        db, pagination, search_by_player, search_by_team, sort_by
+        db, pagination, search, team, country, sort_by
     )
 
 
@@ -49,7 +50,7 @@ def get_player(player_id: UUID, db: Session = Depends(get_db)):
 def update_player(
     player_id: UUID,
     player: PlayerUpdate = Depends(),
-    avatar: UploadFile = File(None),
+    avatar: UploadFile | str = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):

@@ -18,13 +18,13 @@ from src.crud.convert_db_to_response import (
 )
 from src.models import Tournament
 from src.models.enums import Role, Stage, TournamentFormat
-from src.schemas.schemas import (
+from src.schemas.tournament import (
     TournamentCreate,
     TournamentDetailResponse,
     TournamentListResponse,
-    TournamentUpdate,
-    UserResponse,
+    TournamentUpdate
 )
+from src.schemas.user import UserResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 from starlette.status import HTTP_400_BAD_REQUEST

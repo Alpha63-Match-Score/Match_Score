@@ -7,7 +7,7 @@ from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 from src.models import Player, Request, User
 from src.models.enums import RequestStatus, RequestType, Role
-from src.schemas.schemas import RequestListResponse, ResponseRequest
+from src.schemas.request import RequestListResponse, ResponseRequest
 from src.utils.notifications import send_email_notification
 from src.utils.pagination import PaginationParams
 from src.utils.validators import (

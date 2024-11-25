@@ -7,16 +7,16 @@ from src.crud.convert_db_to_response import (
     convert_db_to_player_list_response,
 )
 from src.models import Player
-from src.schemas.schemas import (
+from src.schemas.player import (
     PlayerCreate,
     PlayerDetailResponse,
     PlayerListResponse,
-    PlayerUpdate,
-    UserResponse,
+    PlayerUpdate
 )
+from src.schemas.user import UserResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
-from src.utils.s3 import S3Service, s3_service
+from src.utils.s3 import s3_service
 
 
 def create_player(
@@ -33,7 +33,7 @@ def create_player(
         db_team = v.team_exists(db, team_name=player.team_name)
 
     avatar_url = None
-    if avatar:
+    if not isinstance(avatar, str):
         avatar_url = s3_service.upload_file(avatar, "players")
 
     db_player = Player(
@@ -55,18 +55,23 @@ def create_player(
 def get_players(
     db: Session,
     pagination: PaginationParams,
-    search_by_player: str | None = None,
-    search_by_team: str | None = None,
+    search: str | None = None,
+    team: str | None = None,
+    country: str | None = None,
     sort_by: str = "asc",
 ) -> list[PlayerListResponse]:
 
     query = db.query(Player).order_by(Player.username.asc())
 
     filters = []
-    if search_by_player:
-        filters.append(Player.username.ilike(f"%{search_by_player}%"))
-    if search_by_team:
-        filters.append(Player.team.has(name=search_by_team))
+    if search:
+        filters.append(Player.username.ilike(f"%{search}%"))
+    if team:
+        filters.append(Player.team.ilike(f"%{team}%"))
+    if country:
+        filters.append(Player.country.ilike(f"%{country}%"))
+
+
     if filters:
         query = query.filter(*filters)
 
@@ -110,22 +115,20 @@ def update_player(
     else:
         v.director_or_admin(current_user)
 
-    if player.username:
+    if player.username is not None:
         v.player_username_unique(db, username=player.username)
         db_player.username = player.username
-    if player.first_name:
+    if player.first_name is not None:
         db_player.first_name = player.first_name
-    if player.last_name:
+    if player.last_name is not None:
         db_player.last_name = player.last_name
-    if player.country:
+    if player.country is not None:
         db_player.country = player.country
-    if player.avatar:
-        db_player.avatar = player.avatar
-    if player.team_name:
+    if player.team_name is not None:
         team = v.team_exists(db, team_name=player.team_name)
         db_player.team_id = team.id
 
-    if avatar:
+    if not isinstance(avatar, str):
         if db_player.avatar:
             s3_service.delete_file(str(db_player.avatar))
 

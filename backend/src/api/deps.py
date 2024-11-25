@@ -9,7 +9,7 @@ from src.core.config import settings
 from src.crud.user import get_by_id
 from src.database.session import SessionLocal
 from src.models import User
-from src.schemas.schemas import UserResponse
+from src.schemas.user import UserResponse
 
 
 def get_db() -> Generator:

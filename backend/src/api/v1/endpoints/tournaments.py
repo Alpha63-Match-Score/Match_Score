@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import tournament as tournament_crud
-from src.schemas.schemas import (
+from src.schemas.tournament import (
     TournamentCreate,
     TournamentDetailResponse,
     TournamentListResponse,
-    TournamentUpdate,
-    UserResponse,
+    TournamentUpdate
 )
+from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
@@ -44,7 +44,7 @@ def read_tournament(tournament_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TournamentDetailResponse, status_code=201)
 def create_tournament(
-    tournament: TournamentCreate,
+    tournament: TournamentCreate = Depends(),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
