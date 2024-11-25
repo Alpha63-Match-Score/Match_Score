@@ -9,9 +9,10 @@
 
       <!-- Avatar/Logo -->
       <v-list-item
-        prepend-icon="mdi-cat"
+        :prepend-avatar="'/src/assets/kitten-strike-logo.png'"
         title="Kitten Strike"
       ></v-list-item>
+
 
       <!-- Search bar -->
       <v-list-item>
@@ -123,9 +124,10 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import Logo from '@/assets/logo.png';
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const authStore = useAuthStore();
 const menuItems = ref([
   { title: 'Home', path: '/', icon: 'mdi-home' },
   { title: 'Events', path: '/events', icon: 'mdi-trophy' },
@@ -135,8 +137,7 @@ const menuItems = ref([
   { title: 'Login', path: '/login', icon: 'mdi-account' },
   { title: 'Register', path: '/register', icon: 'mdi-account-plus' },
   { title: 'About', path: '/about', icon: 'mdi-information' },
-
-])
+]);
 
 const handleLogout = async () => {
   const success = await authStore.logout()
