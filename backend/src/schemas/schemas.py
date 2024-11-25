@@ -187,6 +187,7 @@ class MatchListResponse(BaseConfig):
     tournament_id: UUID
     tournament_title: str
 
+
 class MatchDetailResponse(MatchListResponse):
     team1_logo: str | None = None
     team2_logo: str | None = None
