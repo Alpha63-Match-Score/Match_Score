@@ -62,7 +62,6 @@ def get_teams(
     # elif sort_by == "desc":
     #     query = query.order_by(team_win_ratio.desc())
 
-    query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_results = query.all()
     sorted_teams = sorted(
@@ -72,6 +71,8 @@ def get_teams(
         ),
         reverse=(sort_by == "desc"),
     )
+
+    sorted_teams = sorted_teams[pagination.offset:pagination.offset + pagination.limit]
 
     return [convert_db_to_team_list_response(team) for team in sorted_teams]
 
