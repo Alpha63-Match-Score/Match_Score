@@ -2,101 +2,99 @@
   <v-app>
 
     <!-- Navigation Drawer -->
-    <v-navigation-drawer
-      expand-on-hover
-      rail
-      class="transparent-drawer">
+      <v-navigation-drawer
+        expand-on-hover
+        rail
+        class="transparent-drawer">
 
-      <!-- Avatar/Logo -->
-      <v-list-item
-        prepend-avatar="/src/assets/logo2.png"
-        title="Kitten Strike"
-      ></v-list-item>
-
-
-      <!-- Search bar -->
-      <v-list-item>
-        <v-text-field
-          density="compact"
-          variant="outlined"
-          prepend-icon="mdi-magnify"
-          placeholder="Search..."
-          hide-details
-          rounded
-          class="mt-2"
-        ></v-text-field>
-      </v-list-item>
-
-      <v-divider></v-divider>
-
-      <v-list nav>
+        <!-- Avatar/Logo -->
         <v-list-item
-          v-for="(item, index) in menuItems.slice(0, 4)"
-          :key="index"
-          :to="item.path"
-          :prepend-icon="item.icon"
-          link
-        >
-          {{ item.title }}
-        </v-list-item>
-      </v-list>
+          prepend-avatar="/src/assets/logo2.png"
+          title="Kitten Strike"
+        ></v-list-item>
 
-      <v-divider></v-divider>
-
-      <!-- If logged in -> dashboard and logout button -->
-      <div v-if="authStore.isAuthenticated">
-        <v-list-item
-          @click="handleLogout"
-          prepend-icon="mdi-logout"
-          link
-          color="error"
-        >
-          Logout
+        <!-- Search bar -->
+        <v-list-item>
+          <v-text-field
+            density="compact"
+            variant="outlined"
+            prepend-icon="mdi-magnify"
+            placeholder="Search..."
+            hide-details
+            rounded
+            class="mt-2"
+          ></v-text-field>
         </v-list-item>
 
-      <v-list nav>
-        <v-list-item
-          v-for="(item, index) in menuItems.slice(4)"
-          :key="index"
-          :to="item.path"
-          :prepend-icon="item.icon"
-          link
-        >
-          {{ item.title }}
-        </v-list-item>
-      </v-list>
-      </div>
+        <v-divider></v-divider>
 
-      <!-- If not logged in -> login and register button -->
-      <div v-else>
-      <v-list nav>
-        <v-list-item
-          v-for="(item, index) in menuItems.slice(5, 7)"
-          :key="index"
-          :to="item.path"
-          :prepend-icon="item.icon"
-          link
-        >
-          {{ item.title }}
-        </v-list-item>
-      </v-list>
-      </div>
+        <!-- Common menu items (Home, Events, Matches, Teams) -->
+        <v-list nav>
+          <v-list-item
+            v-for="(item, index) in menuItems.slice(0, 4)"
+            :key="index"
+            :to="item.path"
+            :prepend-icon="item.icon"
+            link
+          >
+            {{ item.title }}
+          </v-list-item>
+        </v-list>
 
+        <v-divider></v-divider>
 
-      <v-divider></v-divider>
+        <!-- Authenticated menu items -->
+        <div v-if="authStore.isAuthenticated">
+          <v-list nav>
+            <!-- Dashboard -->
+            <v-list-item
+              :to="menuItems[4].path"
+              :prepend-icon="menuItems[4].icon"
+              link
+            >
+              {{ menuItems[4].title }}
+            </v-list-item>
 
-      <v-list nav>
-        <v-list-item
-          v-for="(item, index) in menuItems.slice(7)"
-          :key="index"
-          :to="item.path"
-          :prepend-icon="item.icon"
-          link
-        >
-          {{ item.title }}
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
+            <!-- Logout button -->
+            <v-list-item
+              @click="handleLogout"
+              prepend-icon="mdi-logout"
+              link
+              color="error"
+            >
+              Logout
+            </v-list-item>
+          </v-list>
+        </div>
+
+        <!-- Non-authenticated menu items -->
+        <div v-else>
+          <v-list nav>
+            <v-list-item
+              v-for="(item, index) in menuItems.slice(5, 7)"
+              :key="index"
+              :to="item.path"
+              :prepend-icon="item.icon"
+              link
+            >
+              {{ item.title }}
+            </v-list-item>
+          </v-list>
+        </div>
+
+        <v-divider></v-divider>
+
+        <!-- About (always visible) -->
+        <v-list nav>
+          <v-list-item
+            :to="menuItems[7].path"
+            :prepend-icon="menuItems[7].icon"
+            link
+          >
+            {{ menuItems[7].title }}
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
 
     <!-- Main Content -->
     <v-main>
@@ -289,3 +287,4 @@ const handleLogout = async () => {
   color: #fed854 !important;
 }
 </style>
+
