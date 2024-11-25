@@ -29,11 +29,10 @@ def get_all(
     request_type: (
         Literal["link user to player", "promote user to director"] | None
     ) = None,
-    filter_by_admin: bool = False,
+    filter_by_user: bool = False,
     # request_date: str = None,
     # response_date: str = None,
 ):
-    user_role_is_admin(current_user)
     query = db.query(Request)
 
     if status:
@@ -42,8 +41,16 @@ def get_all(
     if request_type:
         query = query.filter(Request.request_type == request_type)
 
-    if filter_by_admin:
-        query = query.filter(Request.admin_id == current_user.id)
+    if filter_by_user:
+        if current_user.role == Role.ADMIN:
+            query = query.filter(Request.admin_id == current_user.id)
+        elif current_user.role == Role.USER:
+            query = query.filter(Request.user_id == current_user.id)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_BAD_REQUEST,
+                detail="You do not have permission to view this resource.",
+            )
 
     if sort_by == "asc":
         query = query.order_by(asc(Request.request_date))

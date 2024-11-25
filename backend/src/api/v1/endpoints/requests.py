@@ -42,9 +42,10 @@ def get_all_requests(
     request_type: (
         Literal["link user to player", "promote user to director"] | None
     ) = None,
-    filter_by_current_admin: bool = False,
+    filter_by_current_user: bool = False,
     pagination: PaginationParams = Depends(get_pagination),
 ):
+
     return get_all(
         db,
         current_user,
@@ -52,7 +53,7 @@ def get_all_requests(
         sort_by,
         status,
         request_type,
-        filter_by_current_admin,
+        filter_by_current_user,
     )
 
 
