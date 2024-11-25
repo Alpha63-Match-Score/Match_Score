@@ -9,7 +9,7 @@
 
       <!-- Avatar/Logo -->
       <v-list-item
-        :prepend-avatar="'/src/assets/kitten-strike-logo.png'"
+        prepend-avatar="/src/assets/logo2.png"
         title="Kitten Strike"
       ></v-list-item>
 
