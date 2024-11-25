@@ -501,6 +501,8 @@ onMounted(() => {
 }
 
 .team-avatar {
+  min-width: 40px;
+  min-height: 40px;
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
 }
@@ -638,7 +640,7 @@ onMounted(() => {
   background-size: cover;
   background-position: center;
   z-index: 1;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .header-overlay {

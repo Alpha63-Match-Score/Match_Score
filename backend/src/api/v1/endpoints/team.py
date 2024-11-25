@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import team as team_crud
@@ -34,18 +34,20 @@ def get_team(team_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TeamListResponse, status_code=201)
 def create_team(
-    team: TeamCreate,
+    team: TeamCreate = Depends(),
+    logo: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return team_crud.create_team(db, team, current_user)
+    return team_crud.create_team(db, team, logo, current_user)
 
 
 @router.put("/{team_id}", response_model=TeamListResponse)
 def update_team(
     team_id: UUID,
-    team: TeamUpdate,
+    team: TeamUpdate = Depends(),
+    logo: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return team_crud.update_team(db, team_id, team, current_user)
+    return team_crud.update_team(db, team_id, team, logo, current_user)

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
     convert_db_to_player_detail_response,
@@ -15,23 +16,32 @@ from src.schemas.schemas import (
 )
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
+from src.utils.s3 import S3Service, s3_service
 
 
 def create_player(
-    db: Session, player: PlayerCreate, current_user: UserResponse
+    db: Session,
+    player: PlayerCreate,
+    avatar: UploadFile | None,
+    current_user: UserResponse
 ) -> PlayerListResponse:
+
     v.player_username_unique(db, username=player.username)
     v.director_or_admin(current_user)
 
     if player.team_name:
         db_team = v.team_exists(db, team_name=player.team_name)
 
+    avatar_url = None
+    if avatar:
+        avatar_url = s3_service.upload_file(avatar, "players")
+
     db_player = Player(
         username=player.username,
         first_name=player.first_name,
         last_name=player.last_name,
         country=player.country,
-        avatar=player.avatar,
+        avatar=avatar_url,
         team_id=db_team.id if player.team_name else None,
     )
 
@@ -86,8 +96,13 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
 
 
 def update_player(
-    db: Session, player_id: UUID, player: PlayerUpdate, current_user: UserResponse
+    db: Session,
+    player_id: UUID,
+    player: PlayerUpdate,
+    avatar: UploadFile | None,
+    current_user: UserResponse
 ) -> PlayerListResponse:
+
     db_player = v.player_exists(db, player_id=player_id)
 
     if db_player.user_id:
@@ -95,9 +110,8 @@ def update_player(
     else:
         v.director_or_admin(current_user)
 
-    v.player_username_unique(db, username=player.username)
-
     if player.username:
+        v.player_username_unique(db, username=player.username)
         db_player.username = player.username
     if player.first_name:
         db_player.first_name = player.first_name
@@ -110,6 +124,13 @@ def update_player(
     if player.team_name:
         team = v.team_exists(db, team_name=player.team_name)
         db_player.team_id = team.id
+
+    if avatar:
+        if db_player.avatar:
+            s3_service.delete_file(str(db_player.avatar))
+
+        avatar_url = s3_service.upload_file(avatar, "players")
+        db_player.avatar = avatar_url
 
     db.commit()
     db.refresh(db_player)

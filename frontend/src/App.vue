@@ -226,11 +226,11 @@ const handleLogout = async () => {
 }
 
 .transparent-drawer .v-list-item--active {
-  color: #fa9bcb !important;
+  color: #fed854 !important;
 }
 
 .transparent-drawer .v-list-item--active .v-icon {
-  color: #fa9bcb !important;
+  color: #fed854 !important;
 }
 /* Search bar */
 .v-text-field {
@@ -278,6 +278,6 @@ const handleLogout = async () => {
 }
 
 .footer-right .v-btn:hover {
-  color: #fa9bcb !important;
+  color: #fed854 !important;
 }
 </style>
