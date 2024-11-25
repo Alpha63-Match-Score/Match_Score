@@ -9,38 +9,13 @@ from src.crud.convert_db_to_response import (
 )
 from src.models import Match, Team, Tournament
 from src.models.enums import Stage
-from src.schemas.schemas import (
-    TeamCreate,
-    TeamDetailedResponse,
-    TeamListResponse,
-    TeamUpdate,
-    UserResponse,
-)
+from src.schemas.team import TeamListResponse, TeamCreate, TeamDetailedResponse, TeamUpdate
+from src.schemas.user import UserResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.utils.s3 import s3_service
-
-
-# def get_teams(
-#     db: Session, pagination: PaginationParams, search: str | None = None
-# ) -> list[TeamListResponse]:
-#
-#     query = db.query(Team).order_by(Team.name.asc())
-#
-#     filters = []
-#
-#     if search:
-#         filters.append(Team.name.ilike(f"%{search}%"))
-#
-#     if filters:
-#         query = db.query(Team).filter(*filters)
-#
-#     query = query.offset(pagination.offset).limit(pagination.limit)
-#
-#     db_teams = query.all()
-#     return [convert_db_to_team_list_response(db_team) for db_team in db_teams]
 
 
 def get_teams(
@@ -89,7 +64,7 @@ def create_team(
     v.team_name_unique(db, team_name=team.name)
 
     logo_url = None
-    if logo:
+    if not isinstance(logo, str):
         logo_url = s3_service.upload_file(logo, "teams")
 
     db_team = Team(
@@ -207,7 +182,7 @@ def update_team(
         v.team_name_unique(db, team_name=team.name)
         db_team.name = team.name
 
-    if logo:
+    if not isinstance(logo, str):
         if db_team.logo:
             s3_service.delete_file(str(db_team.logo))
 

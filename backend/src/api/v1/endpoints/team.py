@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import team as team_crud
-from src.schemas.schemas import (
+from src.schemas.team import (
     TeamCreate,
     TeamDetailedResponse,
     TeamListResponse,
-    TeamUpdate,
-    UserResponse,
+    TeamUpdate
 )
+from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
 
 router = APIRouter()
@@ -35,7 +35,7 @@ def get_team(team_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", response_model=TeamListResponse, status_code=201)
 def create_team(
     team: TeamCreate = Depends(),
-    logo: UploadFile = File(None),
+    logo: UploadFile | str = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
@@ -46,7 +46,7 @@ def create_team(
 def update_team(
     team_id: UUID,
     team: TeamUpdate = Depends(),
-    logo: UploadFile = File(None),
+    logo: UploadFile | str = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):

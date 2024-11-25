@@ -13,7 +13,7 @@ from src.crud.convert_db_to_response import (
 from src.models import Team, Tournament
 from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.models.match import Match
-from src.schemas.schemas import (
+from src.schemas.match import (
     MatchDetailResponse,
     MatchListResponse,
     MatchUpdate,
@@ -194,19 +194,27 @@ def update_match(
         db.begin_nested()
 
         db_match = _validate_match_update(db, match_id, current_user)
-        if match.start_time:
+        if match.start_time is not None:
             _validate_and_update_start_time(db_match, match, time_format)
+            db_match.start_time = match.start_time
 
-        update_data = match.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(db_match, key, value)
+        if match.stage is not None:
+            db_match.stage = match.stage
 
-        _update_team_and_notify_players(
-            db, db_match, match.team1_id, db_match.team2, time_format, True
-        )
-        _update_team_and_notify_players(
-            db, db_match, match.team2_id, db_match.team1, time_format, False
-        )
+        if match.team1_name is not None:
+            db_team1 = v.team_exists(db, team_name=match.team1_name)
+            db_match.team1_id = db_team1.id
+            _update_team_and_notify_players(
+                db, db_match, db_team1.id, db_match.team2, time_format, True
+            )
+
+        if match.team2_name is not None:
+            db_team2 = v.team_exists(db, team_name=match.team2_name)
+            db_match.team2_id = db_team2.id
+            _update_team_and_notify_players(
+                db, db_match, db_team2.id, db_match.team1, time_format, False
+            )
+
 
         db.commit()
         db.refresh(db_match)

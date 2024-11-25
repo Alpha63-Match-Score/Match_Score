@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import match as match_crud
 from src.models.enums import Stage
-from src.schemas.schemas import (
+from src.schemas.match import (
     MatchDetailResponse,
     MatchListResponse,
     MatchUpdate,
@@ -47,7 +47,7 @@ def read_match(match_id: UUID, db: Session = Depends(get_db)):
 @router.put("/{match_id}", response_model=MatchDetailResponse)
 def update_match(
     match_id: UUID,
-    match: MatchUpdate,
+    match: MatchUpdate = Depends(),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):

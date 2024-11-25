@@ -158,18 +158,19 @@ const handleLogout = async () => {
 }
 
 .v-application {
-    background-color: #171c26 !important;
-    display: flex;
-    min-height: 100vh !important;
-    width: 120vw !important;
-    flex-direction: column;
-    overflow-x: hidden;
+  background-color: #171c26 !important;
+  display: flex;
+  min-height: 100vh !important;
+  width: 120vw !important;
+  flex-direction: column;
+  overflow-x: hidden;
 }
 
 .v-main {
-  min-height: calc(100vh - 64px) !important;
+  min-height: 100vh !important;
   height: auto !important;
   overflow-y: auto;
+  padding: 0 !important;
 }
 
 .main-content {

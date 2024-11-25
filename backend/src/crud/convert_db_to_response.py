@@ -1,17 +1,11 @@
 from typing import Type
 
 from src.models import Match, Player, PrizeCut, Team, Tournament
-from src.schemas.schemas import (
-    MatchDetailResponse,
-    MatchListResponse,
-    PlayerDetailResponse,
-    PlayerListResponse,
-    PrizeCutResponse,
-    TeamDetailedResponse,
-    TeamListResponse,
-    TournamentDetailResponse,
-    TournamentListResponse,
-)
+from src.schemas.match import MatchDetailResponse, MatchListResponse
+from src.schemas.player import PlayerListResponse, PlayerDetailResponse
+from src.schemas.prize_cut import PrizeCutResponse
+from src.schemas.team import TeamDetailedResponse, TeamListResponse
+from src.schemas.tournament import TournamentListResponse, TournamentDetailResponse
 
 
 def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:

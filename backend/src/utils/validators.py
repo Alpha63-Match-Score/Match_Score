@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from src.models import Match, Player, Request, Tournament, User
 from src.models.enums import Role, Stage
 from src.models.team import Team
-from src.schemas.schemas import UserResponse
+from src.schemas.user import UserResponse
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_403_FORBIDDEN,
