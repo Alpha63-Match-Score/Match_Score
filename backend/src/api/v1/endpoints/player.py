@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import player as player_crud
@@ -19,11 +19,12 @@ router = APIRouter()
 
 @router.post("/", response_model=PlayerListResponse, status_code=201)
 def create_player(
-    team: PlayerCreate,
+    player: PlayerCreate = Depends(),
+    avatar: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return player_crud.create_player(db, team, current_user)
+    return player_crud.create_player(db, player, avatar, current_user)
 
 
 @router.get("/")
@@ -47,8 +48,9 @@ def get_player(player_id: UUID, db: Session = Depends(get_db)):
 @router.put("/{player_id}", response_model=PlayerListResponse)
 def update_player(
     player_id: UUID,
-    player: PlayerUpdate,
+    player: PlayerUpdate = Depends(),
+    avatar: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
-    return player_crud.update_player(db, player_id, player, current_user)
+    return player_crud.update_player(db, player_id, player, avatar, current_user)

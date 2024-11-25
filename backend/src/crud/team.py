@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
@@ -19,6 +19,9 @@ from src.schemas.schemas import (
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
 from starlette.status import HTTP_400_BAD_REQUEST
+
+from src.utils.s3 import s3_service
+
 
 # def get_teams(
 #     db: Session, pagination: PaginationParams, search: str | None = None
@@ -74,16 +77,23 @@ def get_teams(
 
 
 def create_team(
-    db: Session, team: TeamCreate, current_user: UserResponse
+    db: Session,
+    team: TeamCreate,
+    logo: UploadFile | None,
+    current_user: UserResponse
 ) -> TeamListResponse:
 
     v.director_or_admin(current_user)
 
     v.team_name_unique(db, team_name=team.name)
 
+    logo_url = None
+    if logo:
+        logo_url = s3_service.upload_file(logo, "teams")
+
     db_team = Team(
         name=team.name,
-        logo=team.logo,
+        logo=logo_url,
     )
 
     db.add(db_team)
@@ -182,14 +192,26 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
 
 
 def update_team(
-    db: Session, team_id: UUID, team: TeamUpdate, current_user: UserResponse
+    db: Session,
+    team_id: UUID,
+    team: TeamUpdate,
+    logo: UploadFile | None,
+    current_user: UserResponse
 ) -> TeamListResponse:
+
     db_team = v.team_exists(db, team_id=team_id)
-    v.team_name_unique(db, team_name=team.name)
     v.director_or_admin(current_user)
 
-    db_team.name = team.name
-    db_team.logo = team.logo
+    if team.name:
+        v.team_name_unique(db, team_name=team.name)
+        db_team.name = team.name
+
+    if logo:
+        if db_team.logo:
+            s3_service.delete_file(str(db_team.logo))
+
+        logo_url = s3_service.upload_file(logo, "teams")
+        db_team.logo = logo_url
 
     db.commit()
     db.refresh(db_team)

@@ -114,7 +114,6 @@ class PlayerCreate(BaseConfig):
         pattern="^[a-zA-Z]+(?:-[a-zA-Z]+)?$",
         examples=["Example"],
     )
-    avatar: str | None = None
     team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")
@@ -127,7 +126,6 @@ class PlayerUpdate(BaseConfig):
     first_name: str | None = None
     last_name: str | None = None
     country: str | None = None
-    avatar: str | None = None
     team_name: str | None = None
 
     @field_validator("first_name", "last_name", mode="before")
@@ -162,12 +160,10 @@ class TeamCreate(BaseConfig):
         pattern="^[a-zA-Z0-9_-]+$",
         examples=["example_team"],
     )
-    logo: str | None
 
 
 class TeamUpdate(BaseConfig):
     name: str | None = None
-    logo: str | None = None
 
 
 # Match schemas

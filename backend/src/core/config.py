@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
     SECRET_KEY: str = os.getenv("SECRET_KEY")
 
+    AWS_ACCESS_KEY: str = os.getenv("AWS_ACCESS_KEY")
+    AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_KEY")
+    AWS_BUCKET_NAME: str = os.getenv("AWS_BUCKET_NAME")
+    AWS_REGION: str = os.getenv("AWS_REGION")
+
     class Config:
         case_sensitive = True
         env_file = ".env"
