@@ -13,7 +13,7 @@ class Player(Base, BaseMixin):
     first_name = Column(String(45), nullable=False)
     last_name = Column(String(45), nullable=False)
     country = Column(String(45), nullable=False)
-    avatar = Column(String(45), nullable=True)
+    avatar = Column(String(255), nullable=True)
     played_games = Column(Integer, nullable=False, default=0)
     won_games = Column(Integer, nullable=False, default=0)
 

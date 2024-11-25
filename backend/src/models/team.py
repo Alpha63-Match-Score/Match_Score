@@ -10,7 +10,7 @@ class Team(Base, BaseMixin):
     """
 
     name = Column(String(45), nullable=False, unique=True)
-    logo = Column(String(45), nullable=True)
+    logo = Column(String(255), nullable=True)
     played_games = Column(Integer, nullable=False, default=0)
     won_games = Column(Integer, nullable=False, default=0)
     tournament_id = Column(
