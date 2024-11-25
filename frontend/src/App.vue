@@ -150,14 +150,21 @@ const handleLogout = async () => {
 </script>
 
 <style>
+
+#app {
+  min-height: 100vh;
+  min-width: 100vw;
+  background: #171c26;
+  padding: 0 0 0 0 !important;
+}
+
 .v-application {
     background-color: #171c26 !important;
     display: flex;
     min-height: 100vh !important;
-    width: 100vw !important;
+    width: 120vw !important;
     flex-direction: column;
     overflow-x: hidden;
-    margin-left: -140px;
 }
 
 .v-main {
