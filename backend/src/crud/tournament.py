@@ -270,23 +270,26 @@ def update_tournament(
         if current_user.role == Role.DIRECTOR:
             v.is_author_of_tournament(db, tournament_id, current_user.id)
 
-        if tournament.end_date:
+        if tournament.title is not None:
+            v.tournament_title_unique(db, tournament.title)
+            if len(tournament.title) == 0:
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST, detail="Title must not be empty"
+                )
+            db_tournament.title = tournament.title
+
+        if tournament.end_date is not None:
             v.validate_old_vs_new_end_date(db_tournament.end_date, tournament.end_date)
+            db_tournament.end_date = tournament.end_date
 
-        if tournament.prize_pool:
+        if tournament.prize_pool is not None:
             crud_prize_cut.delete_prize_cuts_for_tournament(db, db_tournament)
-
-        # Creating a dictionary with the updated data
-        update_data = tournament.model_dump(exclude_unset=True)
+            db_tournament.prize_pool = tournament.prize_pool
 
         if tournament.prize_pool:
             crud_prize_cut.create_prize_cuts_for_tournament(
                 db, db_tournament, int(tournament.prize_pool)
             )
-
-        # Updating the data
-        for key, value in update_data.items():
-            setattr(db_tournament, key, value)
 
         db.commit()
         db.refresh(db_tournament)

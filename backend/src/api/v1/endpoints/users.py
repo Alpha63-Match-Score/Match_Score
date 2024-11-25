@@ -17,7 +17,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return UserRegisterResponse(email=db_user.email, role=db_user.role)
 
 
-@router.post("/login")
+@router.post("/login", include_in_schema=False)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):

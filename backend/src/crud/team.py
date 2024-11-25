@@ -185,7 +185,7 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     stats["tournament_win_loss_ratio"]["played"] = stats["tournaments_played"]
     stats["tournament_win_loss_ratio"]["win_percentage"] = (
         f"{(stats["tournaments_won"] / stats["tournaments_played"]) * 100:.0f}%"
-        if stats["tournaments_played"] > 0
+        if len(stats["tournaments_played"]) > 0
         else "0%"
     )
 

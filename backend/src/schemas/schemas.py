@@ -120,6 +120,10 @@ class PlayerCreate(BaseConfig):
     def capitalize_names(cls, value):
         return "-".join(part.capitalize() for part in value.split("-"))
 
+    @field_validator("country", mode="before")
+    def capitalize_country(cls, value):
+        return value.title()
+
 
 class PlayerUpdate(BaseConfig):
     username: str | None = None
@@ -224,12 +228,7 @@ class TournamentCreate(BaseConfig):
 
 
 class TournamentUpdate(BaseConfig):
-    title: str | None = None, Field(
-        min_length=3,
-        max_length=20,
-        pattern="^[a-zA-Z0-9_-]+$",
-        examples=["Example Tournament Title"],
-    )
+    title: str | None = None
     end_date: datetime | None = None
     prize_pool: int | None = None
 

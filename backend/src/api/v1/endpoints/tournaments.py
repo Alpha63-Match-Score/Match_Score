@@ -54,7 +54,7 @@ def create_tournament(
 @router.put("/{tournament_id}", response_model=TournamentDetailResponse)
 def update_tournament(
     tournament_id: UUID,
-    tournament: TournamentUpdate,
+    tournament: TournamentUpdate = Depends(),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
