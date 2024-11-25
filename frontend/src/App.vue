@@ -225,11 +225,11 @@ const handleLogout = async () => {
 }
 
 .transparent-drawer .v-list-item--active {
-  color: #00ff9d !important;
+  color: #fa9bcb !important;
 }
 
 .transparent-drawer .v-list-item--active .v-icon {
-  color: #00ff9d !important;
+  color: #fa9bcb !important;
 }
 /* Search bar */
 .v-text-field {
@@ -245,7 +245,7 @@ const handleLogout = async () => {
 .app-footer {
   background: rgba(45, 55, 75, 0.5) !important;
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 255, 157, 0.2);
+  border-top: 1px solid rgba(8, 117, 176, 0.4);
   min-height: 64px !important;
   padding: 12px 24px !important;
   position: relative;
@@ -257,7 +257,7 @@ const handleLogout = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-left: 40px;
+  margin-left: 70px;
   margin-right: 40px;
 }
 
@@ -277,6 +277,6 @@ const handleLogout = async () => {
 }
 
 .footer-right .v-btn:hover {
-  color: #00ff9d !important;
+  color: #fa9bcb !important;
 }
 </style>

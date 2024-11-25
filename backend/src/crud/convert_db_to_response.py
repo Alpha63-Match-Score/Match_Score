@@ -53,7 +53,6 @@ def convert_db_to_match_list_response(
         winner_id=db_match.winner_team_id,
         tournament_id=db_match.tournament_id,
         tournament_title=db_match.tournament.title,
-        tournament_format=db_match.tournament.tournament_format,
     )
 
 

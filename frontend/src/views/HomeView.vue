@@ -13,7 +13,7 @@
         </div>
 
         <!-- Error -->
-        <div v-else-if="error" class="text-center pa-4">
+        <div v-else-if="error" class="error-text pa-4">
           {{ error }}
         </div>
 
@@ -72,7 +72,7 @@
           </div>
 
           <!-- Error state -->
-          <div v-else-if="teamsError" class="text-center pa-4">
+          <div v-else-if="teamsError" class="error-text pa-4">
             {{ teamsError }}
           </div>
 
@@ -83,7 +83,7 @@
                 <div class="team-info-left">
                   <v-avatar class="team-avatar" size="40">
                     <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                    <v-icon v-else icon="mdi-account" color="#00ff9d"></v-icon>
+                    <v-icon v-else icon="mdi-account" color="#42DDF2FF"></v-icon>
                   </v-avatar>
                   <div class="team-name">{{ team.name }}</div>
                 </div>
@@ -96,7 +96,7 @@
                       class="player-avatar"
                     >
                       <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
-                      <v-icon v-else icon="mdi-account" color="#00ff9d" size="20"></v-icon>
+                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="20"></v-icon>
                     </v-avatar>
                   </div>
               </div>
@@ -104,7 +104,7 @@
               <div class="progress-wrapper">
                 <v-progress-linear
                   :model-value="parseInt(team.game_win_ratio)"
-                  color="#00ff9d"
+                  color="#42DDF2FF"
                   height="6"
                   rounded
                   class="progress-bar"
@@ -129,7 +129,7 @@
           </div>
 
           <!-- Error state -->
-          <div v-else-if="tournamentsError" class="text-center pa-4">
+          <div v-else-if="tournamentsError" class="error-text pa-4">
             {{ tournamentsError }}
           </div>
 
@@ -182,7 +182,6 @@ interface Match {
   winner_id: string | null
   tournament_id: string
   tournament_title: string
-  tournament_format: string
 }
 
 interface Player {
@@ -308,16 +307,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.home-wrapper {
-  position: relative;
-  overflow-y: auto;
-}
-
 .matches-container {
   background: rgba(30, 30, 30, 0);
   border-radius: 20px;
-  border: 2px solid #00ff9d;
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+  border: 2px solid #42ddf2;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
   height: 250px;
 }
@@ -389,7 +383,7 @@ onMounted(() => {
 
 .match-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(0, 255, 157, 0.4) !important;
+  box-shadow: 0 0 20px rgba(8, 117, 176, 0.4) !important;
 }
 
 .tournament-tag {
@@ -398,11 +392,11 @@ onMounted(() => {
   left: 50%;
   width: 290px;
   transform: translateX(-50%);
-  background: rgb(45, 55, 75);
+  background: rgba(45, 55, 75, 0);
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 0.9rem;
-  color: #00ff9d;
+  color: #42DDF2FF;
   border: 1px solid rgba(0, 255, 157, 0);
   font-weight: bold;
   text-align: center;
@@ -416,23 +410,15 @@ onMounted(() => {
 .team-score {
   font-size: 2rem;
   font-weight: bold;
-  color: #00ff9d;
-  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  color: #fed854;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
 }
 
 .score-divider {
   font-size: 2rem;
-  color: #00ff9d;
-  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  color: #FED854FF;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
   margin: 0 8px;
-}
-
-.dot {
-  width: 4px;
-  height: 4px;
-  background-color: #00ff9d;
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(0, 255, 157, 0.6);
 }
 
 .match-divider {
@@ -441,7 +427,7 @@ onMounted(() => {
 }
 
 .neon-text {
-  color: #00ff9d !important;
+  color: #fed854 !important;
 }
 
 .time-text {
@@ -462,8 +448,8 @@ onMounted(() => {
   flex: 1;
   background: rgba(30, 30, 30, 0);
   border-radius: 20px;
-  border: 2px solid #00ff9d;
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
   padding: 20px;
   height: 820px;
@@ -471,12 +457,12 @@ onMounted(() => {
 }
 
 .container-title {
-  color: #00ff9d;
+  color: #42DDF2FF;
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 20px;
   text-align: center;
-  text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+  text-shadow: 0 0 10px rgba(8, 87, 144, 0.3);
 }
 
 .team-list {
@@ -490,7 +476,7 @@ onMounted(() => {
 .team-item {
   padding: 16px !important;
   background: rgba(45, 55, 75, 0.8) !important;
-  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border: 1px solid rgba(8, 87, 144, 0.2) !important;
   border-radius: 10px !important;
   transition: all 0.2s !important;
   height: 130px;
@@ -503,26 +489,20 @@ onMounted(() => {
 }
 
 .player-avatar {
-  border: 1px solid rgba(0, 255, 157, 0.3);
-  background: rgba(0, 255, 157, 0.1);
-}
-
-.left-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  border: 1px solid rgba(8, 117, 176, 0.3);
+  background: rgba(8, 87, 144, 0.1);
 }
 
 .team-item:hover {
   background: rgb(45, 55, 75) !important;
-  border-color: #00ff9d !important;
+  border-color: #42ddf2 !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 255, 157, 0.2) !important;
+  box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2) !important;
 }
 
 .team-avatar {
-  border: 2px solid #00ff9d;
-  background: rgba(0, 255, 157, 0.1);
+  border: 2px solid #42ddf2;
+  background: rgba(8, 87, 144, 0.1);
 }
 
 .team-header {
@@ -557,7 +537,7 @@ onMounted(() => {
 }
 
 .win-ratio {
-  color: #00ff9d;
+  color: #42ddf2;
   font-size: 0.9rem;
   min-width: 45px;
   text-align: right;
@@ -573,7 +553,7 @@ onMounted(() => {
 
 .tournament-item {
   background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(0, 255, 157, 0.2);
+  border: 1px solid rgba(8, 87, 144, 0.2);
   border-radius: 10px;
   padding: 16px;
   transition: all 0.2s;
@@ -582,9 +562,9 @@ onMounted(() => {
 
 .tournament-item:hover {
   background: rgb(45, 55, 75);
-  border-color: #00ff9d;
+  border-color: #42ddf2;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 255, 157, 0.2);
+  box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
 }
 
 .tournament-header {
@@ -601,12 +581,12 @@ onMounted(() => {
 }
 
 .format-tag {
-  background: rgba(0, 255, 157, 0.1);
-  color: #00ff9d;
+  background: rgba(8, 117, 176, 0.1);
+  color: #42ddf2;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 0.8rem;
-  border: 1px solid rgba(0, 255, 157, 0.3);
+  border: 1px solid rgba(8, 87, 144, 0.8);
 }
 
 .tournament-dates {
@@ -622,7 +602,7 @@ onMounted(() => {
 }
 
 .stage-tag {
-  color: #00ff9d;
+  color: #42ddf2;
   font-size: 0.9rem;
 }
 
@@ -635,15 +615,15 @@ onMounted(() => {
 }
 
 .count-circle {
-  background: rgba(0, 255, 157, 0.1);
-  color: #00ff9d;
+  background: rgba(8, 117, 176, 0.1);
+  color: #42ddf2;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 255, 157, 0.3);
+  border: 1px solid rgba(8, 87, 144, 0.8);
   font-weight: bold;
 }
 
@@ -685,5 +665,11 @@ onMounted(() => {
   gap: 20px;
   width: 100%;
   margin-bottom: 100px;
+}
+
+.error-text {
+  text-align: center !important;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 10px;
 }
 </style>
