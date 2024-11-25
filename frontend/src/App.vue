@@ -257,6 +257,7 @@ const handleLogout = async () => {
   padding: 12px 24px !important;
   position: relative;
   z-index: 1000;
+  width: 100vw !important;
 }
 
 .footer-content {
@@ -265,7 +266,7 @@ const handleLogout = async () => {
   justify-content: space-between;
   align-items: center;
   margin-left: 70px;
-  margin-right: 40px;
+  margin-right: 20px;
 }
 
 .footer-text {
