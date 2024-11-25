@@ -290,7 +290,7 @@ input:autofill {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
+  width: 100vw !important;
   margin-bottom: 100px;
 }
 
