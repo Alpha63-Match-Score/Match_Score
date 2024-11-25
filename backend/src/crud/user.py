@@ -17,6 +17,12 @@ def create_user(user: UserCreate, db: Session):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    send_email_notification(
+        email=user.email,
+        subject="Account Created",
+        message=f"Your account has been created with email {user.email}",
+    )
     return db_user
 
 
