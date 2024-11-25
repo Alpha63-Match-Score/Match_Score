@@ -8,7 +8,7 @@
         <v-card class="login-card">
           <div class="login-background"></div>
           <div class="login-content">
-            <h2 class="text-center mb-6">Login to Kitten Strike</h2>
+            <h2 class="text-center mb-6">Login</h2>
 
             <!-- Error Alert -->
             <v-alert
@@ -32,6 +32,7 @@
                 prepend-icon="mdi-email"
                 class="mb-4"
                 required
+                error-messages-class="custom-error-message"
               ></v-text-field>
 
               <!-- Password Field -->
@@ -46,6 +47,7 @@
                 @click:append="showPassword = !showPassword"
                 class="mb-6"
                 required
+                error-messages-class="custom-error-message"
               ></v-text-field>
 
               <!-- Login Button -->
@@ -178,10 +180,70 @@ const handleLogin = async () => {
   box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
 }
 
-.custom-error-message {
-  color: #fed854 !important; /* Изберете желания цвят */
-  font-size: 14px; /* Регулирайте размера, ако е необходимо */
-  font-weight: bold; /* По желание направете текста по-силен */
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 14px;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--variant-outlined.v-field--error) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline) {
+  color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-alert) {
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  color: #fed854 !important;
+  border-color: #fed854 !important;
+}
+
+:deep(.v-alert__close-button) {
+  color: #fed854 !important;
+}
+
+:deep(.v-alert__prepend) {
+  color: #fed854 !important;
+}
+
+:deep(.v-alert__content) {
+  color: #fed854 !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(45, 55, 75, 0.8) inset !important;
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: white !important;
+}
+
+input:autofill {
+  background: rgba(45, 55, 75, 0.8) !important;
+  color: white !important;
+}
+
+:deep(.v-field__input:-webkit-autofill) {
+  -webkit-box-shadow: 0 0 0 30px rgba(45, 55, 75, 0.8) inset !important;
+  -webkit-text-fill-color: white !important;
+}
+
+.text-medium-emphasis {
+  color: rgba(86, 91, 91, 0.99) !important; /* Жълт цвят */
+  font-weight: bold;
 }
 
 .register-link {
