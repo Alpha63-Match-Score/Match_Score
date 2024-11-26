@@ -31,10 +31,12 @@ def create_player(
 
     if player.team_name:
         db_team = v.team_exists(db, team_name=player.team_name)
+        v.team_player_limit_reached(db_team)
 
     avatar_url = None
     if not isinstance(avatar, str):
         avatar_url = s3_service.upload_file(avatar, "players")
+
 
     db_player = Player(
         username=player.username,
@@ -126,6 +128,7 @@ def update_player(
         db_player.country = player.country
     if player.team_name is not None:
         team = v.team_exists(db, team_name=player.team_name)
+        v.team_player_limit_reached(team)
         db_player.team_id = team.id
 
     if not isinstance(avatar, str):
