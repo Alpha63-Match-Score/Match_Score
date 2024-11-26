@@ -12,6 +12,7 @@ interface LoginCredentials {
 interface LoginResponse {
   access_token: string
   token_type: string
+  role: string
 }
 
 interface RegisterCredentials {
@@ -28,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const token = ref<string | null>(localStorage.getItem('token') || null)
   const userEmail = ref<string | null>(null)
+  const userRole = ref<string | null>(null) // Add role to the state
   const isAuthenticated = ref(!!token.value)
 
   const setToken = (newToken: string | null) => {
@@ -41,9 +43,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const setUserRole = (role: string | null) => {
+    userRole.value = role
+    if (role) {
+      localStorage.setItem('userRole', role)
+    } else {
+      localStorage.removeItem('userRole')
+    }
+  }
+
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
-      // Convert credentials to FormData as required by OAuth2PasswordRequestForm
       const formData = new FormData()
       formData.append('username', credentials.username)
       formData.append('password', credentials.password)
@@ -59,9 +69,10 @@ export const useAuthStore = defineStore('auth', () => {
 
       const data: LoginResponse = await response.json()
 
-      // Store the token and email
+      // Store the token, email, and role
       setToken(data.access_token)
-      userEmail.value = credentials.username // Store the email used to login
+      userEmail.value = credentials.username
+      setUserRole(data.role)
 
       await router.push('/')
 
@@ -70,6 +81,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Login error:', error)
       setToken(null)
       userEmail.value = null
+      setUserRole(null)
       return false
     }
   }
@@ -91,6 +103,10 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('Registration failed')
       }
 
+      const data: RegisterResponse = await response.json()
+
+      setUserRole(data.role)
+
       const loginSuccess = await login({
         username: credentials.email,
         password: credentials.password
@@ -100,9 +116,6 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('Auto-login after registration failed')
       }
 
-      // await router.push('/login') // Пренасочваме към login страницата след успешна регистрация
-      // After successful registration, you might want to automatically log in
-      // or just redirect to login page
       return true
     } catch (error) {
       console.error('Registration error:', error)
@@ -112,9 +125,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async (): Promise<boolean> => {
     try {
-      // Even if you don't have a logout endpoint, we should still clear local state
       setToken(null)
       userEmail.value = null
+      setUserRole(null) // Clear role on logout
       await router.push('/login')
       return true
     } catch (error) {
@@ -123,12 +136,39 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const fetchUserRole = async (): Promise<void> => {
+    try {
+      if (!token.value) {
+        throw new Error('User is not authenticated')
+      }
+
+      const response = await fetch(`${API_URL}/users/role`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token.value}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user role')
+      }
+
+      const data = await response.json()
+      setUserRole(data.role) // Assume the API returns a `role` field
+    } catch (error) {
+      console.error('Error fetching user role:', error)
+      setUserRole(null)
+    }
+  }
+
   return {
     token,
     userEmail,
+    userRole, // Expose userRole to components
     isAuthenticated,
     login,
     register,
-    logout
+    logout,
+    fetchUserRole // Expose method to fetch roles
   }
 })

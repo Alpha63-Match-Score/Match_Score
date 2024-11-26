@@ -29,10 +29,11 @@ def get_all(
     request_type: (
         Literal["link user to player", "promote user to director"] | None
     ) = None,
-    filter_by_user: bool = False,
+    filter_by_admin: bool = False,
     # request_date: str = None,
     # response_date: str = None,
 ):
+    user_role_is_admin(current_user)
     query = db.query(Request)
 
     if status:
@@ -41,16 +42,8 @@ def get_all(
     if request_type:
         query = query.filter(Request.request_type == request_type)
 
-    if filter_by_user:
-        if current_user.role == Role.ADMIN:
-            query = query.filter(Request.admin_id == current_user.id)
-        elif current_user.role == Role.USER:
-            query = query.filter(Request.user_id == current_user.id)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_BAD_REQUEST,
-                detail="You do not have permission to view this resource.",
-            )
+    if filter_by_admin:
+        query = query.filter(Request.admin_id == current_user.id)
 
     if sort_by == "asc":
         query = query.order_by(asc(Request.request_date))
@@ -72,6 +65,27 @@ def get_all(
             response_date=request.response_date,
             admin_id=request.admin_id,
             username=request.username,
+        )
+        for request in query
+    ]
+    return result
+
+
+def get_current_user_request(db: Session,
+                            current_user: User,
+                            pagination: PaginationParams
+                             ):
+
+    query = db.query(Request).filter(Request.user_id == current_user.id)
+    query = query.order_by(desc(Request.request_date))
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    result = [
+        ResponseRequest(
+        request_type=request.request_type,
+        status=request.status,
+        request_date=request.request_date,
+        response_date=request.response_date,
         )
         for request in query
     ]

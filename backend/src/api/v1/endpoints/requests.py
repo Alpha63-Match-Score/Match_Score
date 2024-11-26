@@ -10,9 +10,12 @@ from src.crud.request import (
     send_director_request,
     send_link_to_player_request,
     update_request,
+    get_current_user_request,
 )
 from src.models import User
 from src.utils.pagination import PaginationParams, get_pagination
+
+
 
 router = APIRouter()
 
@@ -42,7 +45,7 @@ def get_all_requests(
     request_type: (
         Literal["link user to player", "promote user to director"] | None
     ) = None,
-    filter_by_current_user: bool = False,
+    filter_by_current_admin: bool = False,
     pagination: PaginationParams = Depends(get_pagination),
 ):
 
@@ -53,7 +56,7 @@ def get_all_requests(
         sort_by,
         status,
         request_type,
-        filter_by_current_user,
+        filter_by_current_admin,
     )
 
 
@@ -65,3 +68,12 @@ def put_request(
     current_user: User = Depends(get_current_user),
 ):
     return update_request(db, current_user, status, request_id)
+
+
+@router.get("/me")
+def get_my_requests(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    pagination: PaginationParams = Depends(get_pagination),
+):
+    return get_current_user_request(db, current_user, pagination)
