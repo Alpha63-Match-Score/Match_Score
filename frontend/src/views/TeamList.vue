@@ -37,34 +37,42 @@
           <v-col v-for="team in teams" :key="team.id" cols="12" md="6" class="team-column">
             <div class="team-card">
               <div class="team-content">
-                <div class="team-title">{{ team.name }}</div>
                 <div class="team-header">
-                  <v-avatar class="team-avatar">
-                    <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
-                  </v-avatar>
-                  <div class="players-avatars">
-                    <v-avatar
-                      v-for="(player, index) in team.players"
-                      :key="player.id"
-                      size="40"
-                      class="player-avatar"
-                    >
-                      <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
-                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="30"></v-icon>
+                  <div class="team-left-section">
+                    <v-avatar class="team-avatar" size="100">
+                      <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
                     </v-avatar>
+                    <div class="team-info">
+                      <div class="team-title">{{ team.name }}</div>
+                      <div class="players-avatars">
+                        <v-avatar
+                          v-for="(player, index) in team.players.slice(0, 10)"
+                          :key="player.id"
+                          size="36"
+                          class="player-avatar"
+                        >
+                          <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
+                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="24"></v-icon>
+                        </v-avatar>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="team-right-section">
+                    <div class="progress-wrapper">
+                      <v-progress-linear
+                        :model-value="parseInt(team.game_win_ratio)"
+                        color="#42DDF2FF"
+                        height="6"
+                        rounded
+                        class="progress-bar"
+                      ></v-progress-linear>
+                      <span class="win-ratio">{{ team.game_win_ratio }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="progress-wrapper">
-                  <v-progress-linear
-                    :model-value="parseInt(team.game_win_ratio)"
-                    color="#42DDF2FF"
-                    height="6"
-                    rounded
-                    class="progress-bar"
-                  ></v-progress-linear>
-                  <span class="win-ratio">{{ team.game_win_ratio }}</span>
-                </div>
+
                 <v-btn class="view-details-btn" variant="outlined" :to="'/teams/' + team.id">
                   View Details
                 </v-btn>
@@ -72,6 +80,7 @@
             </div>
           </v-col>
         </v-row>
+
         <!-- Load More Button -->
         <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
           <v-btn
@@ -244,11 +253,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  align-items: right;
+  align-items: center;
+  margin-left: 10px;
 }
 
 .team-title {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #42DDF2FF;
   text-align: center;
@@ -263,17 +273,18 @@ onUnmounted(() => {
 }
 
 .players-avatars {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
-  max-width: 200px;
+  max-width: 400px;
   flex: 1;
   justify-content: flex-start;
+  margin-left: 10px;
 }
 
 .player-avatar {
-  width: 40px;
-  height: 40px;
+  min-width: 55px;
+  min-height: 55px;
   border: 1px solid rgba(8, 117, 176, 0.3);
   background: rgba(8, 87, 144, 0.1);
 }
@@ -288,10 +299,15 @@ onUnmounted(() => {
 .progress-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 170px; /* Match the width of the team-avatar */
-  margin-top: 10px;
-  justify-content: center;
+  color: #42ddf2;
+  font-size: 0.9rem;
+  width: 170px; /* Match the width of team-avatar */
+  text-align: left;
+  align-self: flex-end;
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  margin: 8px;
 }
 
 .progress-bar {
@@ -303,6 +319,11 @@ onUnmounted(() => {
   font-size: 0.9rem;
   min-width: 45px;
   text-align: left;
+  align-self: flex-end;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 8px;
 }
 
 .view-details-btn {
