@@ -1,37 +1,81 @@
 <template>
   <v-app>
-
     <!-- Navigation Drawer -->
-      <v-navigation-drawer
-        expand-on-hover
-        rail
-        class="transparent-drawer">
+    <v-navigation-drawer
+      expand-on-hover
+      rail
+      class="transparent-drawer">
 
-        <!-- Avatar/Logo -->
+      <!-- Avatar/Logo -->
+      <v-list-item
+        prepend-avatar="/src/assets/logo2.png"
+        title="Kitten Strike"
+      ></v-list-item>
+
+      <!-- Search bar - conditionally rendered -->
+      <v-list-item>
+        <v-text-field
+          v-model="searchQuery"
+          density="compact"
+          variant="outlined"
+          prepend-icon="mdi-magnify"
+          :placeholder="shouldShowSearch ? 'Search...' : ''"
+          hide-details
+          rounded
+          class="mt-2"
+          @update:model-value="handleSearch"
+          :disabled="!shouldShowSearch"
+          :readonly="!shouldShowSearch"
+          :class="{ 'search-disabled': !shouldShowSearch }"
+        ></v-text-field>
+      </v-list-item>
+
+      <v-divider></v-divider>
+
+      <!-- Common menu items (Home, Events, Matches, Teams) -->
+      <v-list nav>
         <v-list-item
-          prepend-avatar="/src/assets/logo2.png"
-          title="Kitten Strike"
-        ></v-list-item>
-
-        <!-- Search bar -->
-        <v-list-item>
-          <v-text-field
-            density="compact"
-            variant="outlined"
-            prepend-icon="mdi-magnify"
-            placeholder="Search..."
-            hide-details
-            rounded
-            class="mt-2"
-          ></v-text-field>
+          v-for="(item, index) in menuItems.slice(0, 4)"
+          :key="index"
+          :to="item.path"
+          :prepend-icon="item.icon"
+          link
+        >
+          {{ item.title }}
         </v-list-item>
+      </v-list>
 
-        <v-divider></v-divider>
+      <v-divider></v-divider>
 
-        <!-- Common menu items (Home, Events, Matches, Teams) -->
+      <!-- Authenticated menu items -->
+      <div v-if="authStore.isAuthenticated">
+        <v-list nav>
+          <!-- Dashboard -->
+          <v-list-item
+            :to="menuItems[4].path"
+            :prepend-icon="menuItems[4].icon"
+            link
+          >
+            {{ menuItems[4].title }}
+          </v-list-item>
+
+          <!-- Logout button -->
+          <v-list-item
+            @click="handleLogout"
+            prepend-icon="mdi-logout"
+            link
+            color="error"
+          >
+            Logout
+          </v-list-item>
+        </v-list>
+      </div>
+
+      <!-- Non-authenticated menu items -->
+      <div v-else>
         <v-list nav>
           <v-list-item
-            v-for="(item, index) in menuItems.slice(0, 4)"
+            v-for="(item, index) in menuItems.slice(5, 7)"
             :key="index"
             :to="item.path"
             :prepend-icon="item.icon"
@@ -40,61 +84,21 @@
             {{ item.title }}
           </v-list-item>
         </v-list>
+      </div>
 
-        <v-divider></v-divider>
+      <v-divider></v-divider>
 
-        <!-- Authenticated menu items -->
-        <div v-if="authStore.isAuthenticated">
-          <v-list nav>
-            <!-- Dashboard -->
-            <v-list-item
-              :to="menuItems[4].path"
-              :prepend-icon="menuItems[4].icon"
-              link
-            >
-              {{ menuItems[4].title }}
-            </v-list-item>
-
-            <!-- Logout button -->
-            <v-list-item
-              @click="handleLogout"
-              prepend-icon="mdi-logout"
-              link
-              color="error"
-            >
-              Logout
-            </v-list-item>
-          </v-list>
-        </div>
-
-        <!-- Non-authenticated menu items -->
-        <div v-else>
-          <v-list nav>
-            <v-list-item
-              v-for="(item, index) in menuItems.slice(5, 7)"
-              :key="index"
-              :to="item.path"
-              :prepend-icon="item.icon"
-              link
-            >
-              {{ item.title }}
-            </v-list-item>
-          </v-list>
-        </div>
-
-        <v-divider></v-divider>
-
-        <!-- About (always visible) -->
-        <v-list nav>
-          <v-list-item
-            :to="menuItems[7].path"
-            :prepend-icon="menuItems[7].icon"
-            link
-          >
-            {{ menuItems[7].title }}
-          </v-list-item>
-        </v-list>
-      </v-navigation-drawer>
+      <!-- About (always visible) -->
+      <v-list nav>
+        <v-list-item
+          :to="menuItems[7].path"
+          :prepend-icon="menuItems[7].icon"
+          link
+        >
+          {{ menuItems[7].title }}
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
 
     <!-- Main Content -->
     <v-main>
@@ -119,13 +123,72 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-import Logo from '@/assets/logo.png';
+import { useRouter, useRoute } from 'vue-router'
+import { API_URL } from '@/config'
+import Logo from '@/assets/logo.png'
 
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+const searchQuery = ref('')
+
+// Pages where search should be hidden
+const noSearchPages = ['/', '/login', '/register', '/dashboard', '/about']
+
+// Computed property to determine if search should be shown
+const shouldShowSearch = computed(() => {
+  return !noSearchPages.includes(route.path)
+})
+
+// Function to handle search based on current route
+const handleSearch = async () => {
+  const query = searchQuery.value.trim()
+
+  try {
+    let endpoint = ''
+
+    // Determine which endpoint to use based on current route
+    switch (route.path) {
+      case '/teams':
+        endpoint = query
+          ? `${API_URL}/teams/?search=${query}&sort_by=desc&offset=0&limit=10`
+          : `${API_URL}/teams/?sort_by=desc&offset=0&limit=10`
+        break
+      case '/events':
+        endpoint = query
+          ? `${API_URL}/tournaments/?search=${query}&offset=0&limit=10`
+          : `${API_URL}/tournaments/?offset=0&limit=10`
+        break
+      case '/matches':
+        endpoint = query
+          ? `${API_URL}/matches/?search=${query}&offset=0&limit=10`
+          : `${API_URL}/matches/?offset=0&limit=10`
+        break
+      default:
+        return
+    }
+
+    const response = await fetch(endpoint)
+    if (!response.ok) {
+      throw new Error('Search failed')
+    }
+
+    const data = await response.json()
+
+    window.dispatchEvent(new CustomEvent('search-results', {
+      detail: {
+        results: data,
+        route: route.path
+      }
+    }))
+  } catch (error) {
+    console.error('Search error:', error)
+  }
+}
+
 const menuItems = ref([
   { title: 'Home', path: '/', icon: 'mdi-home' },
   { title: 'Events', path: '/events', icon: 'mdi-trophy' },
@@ -135,7 +198,7 @@ const menuItems = ref([
   { title: 'Login', path: '/login', icon: 'mdi-account' },
   { title: 'Register', path: '/register', icon: 'mdi-account-plus' },
   { title: 'About', path: '/about', icon: 'mdi-information' },
-]);
+])
 
 const handleLogout = async () => {
   const success = await authStore.logout()
@@ -286,6 +349,15 @@ const handleLogout = async () => {
 
 .footer-right .v-btn:hover {
   color: #fed854 !important;
+}
+
+.search-disabled {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.search-disabled :deep(.v-field__outline) {
+  opacity: 0.2;
 }
 </style>
 

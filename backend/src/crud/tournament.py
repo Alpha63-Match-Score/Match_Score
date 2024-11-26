@@ -35,6 +35,7 @@ def get_tournaments(
     pagination: PaginationParams,
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
+    tournament_format: TournamentFormat | None = None,
     search: str | None = None,
     author_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
@@ -44,6 +45,7 @@ def get_tournaments(
     filters = []
     filters.extend(_get_period_filter(period))
     filters.extend(_get_status_filter(status))
+    filters.extend(_get_format_filter(tournament_format))
     filters.extend(_get_search_filter(search))
     filters.extend(_get_author_filter(author_id))
 
@@ -100,6 +102,11 @@ def _get_status_filter(status: Literal["active", "finished"] | None):
     elif status == "finished":
         return [Tournament.current_stage == Stage.FINISHED]
 
+def _get_format_filter(tournament_format: TournamentFormat | None):
+    if not tournament_format:
+        return []
+
+    return [Tournament.tournament_format == tournament_format]
 
 def _get_search_filter(search: str | None):
     if not search:

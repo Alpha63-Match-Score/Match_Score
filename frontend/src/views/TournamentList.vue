@@ -6,6 +6,22 @@
 
     <div class="content-wrapper">
       <v-container>
+      <!-- Add Reset Button when filtered -->
+      <div
+        v-if="isFiltered"
+        class="reset-filter-wrapper"
+        :class="{ 'hidden': !isFiltered }"
+      >
+        <v-btn
+          class="reset-filter-btn"
+          variant="outlined"
+          @click="resetFilters"
+          prepend-icon="mdi-filter-off"
+        >
+          Show All Tournaments
+        </v-btn>
+      </div>
+
         <!-- Loading state -->
         <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
           <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
@@ -31,7 +47,14 @@
               <div class="tournament-content">
                 <div class="tournament-header">
                   <h3 class="tournament-title">{{ tournament.title }}</h3>
-                  <div class="format-tag">{{ formatText(tournament.tournament_format) }}</div>
+                  <div
+                    class="format-tag"
+                    @click="handleFormatClick(tournament.tournament_format)"
+                    role="button"
+                    :class="{ 'format-tag--loading': isLoadingTournaments }"
+                  >
+                    {{ formatText(tournament.tournament_format).toUpperCase() }}
+                  </div>
                 </div>
 
                 <div class="tournament-info">
@@ -70,17 +93,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { format } from 'date-fns'
 import { API_URL } from '@/config'
 import singleEliminationBg from "@/assets/single-elimination.png";
 import roundRobinBg from "@/assets/round-robin.png";
 import oneOffMatchBg from "@/assets/one-off-match.png";
-import topImageBg from "@/assets/top-image.png";
 
-// const formatPrizePool = (prizePool: number): string => {
-//   return `${prizePool} pate`;
-// };
+interface Tournament {
+  id: string
+  title: string
+  tournament_format: string
+  start_date: string
+  end_date: string
+  current_stage: string
+  number_of_teams: number
+}
+
+const isFiltered = ref(false);
+const tournaments = ref<Tournament[]>([]);
+const isLoadingTournaments = ref(false);
+const tournamentsError = ref<string | null>(null);
 
 const getTournamentBackground = (format: string): string => {
   const formatMap: Record<string, string> = {
@@ -98,51 +131,66 @@ const getTournamentBackground = (format: string): string => {
 };
 
 
-interface Tournament {
-  id: string
-  title: string
-  tournament_format: string
-  start_date: string
-  end_date: string
-  current_stage: string
-  number_of_teams: number
-  // prize_pool: number
-}
+const handleFormatClick = async (format: string) => {
+  try {
+    isLoadingTournaments.value = true;
+    tournamentsError.value = null;
+    const encodedFormat = encodeURIComponent(format.toLowerCase());
 
-import { defineComponent } from 'vue';
+    const response = await fetch(
+      `${API_URL}/tournaments/?tournament_format=${encodedFormat}&offset=0&limit=10`
+    );
 
-enum TournamentFormat {
-  SINGLE_ELIMINATION = 'SINGLE_ELIMINATION',
-  ROUND_ROBIN = 'ROUND_ROBIN',
-  ONE_OFF_MATCH = 'ONE_OFF_MATCH',
-}
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-// Reactive data
-const stageFormat = ref(TournamentFormat.SINGLE_ELIMINATION);
-const tournaments = ref<Tournament[]>([]);
-const isLoadingTournaments = ref(false);
-const tournamentsError = ref<string | null>(null);
+    const data = await response.json();
+    tournaments.value = Array.isArray(data) ? data : data.results || [];
+    isFiltered.value = true; // Set filtered state to true
+  } catch (e) {
+    console.error('Error fetching tournaments:', e);
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
+  } finally {
+    isLoadingTournaments.value = false;
+  }
+};
 
-// // Helper methods
-// const getTournamentBackground = (format: string): string => {
-//   const formatMap = {
-//     [TournamentFormat.SINGLE_ELIMINATION]: "@/assets/single-elimination.png",
-//     [TournamentFormat.ROUND_ROBIN]: "@/assets/round-robin.png",
-//     [TournamentFormat.ONE_OFF_MATCH]: "@/assets/one-off-match.png",
-//   };
-//
-//   return formatMap[format as TournamentFormat] || "@/assets/top-image.png";
-// };
+// Add reset function
+const resetFilters = async () => {
+  try {
+    isLoadingTournaments.value = true;
+    tournamentsError.value = null;
+
+    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=10`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    tournaments.value = Array.isArray(data) ? data : data.results || [];
+    isFiltered.value = false; // Reset filtered state
+  } catch (e) {
+    console.error('Error fetching tournaments:', e);
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
+  } finally {
+    isLoadingTournaments.value = false;
+  }
+};
+
 
 const formatText = (text: string) => {
   return text.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
+
 
 const formatDateRange = (startDate: string, endDate: string) => {
   const start = format(new Date(startDate), 'dd MMM yyyy')
   const end = format(new Date(endDate), 'dd MMM yyyy')
   return `${start} / ${end}`
 }
+
 
 const formatStage = (stage: string) => {
   return stage.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -170,11 +218,60 @@ const fetchTournaments = async () => {
 // Lifecycle
 onMounted(() => {
   fetchTournaments()
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/events') {
+      // Update tournaments data with search results
+      tournaments.value = event.detail.results
+      isLoadingTournaments.value = false
+      tournamentsError.value = null
+    }
+  }) as EventListener)
+})
+
+// Don't forget to remove the event listener when component is destroyed
+onUnmounted(() => {
+  window.removeEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/events') {
+      tournaments.value = event.detail.results
+    }
+  }) as EventListener)
 })
 </script>
 
 <style scoped>
+.reset-filter-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 4;
+  margin-top: 20px;
+  opacity: 1;                /* Add this */
+  transition: all 0.3s ease; /* Add this */
+}
 
+.reset-filter-wrapper.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.reset-filter-btn {
+  background: rgba(17, 78, 112, 0.56);
+  color: #ffffff !important;
+  border-color: #42DDF2FF !important;  /* Change this */
+  border-width: 2px !important;        /* Add this */
+  border-radius: 50px;
+  transition: all 0.2s ease;
+  padding: 7px 40px !important;       /* Add this */
+  font-size: 1.1rem !important;        /* Add this */
+}
+
+.reset-filter-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
+  border-color: #42DDF2FF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3); /* Add this */
+}
 
 .tournament-list-wrapper {
   min-height: 100vh;
@@ -186,7 +283,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px;
+  height: 600px;
   background-image: url('@/assets/top-image.png');
   background-size: cover;
   background-position: center;
@@ -199,7 +296,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px;
+  height: 600px; /* Same as header-image */
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
@@ -212,7 +309,7 @@ onMounted(() => {
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 250px;
+  padding-top: 100px;
   min-height: 100vh;
   width: 100vw !important;
 }
@@ -247,7 +344,7 @@ onMounted(() => {
   background-image: var(--tournament-bg, url('@/assets/top-image.png'));
   background-position: center;
   background-size: cover;
-  opacity: 0.1;
+  opacity: 0.05;
   z-index: 1;
 }
 
@@ -258,29 +355,45 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .tournament-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  align-items: flex-start;
+  height: 100px;
 }
 
 .tournament-title {
-  color: #42DDF2FF;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
   margin: 0;
   font-weight: 600;
+  font-family: Orbitron, sans-serif;
+  max-width: 320px;
 }
 
 .format-tag {
-  background: rgba(8, 117, 176, 0.1);
+  background: rgba(17, 78, 112, 0.56);
   color: #42DDF2FF;
   padding: 6px 16px;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
   border: 1px solid rgba(8, 87, 144, 0.8);
+  cursor: pointer;
+}
+
+.format-tag:hover {
+  color: #42DDF2FF !important;
+  background: rgba(66, 221, 242, 0.1);
+}
+
+.format-tag--loading {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .tournament-info {
@@ -298,21 +411,28 @@ onMounted(() => {
 }
 
 .info-icon {
-  color: #42DDF2FF !important;
+  color: rgba(66, 221, 242, 0.8) !important;
 }
 
 .view-details-btn {
   margin-top: auto;
   color: #42DDF2FF !important;
   border-color: #42DDF2FF !important;
-  width: 100%;
+  border-radius: 50px;
+  width: 40%;
+  align-self: center;
+}
+
+.view-details-btn:hover {
+  color: #42DDF2FF !important;
+  background: rgba(66, 221, 242, 0.1);
 }
 
 .error-text {
   text-align: center;
   color: rgba(255, 255, 255, 0.75);
   padding: 20px;
-  background: rgba(255, 0, 0, 0.1);
+  background: rgba(255, 215, 0, 0.25);
   border-radius: 10px;
   margin: 20px 0;
 }
