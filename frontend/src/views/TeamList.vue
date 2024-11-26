@@ -51,7 +51,7 @@
                           :key="player.id"
                           size="36"
                           class="player-avatar"
-                          @click="redirectToPlayer(player.id)"
+                          @click="handlePlayerClick(player.id)"
                         >
                           <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
                           <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="24"></v-icon>
@@ -82,6 +82,39 @@
           </v-col>
         </v-row>
 
+        <!-- Player Modal -->
+        <v-dialog v-model="showPlayerModal" max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="headline">{{ selectedPlayer?.username }}</span>
+            </v-card-title>
+            <v-card-text>
+              <div v-if="isLoadingPlayer" class="d-flex justify-center align-center" style="height: 200px">
+                <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+              </div>
+              <div v-else-if="playerError" class="error-text pa-4">
+                {{ playerError }}
+              </div>
+              <div v-else>
+                <v-avatar size="100">
+                  <v-img v-if="selectedPlayer?.avatar" :src="selectedPlayer.avatar" alt="Player avatar"></v-img>
+                  <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
+                </v-avatar>
+                <div class="player-info">
+                  <p><strong>First Name:</strong> {{ selectedPlayer?.first_name }}</p>
+                  <p><strong>Last Name:</strong> {{ selectedPlayer?.last_name }}</p>
+                  <p><strong>Country:</strong> {{ selectedPlayer?.country }}</p>
+                  <p><strong>Email:</strong> {{ selectedPlayer?.user_email }}</p>
+                  <p><strong>Team Name:</strong> {{ selectedPlayer?.team_name }}</p>
+                </div>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- Load More Button -->
         <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
           <v-btn
@@ -107,7 +140,12 @@ import { API_URL } from '@/config'
 
 interface Player {
   id: string
-  name: string
+  username: string
+  first_name: string
+  last_name: string
+  country: string
+  user_email: string | null
+  team_name: string
   avatar: string | null
 }
 
@@ -127,6 +165,10 @@ const currentLimit = ref(10)
 const hasMoreTeams = ref(true)
 const isLoadingMore = ref(false)
 const router = useRouter()
+const showPlayerModal = ref(false)
+const selectedPlayer = ref<Player | null>(null)
+const isLoadingPlayer = ref(false)
+const playerError = ref<string | null>(null)
 
 const fetchTeams = async () => {
   try {
@@ -152,8 +194,26 @@ const loadMoreTeams = async () => {
   await fetchTeams()
 }
 
-const redirectToPlayer = (playerId: string) => {
-  router.push(`/players/${playerId}`)
+const fetchPlayer = async (playerId: string) => {
+  try {
+    isLoadingPlayer.value = true
+    playerError.value = null
+    const response = await fetch(`${API_URL}/players/${playerId}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    selectedPlayer.value = await response.json()
+  } catch (e) {
+    console.error('Error fetching player:', e)
+    playerError.value = 'Failed to load player. Please try again later.'
+  } finally {
+    isLoadingPlayer.value = false
+  }
+}
+
+const handlePlayerClick = (playerId: string) => {
+  fetchPlayer(playerId)
+  showPlayerModal.value = true
 }
 
 onMounted(() => {
@@ -277,6 +337,14 @@ onUnmounted(() => {
   min-height: 170px;
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
+}
+
+.player-info {
+  margin-top: 16px;
+}
+
+.player-info p {
+  margin: 4px 0;
 }
 
 .players-avatars {
