@@ -7,19 +7,22 @@
     <div class="content-wrapper">
       <v-container>
       <!-- Add Reset Button when filtered -->
-      <div
-        v-if="isFiltered"
-        class="reset-filter-wrapper"
-        :class="{ 'hidden': !isFiltered }"
-      >
-        <v-btn
-          class="reset-filter-btn"
-          variant="outlined"
-          @click="resetFilters"
-          prepend-icon="mdi-filter-off"
-        >
-          Show All Tournaments
-        </v-btn>
+      <div class="filter-button-space">
+        <transition name="fade">
+          <div
+            v-if="isFiltered"
+            class="reset-filter-wrapper"
+          >
+            <v-btn
+              class="reset-filter-btn"
+              variant="outlined"
+              @click="resetFilters"
+              prepend-icon="mdi-filter-off"
+            >
+              Show All Tournaments
+            </v-btn>
+          </div>
+        </transition>
       </div>
 
         <!-- Loading state -->
@@ -80,13 +83,26 @@
 
                 <v-btn class="view-details-btn"
                        variant="outlined"
-                       :to="'/tournaments/' + tournament.id">
+                       :to="'/events/' + tournament.id">
                   View Details
                 </v-btn>
               </div>
             </div>
           </v-col>
         </v-row>
+        <!-- Load More Button -->
+          <div v-if="!isLoadingTournaments && hasMoreTournaments" class="load-more-wrapper">
+            <v-btn
+              class="load-more-btn"
+              variant="outlined"
+              @click="loadMoreTournaments"
+              :loading="isLoadingMore"
+              :disabled="isLoadingMore"
+            >
+              <v-icon left class="mr-2">mdi-refresh</v-icon>
+              Load More Tournaments
+            </v-btn>
+          </div>
       </v-container>
     </div>
   </div>
@@ -114,6 +130,9 @@ const isFiltered = ref(false);
 const tournaments = ref<Tournament[]>([]);
 const isLoadingTournaments = ref(false);
 const tournamentsError = ref<string | null>(null);
+const currentLimit = ref(10);
+const hasMoreTournaments = ref(true);
+const isLoadingMore = ref(false);
 
 const getTournamentBackground = (format: string): string => {
   const formatMap: Record<string, string> = {
@@ -135,10 +154,11 @@ const handleFormatClick = async (format: string) => {
   try {
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
+    currentLimit.value = 10; // Reset limit
     const encodedFormat = encodeURIComponent(format.toLowerCase());
 
     const response = await fetch(
-      `${API_URL}/tournaments/?tournament_format=${encodedFormat}&offset=0&limit=10`
+      `${API_URL}/tournaments/?tournament_format=${encodedFormat}&offset=0&limit=${currentLimit.value}`
     );
 
     if (!response.ok) {
@@ -146,8 +166,13 @@ const handleFormatClick = async (format: string) => {
     }
 
     const data = await response.json();
-    tournaments.value = Array.isArray(data) ? data : data.results || [];
-    isFiltered.value = true; // Set filtered state to true
+    const results = Array.isArray(data) ? data : data.results || [];
+    tournaments.value = results;
+    isFiltered.value = true;
+
+    // Check if we have reached the end
+    hasMoreTournaments.value = results.length === currentLimit.value;
+
   } catch (e) {
     console.error('Error fetching tournaments:', e);
     tournamentsError.value = 'Failed to load tournaments. Please try again later.';
@@ -161,16 +186,20 @@ const resetFilters = async () => {
   try {
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
+    currentLimit.value = 10; // Reset limit
+    isFiltered.value = false; // Explicitly set to false
 
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=10`);
+    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    tournaments.value = Array.isArray(data) ? data : data.results || [];
-    isFiltered.value = false; // Reset filtered state
+    const results = Array.isArray(data) ? data : data.results || [];
+    tournaments.value = results;
+    hasMoreTournaments.value = results.length === currentLimit.value;
+
   } catch (e) {
     console.error('Error fetching tournaments:', e);
     tournamentsError.value = 'Failed to load tournaments. Please try again later.';
@@ -197,22 +226,38 @@ const formatStage = (stage: string) => {
 }
 
 // Fetch tournaments
-const fetchTournaments = async () => {
+const fetchTournaments = async (loadMore = false) => {
   try {
-    isLoadingTournaments.value = true;
+    if (loadMore) {
+      isLoadingMore.value = true;
+    } else {
+      isLoadingTournaments.value = true;
+      isFiltered.value = false; // Reset filter state when loading initial tournaments
+    }
     tournamentsError.value = null;
-    const response = await fetch(`${API_URL}/tournaments/`);
+
+    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    tournaments.value = Array.isArray(data) ? data : data.results || [];
+    const results = Array.isArray(data) ? data : (data.results || []);
+
+    tournaments.value = results;
+    hasMoreTournaments.value = results.length === currentLimit.value;
+
   } catch (e) {
     console.error('Error fetching tournaments:', e);
     tournamentsError.value = 'Failed to load tournaments. Please try again later.';
   } finally {
     isLoadingTournaments.value = false;
+    isLoadingMore.value = false;
   }
+};
+
+const loadMoreTournaments = async () => {
+  currentLimit.value += 10;
+  await fetchTournaments(true);
 };
 
 // Lifecycle
@@ -436,4 +481,63 @@ onUnmounted(() => {
   border-radius: 10px;
   margin: 20px 0;
 }
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+  position: relative;
+  z-index: 4;
+}
+
+.load-more-btn {
+  background: rgba(17, 78, 112, 0.56);
+  color: #ffffff !important;
+  border-color: #42DDF2FF !important;
+  border-width: 2px !important;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+  padding: 5px 40px !important;
+  font-size: 1.1rem !important;
+}
+
+.load-more-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
+  border-color: #42DDF2FF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.reset-filter-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.filter-button-space {
+  min-height: 80px;
+  position: relative;
+  z-index: 4;
+}
+
 </style>
