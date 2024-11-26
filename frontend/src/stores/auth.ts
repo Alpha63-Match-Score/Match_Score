@@ -100,9 +100,6 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('Auto-login after registration failed')
       }
 
-      // await router.push('/login') // Пренасочваме към login страницата след успешна регистрация
-      // After successful registration, you might want to automatically log in
-      // or just redirect to login page
       return true
     } catch (error) {
       console.error('Registration error:', error)
