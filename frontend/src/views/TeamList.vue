@@ -51,6 +51,7 @@
                           :key="player.id"
                           size="36"
                           class="player-avatar"
+                          @click="redirectToPlayer(player.id)"
                         >
                           <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
                           <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="24"></v-icon>
@@ -101,6 +102,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { API_URL } from '@/config'
 
 interface Player {
@@ -124,6 +126,7 @@ const teamsError = ref<string | null>(null)
 const currentLimit = ref(10)
 const hasMoreTeams = ref(true)
 const isLoadingMore = ref(false)
+const router = useRouter()
 
 const fetchTeams = async () => {
   try {
@@ -147,6 +150,10 @@ const fetchTeams = async () => {
 const loadMoreTeams = async () => {
   currentLimit.value += 10
   await fetchTeams()
+}
+
+const redirectToPlayer = (playerId: string) => {
+  router.push(`/players/${playerId}`)
 }
 
 onMounted(() => {
@@ -287,6 +294,12 @@ onUnmounted(() => {
   min-height: 55px;
   border: 1px solid rgba(8, 117, 176, 0.3);
   background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.player-avatar:hover {
+  transform: scale(1.2);
 }
 
 .team-right-section {
