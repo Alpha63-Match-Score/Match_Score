@@ -46,6 +46,16 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/Register.vue')
+    },
+    {
+      path: '/events/:id',
+      name: 'tournament-details',
+      component: () => import('../views/SingleTournament.vue'),
+    },
+    {
+      path: '/teams/:id',
+      name: 'team-details',
+      component: () => import('../views/SingleTeam.vue'),
     }
   ],
 })
