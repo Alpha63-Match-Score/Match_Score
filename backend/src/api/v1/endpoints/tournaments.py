@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
+from src.models.enums import TournamentFormat
 from src.crud import tournament as tournament_crud
 from src.schemas.tournament import (
     TournamentCreate,
@@ -14,6 +15,8 @@ from src.schemas.tournament import (
 from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
 
+
+
 router = APIRouter()
 
 
@@ -23,6 +26,7 @@ def read_tournaments(
     pagination: PaginationParams = Depends(get_pagination),
     period: Literal["past", "present", "future"] | None = None,
     status: Literal["active", "finished"] | None = None,
+    tournament_format: TournamentFormat | None = None,
     search: str | None = None,
     author_id: UUID | None = None,
     db: Session = Depends(get_db),
@@ -32,6 +36,7 @@ def read_tournaments(
         pagination,
         period,
         status,
+        tournament_format,
         search,
         author_id,
     )
