@@ -83,20 +83,13 @@
         </v-row>
 
         <!-- Player Modal -->
-        <v-dialog v-model="showPlayerModal" max-width="600px">
-          <v-card>
-            <v-card-title>
-              <span class="headline">{{ selectedPlayer?.username }}</span>
-            </v-card-title>
-            <v-card-text>
-              <div v-if="isLoadingPlayer" class="d-flex justify-center align-center" style="height: 200px">
-                <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
-              </div>
-              <div v-else-if="playerError" class="error-text pa-4">
-                {{ playerError }}
-              </div>
-              <div v-else>
-                <v-avatar size="100">
+          <v-dialog v-model="showPlayerModal" max-width="600px">
+            <v-card>
+              <v-card-title>
+                <span class="headline">{{ selectedPlayer?.username }}</span>
+              </v-card-title>
+              <v-card-text>
+                <v-avatar size="150" class="player-avatar">
                   <v-img v-if="selectedPlayer?.avatar" :src="selectedPlayer.avatar" alt="Player avatar"></v-img>
                   <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
                 </v-avatar>
@@ -104,17 +97,17 @@
                   <p><strong>Username:</strong> {{ selectedPlayer?.username }}</p>
                   <p><strong>First Name:</strong> {{ selectedPlayer?.first_name }}</p>
                   <p><strong>Last Name:</strong> {{ selectedPlayer?.last_name }}</p>
+                  <p><strong>Game Win Ratio:</strong> {{ selectedPlayer?.game_win_ratio }}</p>
                   <p><strong>Country:</strong> {{ selectedPlayer?.country }}</p>
                   <p><strong>Email:</strong> {{ selectedPlayer?.user_email }}</p>
                   <p><strong>Team Name:</strong> {{ selectedPlayer?.team_name }}</p>
                 </div>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
 
         <!-- Load More Button -->
         <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
@@ -348,6 +341,49 @@ onUnmounted(() => {
   margin: 4px 0;
 }
 
+.v-dialog .v-card {
+  width: 400px; /* Adjust the value to make the box smaller */
+  margin: 0 auto; /* Center the box horizontally */
+  border-radius: 50px;
+  background: rgba(45, 55, 75, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+}
+
+
+.v-dialog .v-card-title {
+  text-align: center;
+  color: #42DDF2FF;
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family: Orbitron, sans-serif;
+}
+
+.v-dialog .v-card-text {
+  display: flex;
+  flex-direction: column; /* This will push the avatar to the right */
+  align-items: center; /* This will vertically center the content */
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+.v-dialog .player-avatar {
+  display: flex;
+  margin-bottom: 16px; /* Add some space between the avatar and the player info */
+}
+
+.v-dialog .v-card-actions .v-btn {
+  color: #42DDF2FF !important;
+  border-color: #42DDF2FF !important;
+  border-radius: 50px;
+}
+
+.v-dialog .v-card-actions .v-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
 .players-avatars {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -387,13 +423,14 @@ onUnmounted(() => {
   text-align: left;
   align-self: flex-end;
   position: absolute;
-  bottom: 0;
+  bottom: 60px;
   left: 8px;
   margin: 8px;
 }
 
 .progress-bar {
   flex-grow: 1;
+  bottom: 16px;
 }
 
 .win-ratio {
@@ -403,13 +440,13 @@ onUnmounted(() => {
   text-align: left;
   align-self: flex-end;
   position: absolute;
-  bottom: 0;
+  bottom: 5px;
   left: 0;
   margin: 8px;
 }
 
 .view-details-btn {
-  margin-top: 16px;
+  margin-top: 45px;
   align-self: center;
   color: #42DDF2FF !important;
   border-color: #42DDF2FF !important;
