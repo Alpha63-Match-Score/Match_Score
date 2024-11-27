@@ -54,6 +54,14 @@
             >
               {{ menuItems[4].title }}
             </v-list-item>
+<!--            <v-list-item-->
+<!--              v-else-->
+<!--              :to="menuItems[8].path"-->
+<!--              :prepend-icon="menuItems[8].icon"-->
+<!--              link-->
+<!--            >-->
+<!--              {{ menuItems[8].title }}-->
+<!--            </v-list-item>-->
 
             <!-- Logout button -->
             <v-list-item
@@ -135,6 +143,7 @@ const menuItems = ref([
   { title: 'Login', path: '/login', icon: 'mdi-account' },
   { title: 'Register', path: '/register', icon: 'mdi-account-plus' },
   { title: 'About', path: '/about', icon: 'mdi-information' },
+  // {title: 'Dashboard', path: '/dashboard-user', icon: 'mdi-paw'},
 ]);
 
 const handleLogout = async () => {

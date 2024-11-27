@@ -1,31 +1,44 @@
-<template>
-  <div>
-    <component :is="currentComponent" />
-  </div>
-</template>
+<!--<template>-->
+<!--  <div>-->
+<!--    <div v-if="!currentComponent">Loading...</div>-->
+<!--    <component v-else :is="currentComponent" />-->
+<!--  </div>-->
+<!--</template>-->
 
-<script setup lang="ts">
-import { ref, onMounted, defineAsyncComponent } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+<!--<script setup lang="ts">-->
+<!--import { ref, watch, defineAsyncComponent } from 'vue';-->
+<!--import { useAuthStore } from '@/stores/auth';-->
 
-const authStore = useAuthStore();
-const role = ref<string | null>(null);
-const currentComponent = ref(null);
+<!--const authStore = useAuthStore();-->
+<!--const currentComponent = ref(null);-->
 
-onMounted(() => {
-  role.value = authStore.userRole;
+<!--// Map roles to components-->
+<!--const roleToComponentMap = {-->
+<!--  USER: () => import('@/views/DashboardUser.vue'),-->
+<!--  ADMIN: () => import('@/views/DashboardAdmin.vue'),-->
+<!--  PLAYER: null,-->
+<!--  DIRECTOR: null,-->
+<!--};-->
 
-  // Dynamically load the component based on the role
-  if (role.value === 'User') {
-    currentComponent.value = defineAsyncComponent(() => import('@/views/DashboardUser.vue'));
-  } else if (role.value === 'Admin') {
-    currentComponent.value = defineAsyncComponent(() => import('@/components/AdminDashboard.vue'));
-  } else if (role.value === 'Director') {
-    currentComponent.value = defineAsyncComponent(() => import('@/components/DirectorDashboard.vue'));
-  } else if (role.value === 'Player') {
-    currentComponent.value = defineAsyncComponent(() => import('@/components/PlayerDashboard.vue'));
-  } else {
-    currentComponent.value = () => 'Unauthorized Access';
-  }
-});
-</script>
+<!--// Watch for changes in userRole-->
+<!--watch(() => authStore.userRole, (newRole) => {-->
+<!--  if (newRole) {-->
+<!--    // Dynamically select the component loader based on the role-->
+<!--    const componentLoader = roleToComponentMap[newRole] || (() =>-->
+<!--      Promise.resolve({-->
+<!--        template: '<div>Unauthorized Access</div>',-->
+<!--      })-->
+<!--    );-->
+
+<!--    currentComponent.value = defineAsyncComponent({-->
+<!--      loader: componentLoader,-->
+<!--      loadingComponent: {-->
+<!--        template: '<div>Loading...</div>',-->
+<!--      },-->
+<!--      errorComponent: {-->
+<!--        template: '<div>Error loading component</div>',-->
+<!--      },-->
+<!--    });-->
+<!--  }-->
+<!--}, { immediate: true });-->
+<!--</script>-->

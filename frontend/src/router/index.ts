@@ -32,10 +32,20 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+  //    {
+  //   path: '/dashboard-user',
+  //   name: 'dashboard-user',
+  //   component: () => import('../views/DashboardUser.vue'),
+  // },
+  // {
+  //   path: '/dashboard-admin',
+  //   name: 'dashboard-admin',
+  //   component: () => import('../views/DashboardAdmin.vue'),
+  // },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('../views/DashboardUser.vue'),
+      component: () => import('../views/DashboardAdmin.vue'),
     },
     {
       path: '/login',

@@ -127,7 +127,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       setToken(null)
       userEmail.value = null
-      setUserRole(null) // Clear role on logout
+      userRole.value = null
       await router.push('/login')
       return true
     } catch (error) {
@@ -154,7 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       const data = await response.json()
-      setUserRole(data.role) // Assume the API returns a `role` field
+      setUserRole(data.role)
     } catch (error) {
       console.error('Error fetching user role:', error)
       setUserRole(null)
@@ -164,11 +164,11 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     userEmail,
-    userRole, // Expose userRole to components
+    userRole,
     isAuthenticated,
     login,
     register,
     logout,
-    fetchUserRole // Expose method to fetch roles
+    fetchUserRole
   }
 })

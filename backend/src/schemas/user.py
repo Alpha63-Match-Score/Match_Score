@@ -17,6 +17,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_identifier: int | None = None
     user_email: str | None = None
+    user_role: str | None = None
 
 
 # User schemas
