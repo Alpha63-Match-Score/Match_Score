@@ -1,249 +1,784 @@
 <template>
-  <div class="admin-dashboard">
-    <header class="dashboard-header">
-      <h1>Admin Dashboard</h1>
-    </header>
+  <div class="home-wrapper">
+    <!-- Header with fade effect -->
+    <div class="header-image"></div>
+    <div class="header-overlay"></div>
 
-    <div class="dashboard-content">
-      <div class="actions-section">
-        <h2>Available Actions</h2>
-        <div class="action-buttons">
-          <button class="action-btn" @click="openTournamentDialog">
-            Add Tournament
-          </button>
-          <button class="action-btn" @click="openMatchDialog">
-            Add Match
-          </button>
-          <button class="action-btn" @click="openPlayerDialog">
-            Add Player
-          </button>
-          <button class="action-btn" @click="openTeamAssignmentDialog">
-            Assign Player to Team
-          </button>
-        </div>
-      </div>
-
-      <div class="requests-section">
-        <h2>Request History</h2>
-        <div class="requests-filter">
-          <label>
-            Filter by Status:
-            <select v-model="selectedStatus">
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </label>
-          <label>
-            Filter by Admin:
-            <select v-model="selectedAdmin">
-              <option value="">All</option>
-              <option v-for="admin in admins" :value="admin.id">
-                {{ admin.name }}
-              </option>
-            </select>
-          </label>
-        </div>
-        <div class="requests-list">
-          <div v-for="request in filteredRequests" :key="request.id" class="request-item">
-            <div class="request-header">
-              <div class="request-type">
-                <i :class="getRequestTypeIcon(request.type)"></i>
-                {{ formatRequestType(request.type) }}
-              </div>
-              <div :class="['status-tag', `status-${request.status}`]">
-                {{ formatStatus(request.status) }}
-              </div>
-            </div>
-            <div class="request-details">
-              <div class="detail-item">
-                <i class="detail-icon mdi mdi-email"></i>
-                {{ request.email }}
-              </div>
-              <div class="detail-item">
-                <i class="detail-icon mdi mdi-calendar"></i>
-                {{ formatDate(request.requestDate) }}
-              </div>
-              <div v-if="request.responseDate" class="detail-item">
-                <i class="detail-icon mdi mdi-calendar-check"></i>
-                {{ formatDate(request.responseDate) }}
-              </div>
-              <div v-if="request.adminId" class="detail-item">
-                <i class="detail-icon mdi mdi-account"></i>
-                {{ getAdminName(request.adminId) }}
-              </div>
-              <div v-if="request.username" class="detail-item">
-                <i class="detail-icon mdi mdi-account"></i>
-                Player: {{ request.username }}
-              </div>
-            </div>
-            <div class="request-actions" v-if="request.status === 'pending'">
-              <button class="action-btn accept-btn" @click="acceptRequest(request)">
-                Accept
-              </button>
-              <button class="action-btn reject-btn" @click="rejectRequest(request)">
-                Reject
-              </button>
-            </div>
-          </div>
-          <div v-if="filteredRequests.length === 0" class="empty-state">
-            No requests found.
+    <div class="content-wrapper">
+      <v-container>
+        <!-- Admin Welcome Section -->
+        <div class="welcome-card">
+          <div class="welcome-background"></div>
+          <div class="welcome-content">
+            <h2 class="welcome-text">Welcome, Admin </h2> <!-- {{ adminEmail }} can be added -->
           </div>
         </div>
-      </div>
+
+        <!-- Action Buttons Section -->
+        <div class="actions-card">
+          <div class="actions-background"></div>
+          <div class="actions-content">
+            <h3 class="section-title">Admin Actions</h3>
+            <div class="actions-buttons">
+              <v-btn
+                class="action-btn"
+                prepend-icon="mdi-tournament"
+                @click="openAddTournamentDialog"
+              >
+                Add Tournament
+              </v-btn>
+              <v-btn
+                class="action-btn"
+                prepend-icon="mdi-soccer"
+                @click="openAddMatchDialog"
+              >
+                Add Match
+              </v-btn>
+              <v-btn
+                class="action-btn"
+                prepend-icon="mdi-account-plus"
+                @click="openAddPlayerDialog"
+              >
+                Add Player
+              </v-btn>
+              <v-btn
+                class="action-btn"
+                prepend-icon="mdi-account-group"
+                @click="openAssignPlayerDialog"
+              >
+                Assign Player to Team
+              </v-btn>
+            </div>
+
+            <!-- Display Error for Admin Actions -->
+            <div v-if="actionsError" class="error-message">
+              {{ actionsError }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Requests Management Section -->
+        <div class="history-card">
+          <div class="history-background"></div>
+          <div class="history-content">
+            <h3 class="section-title">Manage Requests</h3>
+
+            <!-- Filter Options -->
+            <div class="filter-options">
+              <v-select
+                v-model="filterStatus"
+                :items="statusOptions"
+                label="Filter by Status"
+                class="filter-select"
+                dense
+              ></v-select>
+              <v-btn
+                class="filter-btn"
+                @click="fetchRequests"
+                :loading="isLoading"
+              >
+                Apply Filter
+              </v-btn>
+            </div>
+
+            <!-- Loading state -->
+            <div
+              v-if="isLoading"
+              class="d-flex justify-center align-center"
+              style="height: 200px"
+            >
+              <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
+            </div>
+
+            <!-- Error state -->
+            <div v-else-if="requestHistoryError" class="error-message">
+              {{ requestHistoryError }}
+            </div>
+
+            <!-- Request list -->
+            <div v-else-if="requests.length > 0" class="request-list">
+              <div
+                v-for="request in requests"
+                :key="request.id"
+                class="request-item"
+              >
+                <div class="request-header">
+                  <div class="request-type">
+                    <v-icon
+                      :icon="getRequestTypeIcon(request.request_type)"
+                      class="request-icon"
+                    ></v-icon>
+                    {{ formatRequestType(request.request_type) }}
+                  </div>
+                  <div :class="['status-tag', `status-${request.status}`]">
+                    {{ formatStatus(request.status) }}
+                  </div>
+                </div>
+
+                <div class="request-details">
+                  <div class="detail-item">
+                    <v-icon
+                      icon="mdi-calendar"
+                      size="small"
+                      class="detail-icon"
+                    ></v-icon>
+                    {{ formatDate(request.request_date) }}
+                  </div>
+                  <div class="detail-item">
+                    <v-icon
+                      icon="mdi-email"
+                      size="small"
+                      class="detail-icon"
+                    ></v-icon>
+                    User Email: {{ request.email }}
+                  </div>
+                  <div v-if="request.username" class="detail-item">
+                    <v-icon
+                      icon="mdi-account"
+                      size="small"
+                      class="detail-icon"
+                    ></v-icon>
+                    Player: {{ request.username }}
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="request-actions">
+                  <v-btn
+                    class="approve-btn"
+                    @click="approveRequest(request.id)"
+                    :disabled="request.status !== 'pending'"
+                  >
+                    Approve
+                  </v-btn>
+                  <v-btn
+                    class="reject-btn"
+                    @click="rejectRequest(request.id)"
+                    :disabled="request.status !== 'pending'"
+                  >
+                    Reject
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="error-message">
+              No requests found.
+            </div>
+          </div>
+        </div>
+
+        <!-- Dialogs -->
+        <!-- Add Tournament Dialog -->
+        <v-dialog v-model="showAddTournamentDialog" max-width="500">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Add Tournament</span>
+              </v-card-title>
+              <v-card-text>
+                <v-text-field
+                  v-model="tournamentName"
+                  label="Tournament Name"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+                <!-- Display Error -->
+                <div v-if="tournamentError" class="error-message">
+                  {{ tournamentError }}
+                </div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn class="cancel-btn" @click="showAddTournamentDialog = false">
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAddTournament"
+                  :loading="isSubmitting"
+                >
+                  Submit
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Add Match Dialog -->
+        <v-dialog v-model="showAddMatchDialog" max-width="500">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Add Match</span>
+              </v-card-title>
+              <v-card-text>
+                <!-- Match details inputs -->
+                <v-text-field
+                  v-model="matchDetails"
+                  label="Match Details"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+                <!-- Display Error -->
+                <div v-if="matchError" class="error-message">
+                  {{ matchError }}
+                </div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn class="cancel-btn" @click="showAddMatchDialog = false">
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAddMatch"
+                  :loading="isSubmitting"
+                >
+                  Submit
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Add Player Dialog -->
+        <v-dialog v-model="showAddPlayerDialog" max-width="500">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Add Player</span>
+              </v-card-title>
+              <v-card-text>
+                <v-text-field
+                  v-model="playerName"
+                  label="Player Name"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+                <!-- Display Error -->
+                <div v-if="playerError" class="error-message">
+                  {{ playerError }}
+                </div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn class="cancel-btn" @click="showAddPlayerDialog = false">
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAddPlayer"
+                  :loading="isSubmitting"
+                >
+                  Submit
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Assign Player to Team Dialog -->
+        <v-dialog v-model="showAssignPlayerDialog" max-width="500">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Assign Player to Team</span>
+              </v-card-title>
+              <v-card-text>
+                <v-text-field
+                  v-model="assignPlayerName"
+                  label="Player Name"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+                <v-text-field
+                  v-model="assignTeamName"
+                  label="Team Name"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+                <!-- Display Error -->
+                <div v-if="assignError" class="error-message">
+                  {{ assignError }}
+                </div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn class="cancel-btn" @click="showAssignPlayerDialog = false">
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAssignPlayer"
+                  :loading="isSubmitting"
+                >
+                  Submit
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Success Snackbar -->
+        <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
+          {{ successMessage }}
+        </v-snackbar>
+      </v-container>
     </div>
-
-    <v-dialog v-model="showTournamentDialog" max-width="500">
-      <!-- Tournament dialog content -->
-    </v-dialog>
-
-    <v-dialog v-model="showMatchDialog" max-width="500">
-      <!-- Match dialog content -->
-    </v-dialog>
-
-    <v-dialog v-model="showPlayerDialog" max-width="500">
-      <!-- Player dialog content -->
-    </v-dialog>
-
-    <v-dialog v-model="showTeamAssignmentDialog" max-width="500">
-      <!-- Team assignment dialog content -->
-    </v-dialog>
   </div>
 </template>
 
-<script>
-import Vue from 'vue'
-import Vuex from 'vuex'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { format } from 'date-fns';
+import { API_URL } from '@/config';
 
-Vue.use(Vuex)
+const authStore = useAuthStore();
+const adminEmail = ref(authStore.userEmail);
 
-export default {
-  data() {
-    return {
-      selectedStatus: '',
-      selectedAdmin: '',
-      requests: [],
-      admins: [],
-      showTournamentDialog: false,
-      showMatchDialog: false,
-      showPlayerDialog: false,
-      showTeamAssignmentDialog: false
-    }
-  },
-  computed: {
-    filteredRequests() {
-      return this.requests.filter(request => {
-        if (this.selectedStatus && request.status !== this.selectedStatus) {
-          return false
-        }
-        if (this.selectedAdmin && request.adminId !== this.selectedAdmin) {
-          return false
-        }
-        return true
-      })
-    }
-  },
-  methods: {
-    formatRequestType(type) {
-      return type.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    },
-    formatStatus(status) {
-      return status.charAt(0).toUpperCase() + status.slice(1)
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleString()
-    },
-    getRequestTypeIcon(type) {
-      return type === 'promote user to director' ? 'mdi-shield-account' : 'mdi-account-plus'
-    },
-    getAdminName(id) {
-      const admin = this.admins.find(a => a.id === id)
-      return admin ? admin.name : 'Unknown'
-    },
-    acceptRequest(request) {
-      // Logic to accept the request
-    },
-    rejectRequest(request) {
-      // Logic to reject the request
-    },
-    openTournamentDialog() {
-      this.showTournamentDialog = true
-    },
-    openMatchDialog() {
-      this.showMatchDialog = true
-    },
-    openPlayerDialog() {
-      this.showPlayerDialog = true
-    },
-    openTeamAssignmentDialog() {
-      this.showTeamAssignmentDialog = true
-    }
-  },
-  mounted() {
-    // Fetch requests and admin data
-    this.fetchRequests()
-    this.fetchAdmins()
-  }
+// Data
+interface Request {
+  id: string;
+  email: string;
+  request_type: string;
+  status: string;
+  request_date: string;
+  response_date: string | null;
+  admin_id: string | null;
+  username: string | null;
 }
+
+const requests = ref<Request[]>([]);
+const isLoading = ref(true);
+const requestHistoryError = ref<string | null>(null);
+const actionsError = ref<string | null>(null);
+const isSubmitting = ref(false);
+const showSuccessAlert = ref(false);
+const successMessage = ref('');
+
+// Filter Options
+const filterStatus = ref('');
+const statusOptions = ['All', 'Pending', 'Accepted', 'Rejected'];
+
+// Dialog visibility
+const showAddTournamentDialog = ref(false);
+const showAddMatchDialog = ref(false);
+const showAddPlayerDialog = ref(false);
+const showAssignPlayerDialog = ref(false);
+
+// Form data and errors
+const tournamentName = ref('');
+const matchDetails = ref('');
+const playerName = ref('');
+const assignPlayerName = ref('');
+const assignTeamName = ref('');
+
+const tournamentError = ref<string | null>(null);
+const matchError = ref<string | null>(null);
+const playerError = ref<string | null>(null);
+const assignError = ref<string | null>(null);
+
+const rules = {
+  required: (v: string) => !!v || 'This field is required',
+};
+
+// Methods
+const formatRequestType = (type: string): string => {
+  return type
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatStatus = (status: string): string => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
+const formatDate = (date: string): string => {
+  return format(new Date(date), 'dd MMM yyyy, HH:mm');
+};
+
+const getRequestTypeIcon = (type: string): string => {
+  if (type === 'promote user to director') return 'mdi-shield-account';
+  if (type === 'link user to player') return 'mdi-account-plus';
+  return 'mdi-help';
+};
+
+const fetchRequests = async () => {
+  try {
+    isLoading.value = true;
+    requestHistoryError.value = null;
+
+    const statusQuery = filterStatus.value && filterStatus.value !== 'All' ? `&status=${filterStatus.value.toLowerCase()}` : '';
+
+    const response = await fetch(`${API_URL}/requests?offset=0&limit=50${statusQuery}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'No requests found.');
+    }
+
+    const data = await response.json();
+
+    requests.value = [...data];
+  } catch (e) {
+    console.error('Error fetching requests:', e);
+    requestHistoryError.value =
+      e.message || 'Failed to load request history. Please try again later.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const approveRequest = async (requestId: string) => {
+  try {
+    isSubmitting.value = true;
+
+    const response = await fetch(`${API_URL}/requests/${requestId}?status=accepted`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to approve request');
+    }
+
+    successMessage.value = 'Request approved successfully.';
+    showSuccessAlert.value = true;
+    fetchRequests();
+  } catch (e) {
+    console.error('Error approving request:', e);
+    actionsError.value = 'Failed to approve request. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const rejectRequest = async (requestId: string) => {
+  try {
+    isSubmitting.value = true;
+
+
+    const response = await fetch(`${API_URL}/requests/${requestId}?status=rejected`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API Error:', errorData);
+      throw new Error(errorData.detail?.[0]?.msg || 'Failed to reject request');
+    }
+
+    successMessage.value = 'Request rejected successfully.';
+    showSuccessAlert.value = true;
+    fetchRequests();
+  } catch (e) {
+    console.error('Error rejecting request:', e);
+    actionsError.value = e.message || 'Failed to reject request. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const openAddTournamentDialog = () => {
+  tournamentName.value = '';
+  tournamentError.value = null;
+  showAddTournamentDialog.value = true;
+};
+
+const submitAddTournament = async () => {
+  if (!tournamentName.value) {
+    tournamentError.value = 'Tournament name is required.';
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+
+    const response = await fetch(`${API_URL}/tournaments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: tournamentName.value }),
+    });
+
+    if (!response.ok) throw new Error('Failed to add tournament');
+
+    showAddTournamentDialog.value = false;
+    successMessage.value = 'Tournament added successfully.';
+    showSuccessAlert.value = true;
+  } catch (e) {
+    console.error('Error adding tournament:', e);
+    tournamentError.value = 'Failed to add tournament. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const openAddMatchDialog = () => {
+  matchDetails.value = '';
+  matchError.value = null;
+  showAddMatchDialog.value = true;
+};
+
+const submitAddMatch = async () => {
+  if (!matchDetails.value) {
+    matchError.value = 'Match details are required.';
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+
+    const response = await fetch(`${API_URL}/matches`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ details: matchDetails.value }),
+    });
+
+    if (!response.ok) throw new Error('Failed to add match');
+
+    showAddMatchDialog.value = false;
+    successMessage.value = 'Match added successfully.';
+    showSuccessAlert.value = true;
+  } catch (e) {
+    console.error('Error adding match:', e);
+    matchError.value = 'Failed to add match. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const openAddPlayerDialog = () => {
+  playerName.value = '';
+  playerError.value = null;
+  showAddPlayerDialog.value = true;
+};
+
+const submitAddPlayer = async () => {
+  if (!playerName.value) {
+    playerError.value = 'Player name is required.';
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+
+    const response = await fetch(`${API_URL}/players`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: playerName.value }),
+    });
+
+    if (!response.ok) throw new Error('Failed to add player');
+
+    showAddPlayerDialog.value = false;
+    successMessage.value = 'Player added successfully.';
+    showSuccessAlert.value = true;
+  } catch (e) {
+    console.error('Error adding player:', e);
+    playerError.value = 'Failed to add player. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const openAssignPlayerDialog = () => {
+  assignPlayerName.value = '';
+  assignTeamName.value = '';
+  assignError.value = null;
+  showAssignPlayerDialog.value = true;
+};
+
+const submitAssignPlayer = async () => {
+  if (!assignPlayerName.value || !assignTeamName.value) {
+    assignError.value = 'Both player name and team name are required.';
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+
+    const response = await fetch(`${API_URL}/teams/assign-player`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        playerName: assignPlayerName.value,
+        teamName: assignTeamName.value,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to assign player to team');
+
+    showAssignPlayerDialog.value = false;
+    successMessage.value = 'Player assigned to team successfully.';
+    showSuccessAlert.value = true;
+  } catch (e) {
+    console.error('Error assigning player to team:', e);
+    assignError.value = 'Failed to assign player. Please try again.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchRequests();
+});
 </script>
 
 <style scoped>
-.admin-dashboard {
-  background-color: #171c26;
-  color: white;
-  padding: 24px;
+/* Same styles as the user dashboard, plus any additional styles needed */
+
+.header-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 400px;
+  background-image: url('@/assets/top-image.png');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  opacity: 0.6;
 }
 
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 32px;
+.header-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 400px;
+  background: linear-gradient(
+    to bottom,
+    rgba(23, 28, 38, 0) 0%,
+    rgba(23, 28, 38, 0.8) 80%,
+    rgba(23, 28, 38, 1) 100%
+  );
+  z-index: 2;
 }
 
-.actions-section,
-.requests-section {
-  background-color: rgba(45, 55, 75, 0.8);
-  border: 2px solid #42DDF2FF;
-  border-radius: 10px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.action-buttons {
+.content-wrapper {
+  position: relative;
+  z-index: 3;
+  padding-top: 200px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  width: 100vw !important;
+  margin-bottom: 100px;
+}
+
+.welcome-card,
+.actions-card,
+.history-card {
+  background: rgba(45, 55, 75, 0.8);
+  border-radius: 20px;
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  backdrop-filter: blur(2px);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+  padding: 24px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-content,
+.actions-content,
+.history-content {
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-text {
+  color: #42DDF2FF;
+  font-size: 1.8rem;
+  text-align: center;
+  margin: 0;
+}
+
+.section-title {
+  color: #42DDF2FF;
+  font-size: 1.4rem;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
+  justify-content: center;
 }
 
 .action-btn {
-  background-color: #42DDF2FF !important;
+  background: #42DDF2FF !important;
   color: #171c26 !important;
   font-weight: bold;
-  padding: 12px 24px !important;
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 20px 32px !important;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover {
-  background-color: #FED854FF !important;
+  background: #FED854FF !important;
   box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
 }
 
-.requests-filter {
+.filter-options {
   display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
   justify-content: center;
-  gap: 24px;
-  margin-bottom: 16px;
 }
 
-.requests-list {
+.filter-select {
+  width: 200px;
+}
+
+.filter-btn {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
+}
+
+.request-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 .request-item {
-  background-color: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.8);
   border: 1px solid rgba(8, 87, 144, 0.2);
   border-radius: 10px;
   padding: 16px;
@@ -251,7 +786,7 @@ export default {
 }
 
 .request-item:hover {
-  background-color: rgb(45, 55, 75);
+  background: rgb(45, 55, 75);
   border-color: #42DDF2FF;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
@@ -268,6 +803,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: white;
   font-weight: 500;
 }
 
@@ -282,19 +818,19 @@ export default {
 }
 
 .status-pending {
-  background-color: rgba(254, 216, 84, 0.1);
+  background: rgba(254, 216, 84, 0.1);
   color: #FED854FF;
   border: 1px solid rgba(254, 216, 84, 0.3);
 }
 
 .status-accepted {
-  background-color: rgba(0, 255, 157, 0.1);
+  background: rgba(0, 255, 157, 0.1);
   color: #00ff9d;
   border: 1px solid rgba(0, 255, 157, 0.3);
 }
 
 .status-rejected {
-  background-color: rgba(255, 99, 99, 0.1);
+  background: rgba(255, 99, 99, 0.1);
   color: #ff6363;
   border: 1px solid rgba(255, 99, 99, 0.3);
 }
@@ -302,7 +838,7 @@ export default {
 .request-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 24px;
 }
 
 .detail-item {
@@ -319,26 +855,55 @@ export default {
 
 .request-actions {
   display: flex;
-  justify-content: center;
   gap: 16px;
   margin-top: 16px;
 }
 
-.accept-btn {
-  background-color: rgba(0, 255, 157, 0.1) !important;
-  color: #00ff9d !important;
-  border: 1px solid rgba(0, 255, 157, 0.3);
+.approve-btn {
+  background: #00ff9d !important;
+  color: #171c26 !important;
 }
 
 .reject-btn {
-  background-color: rgba(255, 99, 99, 0.1) !important;
-  color: #ff6363 !important;
-  border: 1px solid rgba(255, 99, 99, 0.3);
+  background: #ff6363 !important;
+  color: #171c26 !important;
 }
 
-.empty-state {
+.dialog-card {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-title {
+  color: #42ddf2;
+  font-weight: bold;
+  font-size: 1.25rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 32px 0;
+}
+
+.error-message {
+  color: #fed854;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.cancel-btn {
+  color: #42DDF2FF !important;
+}
+
+.submit-btn {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
+  margin-left: 16px;
+}
+
+:deep(.v-text-field) {
+  margin-top: 16px;
 }
 </style>
