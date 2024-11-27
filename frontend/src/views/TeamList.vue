@@ -101,6 +101,7 @@
                   <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
                 </v-avatar>
                 <div class="player-info">
+                  <p><strong>Username:</strong> {{ selectedPlayer?.username }}</p>
                   <p><strong>First Name:</strong> {{ selectedPlayer?.first_name }}</p>
                   <p><strong>Last Name:</strong> {{ selectedPlayer?.last_name }}</p>
                   <p><strong>Country:</strong> {{ selectedPlayer?.country }}</p>
