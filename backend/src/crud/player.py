@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from dns.e164 import query
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
@@ -101,6 +102,17 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
 
     return convert_db_to_player_detail_response(db_player, tournament_title)
 
+
+def get_player_by_user_id(db: Session, current_user: UserResponse) -> PlayerDetailResponse:
+
+    v.user_associated_with_player(current_user)
+    db_player = db.query(Player).filter(Player.user_id == current_user.id).first()
+
+    tournament_title = None
+    if db_player.team_id and db_player.team.tournament_id:
+        tournament_title = db_player.team.tournament.title
+
+    return convert_db_to_player_detail_response(db_player, tournament_title)
 
 def update_player(
     db: Session,

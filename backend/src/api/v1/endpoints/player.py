@@ -40,6 +40,10 @@ def get_players(
         db, pagination, search, team, country, sort_by
     )
 
+@router.get("/users", response_model=PlayerDetailResponse)
+def get_players_by_user(db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)):
+    return player_crud.get_player_by_user_id(db, current_user)
+
 
 @router.get("/{player_id}", response_model=PlayerDetailResponse)
 def get_player(player_id: UUID, db: Session = Depends(get_db)):
@@ -55,3 +59,4 @@ def update_player(
     current_user: UserResponse = Depends(get_current_user),
 ):
     return player_crud.update_player(db, player_id, player, avatar, current_user)
+
