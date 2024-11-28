@@ -8,11 +8,40 @@
       <v-container>
       <!-- Add Reset Button when filtered -->
       <div class="filter-button-space">
+        <div class="filters-wrapper">
+          <v-select
+            v-model="selectedPeriod"
+            :items="periodOptions"
+            item-title="text"
+            item-value="value"
+            label="Period"
+            variant="outlined"
+            density="comfortable"
+            class="filter-select"
+            bg-color="rgba(45, 55, 75, 0.8)"
+            color="#ffffff"
+            menu-icon="mdi-chevron-down"
+            @update:model-value="handleFiltersChange"
+/>
+
+          <v-select
+            v-model="selectedStatus"
+            :items="statusOptions"
+            item-title="text"
+            item-value="value"
+            label="Status"
+            variant="outlined"
+            density="comfortable"
+            class="filter-select"
+            bg-color="rgba(45, 55, 75, 0.8)"
+            color="#ffffff"
+            menu-icon="mdi-chevron-down"
+            @update:model-value="handleFiltersChange"
+          ></v-select>
+        </div>
+
         <transition name="fade">
-          <div
-            v-if="isFiltered"
-            class="reset-filter-wrapper"
-          >
+          <div v-if="isFiltered" class="reset-filter-wrapper">
             <v-btn
               class="reset-filter-btn"
               variant="outlined"
@@ -126,6 +155,11 @@ interface Tournament {
   number_of_teams: number
 }
 
+interface FilterOption {
+  text: string
+  value: string
+}
+
 const isFiltered = ref(false);
 const tournaments = ref<Tournament[]>([]);
 const isLoadingTournaments = ref(false);
@@ -133,6 +167,57 @@ const tournamentsError = ref<string | null>(null);
 const currentLimit = ref(10);
 const hasMoreTournaments = ref(true);
 const isLoadingMore = ref(false);
+const selectedPeriod = ref('all');
+const selectedStatus = ref('all');
+
+const periodOptions: FilterOption[] = [
+  { text: 'All Tournaments', value: 'all' },
+  { text: 'Upcoming', value: 'future' },
+  { text: 'Current', value: 'present' },
+  { text: 'Past', value: 'past' }
+]
+
+const statusOptions: FilterOption[] = [
+  { text: 'All Status', value: 'all' },
+  { text: 'Active', value: 'active' },
+  { text: 'Finished', value: 'finished' }
+]
+
+const handleFiltersChange = async () => {
+  try {
+    isLoadingTournaments.value = true;
+    tournamentsError.value = null;
+    currentLimit.value = 10; // Reset limit
+
+    let url = `${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`;
+
+    if (selectedPeriod.value !== 'all') {
+      url += `&period=${selectedPeriod.value}`;
+    }
+
+    if (selectedStatus.value !== 'all') {
+      url += `&status=${selectedStatus.value}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const results = Array.isArray(data) ? data : data.results || [];
+    tournaments.value = results;
+    isFiltered.value = selectedPeriod.value !== 'all' || selectedStatus.value !== 'all';
+    hasMoreTournaments.value = results.length === currentLimit.value;
+
+  } catch (e) {
+    console.error('Error fetching tournaments:', e);
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
+  } finally {
+    isLoadingTournaments.value = false;
+  }
+};
 
 const getTournamentBackground = (format: string): string => {
   const formatMap: Record<string, string> = {
@@ -181,31 +266,10 @@ const handleFormatClick = async (format: string) => {
   }
 };
 
-// Add reset function
 const resetFilters = async () => {
-  try {
-    isLoadingTournaments.value = true;
-    tournamentsError.value = null;
-    currentLimit.value = 10; // Reset limit
-    isFiltered.value = false; // Explicitly set to false
-
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const results = Array.isArray(data) ? data : data.results || [];
-    tournaments.value = results;
-    hasMoreTournaments.value = results.length === currentLimit.value;
-
-  } catch (e) {
-    console.error('Error fetching tournaments:', e);
-    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
-  } finally {
-    isLoadingTournaments.value = false;
-  }
+  selectedPeriod.value = 'all';
+  selectedStatus.value = 'active';
+  await handleFiltersChange();
 };
 
 
@@ -283,16 +347,34 @@ onUnmounted(() => {
 })
 </script>
 
+
 <style scoped>
-.reset-filter-wrapper {
+
+.filters-wrapper {
   display: flex;
+  gap: 16px;
   justify-content: center;
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 4;
-  margin-top: 20px;
-  opacity: 1;                /* Add this */
-  transition: all 0.3s ease; /* Add this */
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 500px; /* или каквато ширина предпочитате */
+}
+
+:deep(.v-field) {
+  background: rgba(45, 55, 75, 0.8) !important;
+}
+
+:deep(.v-select__selection) {
+  color: white !important;
+}
+
+:deep(.v-label) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+
+.reset-filter-wrapper {
+  margin-top: 8px;
+  margin-bottom: 16px;
 }
 
 .reset-filter-wrapper.hidden {
@@ -301,21 +383,19 @@ onUnmounted(() => {
 }
 
 .reset-filter-btn {
-  background: rgba(17, 78, 112, 0.56);
+  background: rgba(45, 55, 75, 0.8);
   color: #ffffff !important;
-  border-color: #42DDF2FF !important;  /* Change this */
-  border-width: 2px !important;        /* Add this */
+  border-color: rgba(255, 255, 255, 0.7)  !important;
+  border-width: 0.5px !important;
   border-radius: 50px;
   transition: all 0.2s ease;
-  padding: 7px 40px !important;       /* Add this */
-  font-size: 1.1rem !important;        /* Add this */
+  padding: 7px 40px !important;
+  font-size: 1.1rem !important;
 }
 
 .reset-filter-btn:hover {
-  background: rgba(66, 221, 242, 0.1);
-  border-color: #42DDF2FF !important;
+  border-color: #ffffff !important;
   transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3); /* Add this */
 }
 
 .tournament-list-wrapper {
@@ -531,11 +611,15 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
-  margin-top: 20px;
+  margin-top: 70px;
 }
 
 .filter-button-space {
-  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
   position: relative;
   z-index: 4;
 }

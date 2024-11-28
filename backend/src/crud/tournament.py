@@ -40,7 +40,7 @@ def get_tournaments(
     author_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
 
-    query = db.query(Tournament).order_by(Tournament.start_date.asc())
+    query = db.query(Tournament)
 
     filters = []
     filters.extend(_get_period_filter(period))
@@ -51,10 +51,10 @@ def get_tournaments(
 
     if filters:
         query = query.filter(*filters)
-
     else:
         query = query.options(joinedload(Tournament.matches))
 
+    query = query.order_by(Tournament.start_date.desc())
     query = query.offset(pagination.offset).limit(pagination.limit)
 
     db_tournaments = query.all()
