@@ -61,7 +61,7 @@ def get_match(db: Session, match_id: UUID) -> MatchDetailResponse:
 
     db_match = v.match_exists(db, match_id)
 
-    return convert_db_to_match_response(db_match)
+    return convert_db_to_match_list_response(db_match)
 
 
 def generate_matches(db: Session, db_tournament: Tournament):

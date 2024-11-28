@@ -7,26 +7,6 @@ from src.schemas.prize_cut import PrizeCutResponse
 from src.schemas.team import TeamDetailedResponse, TeamListResponse
 from src.schemas.tournament import TournamentListResponse, TournamentDetailResponse
 
-def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
-    return MatchDetailResponse(
-        id=db_match.id,
-        match_format=db_match.match_format,
-        start_time=db_match.start_time,
-        is_finished=db_match.is_finished,
-        stage=db_match.stage,
-        team1_id=db_match.team1_id,
-        team2_id=db_match.team2_id,
-        team1_score=db_match.team1_score,
-        team2_score=db_match.team2_score,
-        winner_id=db_match.winner_team_id,
-        tournament_id=db_match.tournament_id,
-        team1_name=db_match.team1.name,
-        team2_name=db_match.team2.name,
-        team1_logo=db_match.team1.logo,
-        team2_logo=db_match.team2.logo,
-        tournament_title=db_match.tournament.title,
-    )
-
 
 def convert_db_to_match_list_response(
     db_match: Match | Type[Match],
