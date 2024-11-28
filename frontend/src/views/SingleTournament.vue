@@ -22,7 +22,7 @@
               ></v-icon>
             </h1>
             <div class="format-tag">
-              {{ formatText(tournament.tournament_format) }}
+              {{ formatText(tournament.tournament_format.toUpperCase()) }}
             </div>
           </div>
 
@@ -65,23 +65,29 @@
                     <v-icon :icon="prize.place === 1 ? 'mdi-trophy' : 'mdi-trophy-variant'" size="32"></v-icon>
                   </div>
                   <div class="prize-details">
-                    <span class="prize-place">{{ formatPlace(prize.place) }} Place</span>
-                    <span class="prize-amount">{{ prize.prize_cut }} Kitty Kibbles</span>
+                    <span class="prize-place">{{ formatPlace(prize.place) }} place</span>
+                    <span class="prize-amount">{{ prize.prize_cut }} kitty kibbles</span>
                   </div>
-                  <router-link
-                    v-if="prize.team_id"
-                    :to="`/teams/${prize.team_id}`"
-                    class="winner-team"
-                  >
-                    <v-avatar size="32">
-                      <v-img
-                        v-if="prize.team_logo"
-                        :src="prize.team_logo"
-                        alt="Winner team logo"
-                      ></v-img>
-                      <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                    </v-avatar>
-                  </router-link>
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                      <router-link
+                        v-if="prize.team_id"
+                        :to="`/teams/${prize.team_id}`"
+                        class="winner-team"
+                        v-bind="props"
+                      >
+                        <v-avatar size="50">
+                          <v-img
+                            v-if="prize.team_logo"
+                            :src="prize.team_logo"
+                            alt="Winner team logo"
+                          ></v-img>
+                          <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                        </v-avatar>
+                      </router-link>
+                    </template>
+                    {{ prize.team_name }}
+                  </v-tooltip>
                 </div>
               </div>
             </div>
@@ -118,47 +124,65 @@
                 </h3>
                 <div class="brackets-content">
                   <div class="stage-header">
-  <h4 class="stage-name">
-    {{ formatStage(tournament.current_stage) }}
-  </h4>
-</div>
+                    <h4 class="stage-name">
+                      {{ formatStage(tournament.current_stage) }}
+                    </h4>
+                  </div>
 
                   <div class="matches-grid">
                     <div v-for="match in tournament.matches_of_current_stage"
                          :key="match.id"
                          class="match-card"
                          :class="{ 'match-finished': match.is_finished }">
-                      <div class="match-time">
-                        {{ format(new Date(match.start_time), 'HH:mm, dd MMM') }}
-                      </div>
 
-                      <div class="teams-container">
-                        <!-- Team 1 -->
-                        <div class="team-row"
-                             :class="{
-                               'team-winner': match.winner_id === match.team1_id,
-                               'team-loser': match.is_finished && match.winner_id !== match.team1_id
-                             }">
-                          <span class="team-name">{{ match.team1_name }}</span>
-                          <span class="team-score">{{ match.team1_score }}</span>
+                      <div class="match-content">
+                        <div class="match-layout">
+                          <div class="team-left">
+                            <v-tooltip location="top">
+                              <template v-slot:activator="{ props }">
+                                <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                                  <v-avatar class="team-avatar" size="60" v-bind="props">
+                                    <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                  </v-avatar>
+                                </router-link>
+                              </template>
+                              {{ match.team1_name }}
+                            </v-tooltip>
+                            <span class="team-score">{{match.team1_score}}</span>
+                          </div>
+
+                          <div class="score-divider">:</div>
+
+                          <div class="team-right">
+                            <span class="team-score">{{match.team2_score}}</span>
+                            <v-tooltip location="top">
+                              <template v-slot:activator="{ props }">
+                                <router-link :to="`/teams/${match.team2_id}`" class="team-avatar-link">
+                                  <v-avatar class="team-avatar" size="60" v-bind="props">
+                                    <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                  </v-avatar>
+                                </router-link>
+                              </template>
+                              {{ match.team2_name }}
+                            </v-tooltip>
+                          </div>
                         </div>
 
-                        <div class="match-divider">VS</div>
+                        <v-divider class="match-divider"></v-divider>
 
-                        <!-- Team 2 -->
-                        <div class="team-row"
-                             :class="{
-                               'team-winner': match.winner_id === match.team2_id,
-                               'team-loser': match.is_finished && match.winner_id !== match.team2_id
-                             }">
-                          <span class="team-name">{{ match.team2_name }}</span>
-                          <span class="team-score">{{ match.team2_score }}</span>
+                        <div class="match-footer">
+                          <div class="match-time">
+                            <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                            <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                          </div>
+
+                          <div v-if="match.is_finished" class="match-winner">
+                            <v-icon icon="mdi-crown" class="winner-icon" color="#FED854FF"></v-icon>
+                            <span class="winner-text">{{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}</span>
+                          </div>
                         </div>
-                      </div>
-
-                      <div class="match-status" v-if="match.is_finished">
-                        <v-icon icon="mdi-crown" class="mr-2" color="#FED854FF"></v-icon>
-                        {{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}
                       </div>
                     </div>
                   </div>
@@ -265,7 +289,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import '@/styles/vuetify.css'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
@@ -554,7 +579,7 @@ onMounted(async () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px;
+  height: 700px;
   background-size: cover;
   background-position: center;
   z-index: 1;
@@ -566,12 +591,12 @@ onMounted(async () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 400px;
+  height: 700px;
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 20%,
+    rgba(23, 28, 38, 1) 40%
   );
   z-index: 2;
 }
@@ -672,7 +697,7 @@ onMounted(async () => {
   gap: 12px;
   padding: 12px;
   background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(8, 87, 144, 0.2);
+  border: 1px solid rgba(8, 87, 144, 0.5);
   border-radius: 10px;
   transition: all 0.2s;
   text-decoration: none;
@@ -706,8 +731,8 @@ onMounted(async () => {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(8, 87, 144, 0.2);
+  background: rgba(45, 55, 75, 0);
+  border: 1px solid rgba(8, 87, 144, 0);
   border-radius: 10px;
 }
 
@@ -727,7 +752,7 @@ onMounted(async () => {
 }
 
 .prize-trophy.silver {
-  color: #C0C0C0;
+  color: #c6c6c6;
   background: rgba(192, 192, 192, 0.1);
   border: 2px solid #C0C0C0;
 }
@@ -746,21 +771,26 @@ onMounted(async () => {
 }
 
 .prize-amount {
-  color: #42DDF2FF;
+  color: rgba(64, 231, 237, 0.73);
   font-size: 0.9rem;
+  font-weight: 550;
 }
 
 .winner-team {
   text-decoration: none;
+  background: transparent !important;
 }
 
 .winner-team v-avatar {
   border: 2px solid #42DDF2FF;
   transition: transform 0.2s;
+  background: transparent !important;
+  transition: transform 0.2s;
 }
 
-.winner-team:hover v-avatar {
-  transform: scale(1.1);
+.winner-team:hover {
+  background: transparent !important;
+  transform: scale(1.2);
 }
 
 .brackets-card {
@@ -809,17 +839,21 @@ onMounted(async () => {
 
 .matches-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   padding: 16px;
 }
 
 .match-card {
+  height: 250px;
+  /* remove position: fixed */
+  border-radius: 15px;
+  overflow: hidden;
   background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(66, 221, 242, 0.3);
-  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
   padding: 20px;
-  transition: all 0.2s;
 }
 
 .match-card:hover {
@@ -828,50 +862,104 @@ onMounted(async () => {
   box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
 }
 
+.match-content {
+  position: relative;
+  z-index: 2;
+}
+
+.match-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 20px;
+  padding: 0 10px;
+}
+
+.team-left, .team-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.team-avatar {
+  border: 2px solid #42ddf2;
+  background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.team-avatar:hover {
+  transform: scale(1.2);
+}
+
+.team-score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fed854;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+}
+
+.score-divider {
+  font-size: 2rem;
+  color: #FED854FF;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+  margin: 0 8px;
+}
+
+.match-divider {
+  opacity: 0.2;
+  margin: 16px 0;
+}
+
+.match-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.match-time {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.neon-text {
+  color: #fed854 !important;
+}
+
+.match-winner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #FED854FF;
+  font-weight: 500;
+}
+
+.winner-icon {
+  font-size: 1.2rem;
+}
+
+.winner-text {
+  font-size: 0.9rem;
+}
+
+.team-avatar-link {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.team-avatar-link:hover {
+  text-decoration: none;
+  background: transparent !important;
+}
+
 .match-time {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
   text-align: center;
   margin-bottom: 16px;
-}
-
-.teams-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.team-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: rgba(45, 55, 75, 0.4);
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.team-winner {
-  background: rgba(254, 216, 84, 0.1);
-  border: 1px solid #FED854FF;
-}
-
-.team-loser {
-  opacity: 0.7;
-}
-
-.team-name {
-  color: white;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.team-score {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: #42DDF2FF;
-  min-width: 30px;
-  text-align: right;
 }
 
 .team-winner .team-score {
@@ -994,5 +1082,18 @@ onMounted(async () => {
 
 :deep(.v-alert__prepend) {
   color: #fed854 !important;
+}
+
+.team-avatar {
+  min-width: 55px;
+  min-height: 55px;
+  border: 1px solid rgba(8, 117, 176, 0.3);
+  background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.team-avatar:hover {
+  transform: scale(1.2);
 }
 </style>

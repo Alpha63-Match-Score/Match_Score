@@ -35,10 +35,12 @@
                       <div class="team-left">
                         <v-tooltip location="top">
                           <template v-slot:activator="{ props }">
-                            <v-avatar class="team-avatar" size="60" v-bind="props">
-                              <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
-                              <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                            </v-avatar>
+                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                              <v-avatar class="team-avatar" size="60" v-bind="props">
+                                <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                              </v-avatar>
+                            </router-link>
                           </template>
                           {{ match.team1_name }}
                         </v-tooltip>
@@ -51,10 +53,12 @@
                         <span class="team-score">{{match.team2_score}}</span>
                         <v-tooltip location="top">
                           <template v-slot:activator="{ props }">
-                            <v-avatar class="team-avatar" size="60" v-bind="props">
-                              <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
-                              <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                            </v-avatar>
+                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                              <v-avatar class="team-avatar" size="60" v-bind="props">
+                                <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                              </v-avatar>
+                            </router-link>
                           </template>
                           {{ match.team2_name }}
                         </v-tooltip>
@@ -383,6 +387,16 @@ onMounted(() => {
   flex: 1;
 }
 
+.team-left .team-avatar,
+.team-right .team-avatar {
+  transition: transform 0.2s ease;
+}
+
+.team-left .team-avatar:hover,
+.team-right .team-avatar:hover {
+  transform: scale(1.2);
+  cursor: pointer;
+}
 
 .match-card:hover {
   transform: translateY(-4px);
@@ -677,5 +691,15 @@ onMounted(() => {
   text-align: center !important;
   color: rgba(255, 255, 255, 0.75);
   padding: 10px;
+}
+
+.team-avatar-link {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.team-avatar-link:hover {
+  text-decoration: none;
+  background: transparent !important;
 }
 </style>
