@@ -2,6 +2,9 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
+import '@/styles/vuetify.css'
+
+
 
 // Vuetify
 import 'vuetify/styles'

@@ -33,7 +33,17 @@
                   <v-card-text>
                     <div class="match-layout">
                       <div class="team-left">
-                        <span class="team-name text-right">{{ match.team1_name }}</span>
+                        <v-tooltip location="top">
+                          <template v-slot:activator="{ props }">
+                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                              <v-avatar class="team-avatar" size="60" v-bind="props">
+                                <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                              </v-avatar>
+                            </router-link>
+                          </template>
+                          {{ match.team1_name }}
+                        </v-tooltip>
                         <span class="team-score">{{match.team1_score}}</span>
                       </div>
 
@@ -41,7 +51,17 @@
 
                       <div class="team-right">
                         <span class="team-score">{{match.team2_score}}</span>
-                        <span class="team-name text-left">{{ match.team2_name }}</span>
+                        <v-tooltip location="top">
+                          <template v-slot:activator="{ props }">
+                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                              <v-avatar class="team-avatar" size="60" v-bind="props">
+                                <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                              </v-avatar>
+                            </router-link>
+                          </template>
+                          {{ match.team2_name }}
+                        </v-tooltip>
                       </div>
                     </div>
                   </v-card-text>
@@ -178,7 +198,9 @@ interface Match {
   team1_score: number
   team2_score: number
   team1_name: string
+  team1_logo: string
   team2_name: string
+  team2_logo: string
   winner_id: string | null
   tournament_id: string
   tournament_title: string
@@ -244,7 +266,7 @@ const fetchMatches = async () => {
     isLoading.value = true
     error.value = null
     const response = await fetch(
-      `${API_URL}/matches/?is_finished=false&one_per_tournament=true&offset=0&limit=3`
+      `${API_URL}/matches/?is_finished=true&offset=0&limit=3`
     )
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -353,32 +375,27 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 30px;
-  gap: 8px;
+  margin-top: 20px;
+  gap: 20px;
+  padding: 0 10px;
 }
 
 .team-left, .team-right {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 15px;
   flex: 1;
 }
 
-.team-left {
-  justify-content: flex-end;
+.team-left .team-avatar,
+.team-right .team-avatar {
+  transition: transform 0.2s ease;
 }
 
-.team-right {
-  justify-content: flex-start;
-}
-
-
-.text-right {
-  text-align: right;
-}
-
-.text-left {
-  text-align: left;
+.team-left .team-avatar:hover,
+.team-right .team-avatar:hover {
+  transform: scale(1.2);
+  cursor: pointer;
 }
 
 .match-card:hover {
@@ -505,6 +522,7 @@ onMounted(() => {
   min-height: 40px;
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s ease;
 }
 
 .team-header {
@@ -673,5 +691,15 @@ onMounted(() => {
   text-align: center !important;
   color: rgba(255, 255, 255, 0.75);
   padding: 10px;
+}
+
+.team-avatar-link {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.team-avatar-link:hover {
+  text-decoration: none;
+  background: transparent !important;
 }
 </style>

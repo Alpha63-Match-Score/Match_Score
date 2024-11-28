@@ -24,7 +24,7 @@ def login(
 ):
     user = authenticate_user(db, form_data.username, form_data.password)
     access_token = create_access_token(data={"user_id": str(user.id)})
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer", user_id=str(user.id), role=user.role)
 
 
 @router.put("/update")
@@ -47,3 +47,12 @@ def logout(token: str = Depends(oauth2_scheme)):
 @router.get("/role")
 def get_user_role(current_user: User = Depends(get_current_user)):
     return UserRole(role=current_user.role)
+
+
+@router.get("/me")
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.role,
+    }

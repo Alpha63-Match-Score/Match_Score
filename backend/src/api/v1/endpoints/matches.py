@@ -7,8 +7,7 @@ from src.api.deps import get_current_user, get_db
 from src.crud import match as match_crud
 from src.models.enums import Stage
 from src.schemas.match import (
-    MatchDetailResponse,
-    MatchListResponse,
+    MatchResponse,
     MatchUpdate,
 )
 from src.utils.pagination import PaginationParams, get_pagination
@@ -16,7 +15,7 @@ from src.utils.pagination import PaginationParams, get_pagination
 router = APIRouter()
 
 
-@router.get("/", response_model=list[MatchListResponse])
+@router.get("/", response_model=list[MatchResponse])
 def read_matches(
     pagination: PaginationParams = Depends(get_pagination),
     db: Session = Depends(get_db),
@@ -24,7 +23,6 @@ def read_matches(
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    one_per_tournament: bool = False,
 ):
 
     return match_crud.get_all_matches(
@@ -34,17 +32,15 @@ def read_matches(
         stage,
         is_finished,
         team_name,
-        one_per_tournament,
     )
 
 
-@router.get("/{match_id}", response_model=MatchDetailResponse)
+@router.get("/{match_id}", response_model=MatchResponse)
 def read_match(match_id: UUID, db: Session = Depends(get_db)):
 
     return match_crud.get_match(db, match_id)
 
-
-@router.put("/{match_id}", response_model=MatchDetailResponse)
+@router.put("/{match_id}", response_model=MatchResponse)
 def update_match(
     match_id: UUID,
     match: MatchUpdate = Depends(),
@@ -55,7 +51,7 @@ def update_match(
     return match_crud.update_match(db, match_id, match, current_user)
 
 
-@router.put("/{match_id}/team-scores", response_model=MatchDetailResponse)
+@router.put("/{match_id}/team-scores", response_model=MatchResponse)
 def update_match_score(
     match_id: UUID,
     team_to_upvote_score: Literal["team1", "team2"],

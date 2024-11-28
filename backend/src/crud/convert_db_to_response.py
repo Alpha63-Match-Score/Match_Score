@@ -1,38 +1,17 @@
 from typing import Type
 
 from src.models import Match, Player, PrizeCut, Team, Tournament
-from src.schemas.match import MatchDetailResponse, MatchListResponse
+from src.schemas.match import MatchResponse
 from src.schemas.player import PlayerListResponse, PlayerDetailResponse
 from src.schemas.prize_cut import PrizeCutResponse
 from src.schemas.team import TeamDetailedResponse, TeamListResponse
 from src.schemas.tournament import TournamentListResponse, TournamentDetailResponse
 
 
-def convert_db_to_match_response(db_match: Match | Type[Match]) -> MatchDetailResponse:
-    return MatchDetailResponse(
-        id=db_match.id,
-        match_format=db_match.match_format,
-        start_time=db_match.start_time,
-        is_finished=db_match.is_finished,
-        stage=db_match.stage,
-        team1_id=db_match.team1_id,
-        team2_id=db_match.team2_id,
-        team1_score=db_match.team1_score,
-        team2_score=db_match.team2_score,
-        winner_id=db_match.winner_team_id,
-        tournament_id=db_match.tournament_id,
-        team1_name=db_match.team1.name,
-        team2_name=db_match.team2.name,
-        team1_logo=db_match.team1.logo,
-        team2_logo=db_match.team2.logo,
-        tournament_title=db_match.tournament.title,
-    )
-
-
 def convert_db_to_match_list_response(
     db_match: Match | Type[Match],
-) -> MatchListResponse:
-    return MatchListResponse(
+) -> MatchResponse:
+    return MatchResponse(
         id=db_match.id,
         match_format=db_match.match_format,
         start_time=db_match.start_time,
@@ -43,7 +22,9 @@ def convert_db_to_match_list_response(
         team1_score=db_match.team1_score,
         team2_score=db_match.team2_score,
         team1_name=db_match.team1.name,
+        team1_logo=db_match.team1.logo,
         team2_name=db_match.team2.name,
+        team2_logo=db_match.team2.logo,
         winner_id=db_match.winner_team_id,
         tournament_id=db_match.tournament_id,
         tournament_title=db_match.tournament.title,
@@ -105,6 +86,7 @@ def convert_db_to_prize_cut_response(
         tournament_name=db_prize.tournament.title,
         team_id=db_prize.team_id,
         team_name=db_prize.team.name if db_prize.team else None,
+        team_logo=db_prize.team.logo if db_prize.team else None,
     )
 
 
@@ -115,9 +97,9 @@ def convert_db_to_team_detailed_response(
         id=db_team.id,
         name=db_team.name,
         logo=db_team.logo,
-        players=db_team.players,
-        matches=[convert_db_to_match_list_response(match) for match in matches],
+        players=[convert_db_to_player_list_response(player) for player in db_team.players],
         tournament_id=db_team.tournament_id,
+        matches=[convert_db_to_match_list_response(match) for match in matches],
         prize_cuts=[
             convert_db_to_prize_cut_response(prize_cut)
             for prize_cut in db_team.prize_cuts
@@ -169,6 +151,7 @@ def convert_db_to_tournament_response(
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
         number_of_teams=len(db_tournament.teams),
+        director_id=db_tournament.director_id,
         matches_of_current_stage=[
             convert_db_to_match_list_response(db_match)
             for db_match in db_tournament.matches

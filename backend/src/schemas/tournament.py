@@ -7,7 +7,7 @@ from src.models.enums import (
     Stage,
     TournamentFormat,
 )
-from src.schemas.match import MatchListResponse
+from src.schemas.match import MatchResponse
 from src.schemas.prize_cut import PrizeCutResponse
 from src.schemas.team import TeamListResponse
 
@@ -29,7 +29,8 @@ class TournamentListResponse(BaseConfig):
 
 
 class TournamentDetailResponse(TournamentListResponse):
-    matches_of_current_stage: list[MatchListResponse]
+    director_id: UUID
+    matches_of_current_stage: list[MatchResponse]
     teams: list[TeamListResponse]
     prizes: list["PrizeCutResponse"]
 

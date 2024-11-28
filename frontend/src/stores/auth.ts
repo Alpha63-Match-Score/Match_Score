@@ -12,6 +12,7 @@ interface LoginCredentials {
 interface LoginResponse {
   access_token: string
   token_type: string
+  user_id: string
   role: string
 }
 
@@ -28,9 +29,22 @@ interface RegisterResponse {
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const token = ref<string | null>(localStorage.getItem('token') || null)
-  const userEmail = ref<string | null>(localStorage.getItem('userEmail') || null)
+  const userEmail = ref<string | null>(null)
+  const userId = ref<string | null>(null)
+  // const userRole = ref<string | null>(null)
+  // const userEmail = ref<string | null>(localStorage.getItem('userEmail') || null)
   const userRole = ref<string | null>(localStorage.getItem('userRole') || null)
   const isAuthenticated = ref(!!token.value)
+
+
+  const clearUserData = () => {
+    token.value = null
+    userEmail.value = null
+    userId.value = null
+    userRole.value = null
+    isAuthenticated.value = false
+    localStorage.removeItem('token')
+  }
 
   const setToken = (newToken: string | null) => {
     token.value = newToken
@@ -61,6 +75,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const initializeFromToken = async () => {
+    const savedToken = localStorage.getItem('token')
+    if (savedToken) {
+      try {
+        const response = await fetch(`${API_URL}/users/me`, {
+          headers: {
+            'Authorization': `Bearer ${savedToken}`
+          }
+        })
+        if (response.ok) {
+          const userData = await response.json()
+          userId.value = userData.id
+          userRole.value = userData.role
+          userEmail.value = userData.email
+          token.value = savedToken
+          isAuthenticated.value = true
+        } else {
+          clearUserData()
+        }
+      } catch (error) {
+        console.error('Failed to initialize user data:', error)
+        clearUserData()
+      }
+    }
+  }
+
+
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
   try {
     const formData = new FormData()
@@ -78,10 +119,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     const data: LoginResponse = await response.json()
 
-    // Store the token, email, and role directly from login response
-    setToken(data.access_token)
-    userEmail.value = credentials.username
-    setUserRole(data.role)
+      // Store the token, email, and role
+      setToken(data.access_token)
+      userEmail.value = credentials.username
+      setUserRole(data.role)
+      userEmail.value = credentials.username
+      userId.value = data.user_id
+      userRole.value = data.role
 
     await router.push('/')
 
@@ -114,10 +158,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       const data: RegisterResponse = await response.json()
 
-      // Immediately set the user role from registration response
       setUserRole(data.role)
 
-      // Attempt to log in automatically after registration
       const loginSuccess = await login({
         username: credentials.email,
         password: credentials.password
@@ -136,12 +178,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async (): Promise<boolean> => {
     try {
-      // Clear all stored authentication data
       setToken(null)
       setUserEmail(null)
       setUserRole(null)
+      // userEmail.value = null
+      // userRole.value = null
 
-      // Redirect to login page
       await router.push('/login')
       return true
     } catch (error) {
@@ -181,8 +223,10 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     userEmail,
+    userId,
     userRole,
     isAuthenticated,
+    initializeFromToken,
     login,
     register,
     logout,

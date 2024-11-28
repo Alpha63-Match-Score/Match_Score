@@ -247,8 +247,8 @@ onUnmounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 20%,
+    rgba(23, 28, 38, 1) 40%
   );
   z-index: 2;
 }

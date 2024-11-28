@@ -60,6 +60,16 @@ const router = createRouter({
       component: () => import('../views/Register.vue'),
       meta: { requiresGuest: true }
     },
+    {
+      path: '/events/:id',
+      name: 'tournament-details',
+      component: () => import('../views/SingleTournament.vue'),
+    },
+    {
+      path: '/teams/:id',
+      name: 'team-details',
+      component: () => import('../views/SingleTeam.vue'),
+    },
   ],
 })
 
