@@ -71,6 +71,7 @@
                 label="Filter by Status"
                 class="filter-select"
                 dense
+                :style="{ background: 'transparent', color: '#ffffff', borderColor: '#42DDF2FF' }"
               ></v-select>
               <v-btn
                 class="filter-btn"
@@ -179,11 +180,43 @@
               </v-card-title>
               <v-card-text>
                 <v-text-field
-                  v-model="tournamentName"
-                  label="Tournament Name"
+                  v-model="tournamentTitle"
+                  label="Tournament Title"
                   variant="outlined"
                   :rules="[rules.required]"
                 ></v-text-field>
+
+                <!-- Add fields for teams, start date, format, and prize pool -->
+                <v-text-field
+                  v-model="tournamentTeams"
+                  label="Teams (comma-separated)"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-text-field>
+
+                <v-text-field
+                  v-model="tournamentStartDate"
+                  label="Start Date"
+                  variant="outlined"
+                  type="date"
+                  :rules="[rules.required]"
+                ></v-text-field>
+
+                <v-select
+                  v-model="tournamentFormat"
+                  :items="tournamentFormats"
+                  label="Tournament Format"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-select>
+
+                <v-text-field
+                  v-model="tournamentPrizePool"
+                  label="Prize Pool"
+                  variant="outlined"
+                  type="number"
+                ></v-text-field>
+
                 <!-- Display Error -->
                 <div v-if="tournamentError" class="error-message">
                   {{ tournamentError }}
@@ -280,38 +313,66 @@
         </v-dialog>
 
         <!-- Assign Player to Team Dialog -->
-        <v-dialog v-model="showAssignPlayerDialog" max-width="500">
+        <v-dialog v-model="showAddTournamentDialog" max-width="500">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
-                <span>Assign Player to Team</span>
+                <span>Add Tournament</span>
               </v-card-title>
               <v-card-text>
                 <v-text-field
-                  v-model="assignPlayerName"
-                  label="Player Name"
+                  v-model="tournamentTitle"
+                  label="Tournament Title"
                   variant="outlined"
                   :rules="[rules.required]"
                 ></v-text-field>
+
+                <!-- Add fields for teams, start date, format, and prize pool -->
                 <v-text-field
-                  v-model="assignTeamName"
-                  label="Team Name"
+                  v-model="tournamentTeams"
+                  label="Teams (comma-separated)"
                   variant="outlined"
                   :rules="[rules.required]"
                 ></v-text-field>
+
+                <v-text-field
+                  v-model="tournamentStartDate"
+                  label="Start Date"
+                  variant="outlined"
+                  type="date"
+                  :rules="[rules.required]"
+                ></v-text-field>
+
+                <v-select
+                  v-model="tournamentFormat"
+                  :items="tournamentFormats"
+                  label="Tournament Format"
+                  item-text="label"
+                  item-value="value"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                ></v-select>
+
+                <v-text-field
+                  v-model="tournamentPrizePool"
+                  label="Prize Pool"
+                  variant="outlined"
+                  type="number"
+                ></v-text-field>
+
                 <!-- Display Error -->
-                <div v-if="assignError" class="error-message">
-                  {{ assignError }}
+                <div v-if="tournamentError" class="error-message">
+                  {{ tournamentError }}
                 </div>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="showAssignPlayerDialog = false">
+                <v-btn class="cancel-btn" @click="showAddTournamentDialog = false">
                   Cancel
                 </v-btn>
                 <v-btn
                   class="submit-btn"
-                  @click="submitAssignPlayer"
+                  @click="submitAddTournament"
                   :loading="isSubmitting"
                 >
                   Submit
@@ -368,6 +429,7 @@ const showAddTournamentDialog = ref(false);
 const showAddMatchDialog = ref(false);
 const showAddPlayerDialog = ref(false);
 const showAssignPlayerDialog = ref(false);
+const startDateMenu = ref(false);
 
 // Form data and errors
 const tournamentName = ref('');
@@ -380,6 +442,12 @@ const tournamentError = ref<string | null>(null);
 const matchError = ref<string | null>(null);
 const playerError = ref<string | null>(null);
 const assignError = ref<string | null>(null);
+
+const tournamentTitle = ref('');
+const tournamentTeams = ref('');
+const tournamentStartDate = ref('');
+const tournamentFormat = ['single elimination', 'round robin', 'one off match']
+const tournamentPrizePool = ref(0);
 
 const rules = {
   required: (v: string) => !!v || 'This field is required',
@@ -500,33 +568,99 @@ const openAddTournamentDialog = () => {
   showAddTournamentDialog.value = true;
 };
 
+// Tournament Formats
+const tournamentFormats = [
+  { label: 'Single Elimination', value: 'single elimination' },
+  { label: 'Round Robin', value: 'round robin' },
+  { label: 'One Off Match', value: 'one off match' },
+];
+
 const submitAddTournament = async () => {
-  if (!tournamentName.value) {
-    tournamentError.value = 'Tournament name is required.';
+  // Reset error message
+  tournamentError.value = '';
+
+  // Validate required fields
+  if (!tournamentTitle.value) {
+    tournamentError.value = 'Tournament title is required.';
+    return;
+  }
+
+  if (!tournamentTeams.value || tournamentTeams.value.split(',').length < 2) {
+    tournamentError.value = 'At least two teams are required.';
+    return;
+  }
+
+  if (!tournamentStartDate.value) {
+    tournamentError.value = 'Tournament start date is required.';
+    return;
+  }
+
+  if (!tournamentFormat.value) {
+    tournamentError.value = 'Tournament format is required.';
     return;
   }
 
   try {
     isSubmitting.value = true;
 
+    // Prepare the data
+    const teamNames = tournamentTeams.value.split(',').map((team) => team.trim());
+
+    // Build the request body
+    const requestBody = {
+      title: tournamentTitle.value,
+      team_names: teamNames,
+      start_date: tournamentStartDate.value,
+      tournament_format: tournamentFormat.value || tournamentFormat.value, // Use .value if tournamentFormat is a ref
+      prize_pool: Number(tournamentPrizePool.value) || 0,
+    };
+
+    // Make the POST request
     const response = await fetch(`${API_URL}/tournaments`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name: tournamentName.value }),
+      body: JSON.stringify(requestBody),
     });
 
-    if (!response.ok) throw new Error('Failed to add tournament');
+    // Check if the response is successful
+    if (!response.ok) {
+      const errorData = await response.json();
+      // Handle validation errors from backend
+      if (Array.isArray(errorData.detail)) {
+        const errorMessages = errorData.detail
+          .map((err) => {
+            const field = err.loc[err.loc.length - 1];
+            const message = err.msg;
+            return `${field}: ${message}`;
+          })
+          .join(', ');
+        throw new Error(errorMessages || 'Failed to add tournament');
+      } else {
+        throw new Error(errorData.detail || 'Failed to add tournament');
+      }
+    }
 
+    // Success case: Update UI state
     showAddTournamentDialog.value = false;
     successMessage.value = 'Tournament added successfully.';
     showSuccessAlert.value = true;
+
+    // Reset form fields
+    tournamentTitle.value = '';
+    tournamentTeams.value = '';
+    tournamentStartDate.value = '';
+    tournamentFormat.value = '';
+    tournamentPrizePool.value = 0;
+
   } catch (e) {
+    // Handle errors
     console.error('Error adding tournament:', e);
-    tournamentError.value = 'Failed to add tournament. Please try again.';
+    tournamentError.value = e.message || 'Failed to add tournament. Please try again.';
   } finally {
+    // Always reset submitting state
     isSubmitting.value = false;
   }
 };
@@ -652,6 +786,37 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Transparent dropdown styles */
+:deep(.v-select) {
+  background: transparent !important; /* Transparent background for the dropdown */
+}
+
+:deep(.filter-select) {
+  background: transparent !important;
+  color: #ffffff !important;
+  border-color: #42DDF2FF !important;
+}
+
+:deep(.v-select:focus),
+:deep(.v-select--active) {
+  background: transparent !important; /* Transparent when focused or active */
+  border-color: #42DDF2FF !important; /* Optional: Add a border to highlight focus */
+}
+
+:deep(.v-menu__content) {
+  background: transparent !important; /* Transparent menu background */
+  box-shadow: none !important; /* Remove shadow */
+}
+
+:deep(.v-list-item) {
+  background: transparent !important; /* Transparent menu items */
+  color: #ffffff !important; /* Ensure text remains readable */
+}
+
+:deep(.v-list-item:hover) {
+  background: rgba(66, 221, 242, 0.2) !important; /* Optional: Light highlight on hover */
+  color: #42DDF2FF !important; /* Accent color for hover text */
+}
 /* Same styles as the user dashboard, plus any additional styles needed */
 
 .header-image {
