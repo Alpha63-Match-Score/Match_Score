@@ -105,6 +105,7 @@ def convert_db_to_prize_cut_response(
         tournament_name=db_prize.tournament.title,
         team_id=db_prize.team_id,
         team_name=db_prize.team.name if db_prize.team else None,
+        team_logo=db_prize.team.logo if db_prize.team else None,
     )
 
 
@@ -169,6 +170,7 @@ def convert_db_to_tournament_response(
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
         number_of_teams=len(db_tournament.teams),
+        director_id=db_tournament.director_id,
         matches_of_current_stage=[
             convert_db_to_match_list_response(db_match)
             for db_match in db_tournament.matches
