@@ -453,6 +453,12 @@ onMounted(() => {
   color: #fed854 !important;
 }
 
+:deep(.v-field--error input::placeholder),
+:deep(.v-field--error .v-label.v-field-label) {
+  color: #fed854 !important;
+}
+
+
 .welcome-icon {
   color: #42DDF2FF !important;
   margin-bottom: 16px;
