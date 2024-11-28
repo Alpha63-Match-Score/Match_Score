@@ -269,3 +269,10 @@ def team_player_limit_reached(team: Type[Team]) -> None:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail="Team has reached the player limit"
         )
+
+
+def user_associated_with_player(user: User) -> None:
+    if user.role != Role.PLAYER:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="User does not have associated player"
+        )
