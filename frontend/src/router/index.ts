@@ -43,10 +43,10 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['admin'] }
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('../views/DashboardAdmin.vue'),
-      meta: { requiresAuth: true, roles: ['admin'] }
+      path: '/dashboard-player',
+      name: 'dashboard-player',
+      component: () => import('../views/DashboardPlayer.vue'),
+      meta: { requiresAuth: true, roles: ['player'] }
     },
     {
       path: '/login',
@@ -88,6 +88,8 @@ router.beforeEach(async (to, from, next) => {
         next('/dashboard-admin')
       } else if (authStore.userRole === 'user') {
         next('/dashboard-user')
+      } else if (authStore.userRole === 'player') {
+        next('/dashboard-player')
       } else {
         next('/login')
       }
@@ -103,6 +105,8 @@ router.beforeEach(async (to, from, next) => {
         next('/dashboard-admin')
       } else if (authStore.userRole === 'user') {
         next('/dashboard-user')
+      } else if (authStore.userRole === 'player') {
+        next('/dashboard-player')
       } else {
         next('/')
       }
