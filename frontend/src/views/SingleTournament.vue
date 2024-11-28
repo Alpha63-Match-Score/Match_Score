@@ -304,7 +304,9 @@ interface Match {
   team1_score: number
   team2_score: number
   team1_name: string
+  team1_logo: string
   team2_name: string
+  team2_logo: string
   winner_id: string | null
   tournament_id: string
   tournament_title: string

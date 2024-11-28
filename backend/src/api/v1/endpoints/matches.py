@@ -24,7 +24,6 @@ def read_matches(
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    one_per_tournament: bool = False,
 ):
 
     return match_crud.get_all_matches(
@@ -34,7 +33,6 @@ def read_matches(
         stage,
         is_finished,
         team_name,
-        one_per_tournament,
     )
 
 
@@ -42,7 +40,6 @@ def read_matches(
 def read_match(match_id: UUID, db: Session = Depends(get_db)):
 
     return match_crud.get_match(db, match_id)
-
 
 @router.put("/{match_id}", response_model=MatchDetailResponse)
 def update_match(

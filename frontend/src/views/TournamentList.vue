@@ -41,7 +41,7 @@
         </div>
 
         <transition name="fade">
-          <div v-if="isFiltered" class="reset-filter-wrapper">
+          <div class="reset-filter-wrapper">
             <v-btn
               class="reset-filter-btn"
               variant="outlined"
