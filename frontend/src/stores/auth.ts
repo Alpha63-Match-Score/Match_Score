@@ -198,7 +198,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('User is not authenticated')
       }
 
-      const response = await fetch(`${API_URL}/users/role`, {
+      const response = await fetch(`${API_URL}/users/me`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token.value}`
