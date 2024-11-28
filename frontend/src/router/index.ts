@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -27,37 +28,89 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
-  //    {
-  //   path: '/dashboard-user',
-  //   name: 'dashboard-user',
-  //   component: () => import('../views/DashboardUser.vue'),
-  // },
-  // {
-  //   path: '/dashboard-admin',
-  //   name: 'dashboard-admin',
-  //   component: () => import('../views/DashboardAdmin.vue'),
-  // },
+    {
+      path: '/dashboard-user',
+      name: 'dashboard-user',
+      component: () => import('../views/DashboardUser.vue'),
+      meta: { requiresAuth: true, roles: ['user'] }
+    },
+    {
+      path: '/dashboard-admin',
+      name: 'dashboard-admin',
+      component: () => import('../views/DashboardAdmin.vue'),
+      meta: { requiresAuth: true, roles: ['admin'] }
+    },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('../views/DashboardAdmin.vue'),
+      meta: { requiresAuth: true, roles: ['admin'] }
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LogIn.vue')
+      component: () => import('../views/LogIn.vue'),
+      meta: { requiresGuest: true }
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('../views/Register.vue')
-    }
+      component: () => import('../views/Register.vue'),
+      meta: { requiresGuest: true }
+    },
   ],
+})
+
+// Navigation Guards
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  // Ensure token and role are checked
+  if (authStore.token && !authStore.userRole) {
+    await authStore.fetchUserRole()
+  }
+
+  // Check for routes that require authentication
+  if (to.meta.requiresAuth) {
+    // User is not authenticated
+    if (!authStore.isAuthenticated) {
+      next('/login')
+      return
+    }
+
+    // Check role-based access
+    const requiredRoles = to.meta.roles as string[]
+    if (requiredRoles && !requiredRoles.includes(authStore.userRole || '')) {
+      // Redirect based on role
+      if (authStore.userRole === 'admin') {
+        next('/dashboard-admin')
+      } else if (authStore.userRole === 'user') {
+        next('/dashboard-user')
+      } else {
+        next('/login')
+      }
+      return
+    }
+  }
+
+  // Routes that require guest (non-authenticated) access
+  if (to.meta.requiresGuest) {
+    if (authStore.isAuthenticated) {
+      // Redirect authenticated users away from login/register
+      if (authStore.userRole === 'admin') {
+        next('/dashboard-admin')
+      } else if (authStore.userRole === 'user') {
+        next('/dashboard-user')
+      } else {
+        next('/')
+      }
+      return
+    }
+  }
+
+  next()
 })
 
 export default router

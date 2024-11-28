@@ -28,8 +28,8 @@ interface RegisterResponse {
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const token = ref<string | null>(localStorage.getItem('token') || null)
-  const userEmail = ref<string | null>(null)
-  const userRole = ref<string | null>(null) // Add role to the state
+  const userEmail = ref<string | null>(localStorage.getItem('userEmail') || null)
+  const userRole = ref<string | null>(localStorage.getItem('userRole') || null)
   const isAuthenticated = ref(!!token.value)
 
   const setToken = (newToken: string | null) => {
@@ -43,6 +43,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const setUserEmail = (email: string | null) => {
+    userEmail.value = email
+    if (email) {
+      localStorage.setItem('userEmail', email)
+    } else {
+      localStorage.removeItem('userEmail')
+    }
+  }
+
   const setUserRole = (role: string | null) => {
     userRole.value = role
     if (role) {
@@ -53,38 +62,38 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    try {
-      const formData = new FormData()
-      formData.append('username', credentials.username)
-      formData.append('password', credentials.password)
+  try {
+    const formData = new FormData()
+    formData.append('username', credentials.username)
+    formData.append('password', credentials.password)
 
-      const response = await fetch(`${API_URL}/users/login`, {
-        method: 'POST',
-        body: formData
-      })
+    const response = await fetch(`${API_URL}/users/login`, {
+      method: 'POST',
+      body: formData
+    })
 
-      if (!response.ok) {
-        throw new Error('Login failed')
-      }
-
-      const data: LoginResponse = await response.json()
-
-      // Store the token, email, and role
-      setToken(data.access_token)
-      userEmail.value = credentials.username
-      setUserRole(data.role)
-
-      await router.push('/')
-
-      return true
-    } catch (error) {
-      console.error('Login error:', error)
-      setToken(null)
-      userEmail.value = null
-      setUserRole(null)
-      return false
+    if (!response.ok) {
+      throw new Error('Login failed')
     }
+
+    const data: LoginResponse = await response.json()
+
+    // Store the token, email, and role directly from login response
+    setToken(data.access_token)
+    userEmail.value = credentials.username
+    setUserRole(data.role)
+
+    await router.push('/')
+
+    return true
+  } catch (error) {
+    console.error('Login error:', error)
+    setToken(null)
+    userEmail.value = null
+    setUserRole(null)
+    return false
   }
+}
 
   const register = async (credentials: RegisterCredentials): Promise<boolean> => {
     try {
@@ -105,8 +114,10 @@ export const useAuthStore = defineStore('auth', () => {
 
       const data: RegisterResponse = await response.json()
 
+      // Immediately set the user role from registration response
       setUserRole(data.role)
 
+      // Attempt to log in automatically after registration
       const loginSuccess = await login({
         username: credentials.email,
         password: credentials.password
@@ -125,9 +136,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async (): Promise<boolean> => {
     try {
+      // Clear all stored authentication data
       setToken(null)
-      userEmail.value = null
-      userRole.value = null
+      setUserEmail(null)
+      setUserRole(null)
+
+      // Redirect to login page
       await router.push('/login')
       return true
     } catch (error) {
@@ -136,7 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const fetchUserRole = async (): Promise<void> => {
+  const fetchUserRole = async (): Promise<string | null> => {
     try {
       if (!token.value) {
         throw new Error('User is not authenticated')
@@ -154,10 +168,13 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       const data = await response.json()
-      setUserRole(data.role)
+      const role = data.role
+      setUserRole(role)
+      return role
     } catch (error) {
       console.error('Error fetching user role:', error)
       setUserRole(null)
+      return null
     }
   }
 

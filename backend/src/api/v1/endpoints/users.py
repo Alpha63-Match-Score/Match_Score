@@ -6,7 +6,8 @@ from src.core.authentication import authenticate_user, create_access_token
 from src.core.config import settings
 from src.crud.user import create_user, update_email
 from src.models import User
-from src.schemas.user import Token, UserCreate, UserRegisterResponse, UserUpdate
+from src.schemas.user import Token, UserCreate, UserRegisterResponse, UserUpdate, UserRole
+
 
 router = APIRouter()
 
@@ -41,3 +42,8 @@ def update_user(
 def logout(token: str = Depends(oauth2_scheme)):
     settings.BLACKLISTED_TOKENS.append(token)
     return {"message": "Logout successful."}
+
+
+@router.get("/role")
+def get_user_role(current_user: User = Depends(get_current_user)):
+    return UserRole(role=current_user.role)

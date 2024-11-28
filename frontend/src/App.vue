@@ -58,14 +58,6 @@
             >
               {{ menuItems[4].title }}
             </v-list-item>
-<!--            <v-list-item-->
-<!--              v-else-->
-<!--              :to="menuItems[8].path"-->
-<!--              :prepend-icon="menuItems[8].icon"-->
-<!--              link-->
-<!--            >-->
-<!--              {{ menuItems[8].title }}-->
-<!--            </v-list-item>-->
 
           <!-- Logout button -->
           <v-list-item
@@ -146,6 +138,17 @@ const searchQuery = ref('')
 // Pages where search should be hidden
 const noSearchPages = ['/', '/login', '/register', '/dashboard', '/about']
 
+const dashboardPath = computed(() => {
+  switch (authStore.userRole) {
+    case 'ADMIN':
+      return '/dashboard-admin'
+    case 'USER':
+      return '/dashboard-user'
+    default:
+      return '/login'
+  }
+})
+
 // Computed property to determine if search should be shown
 const shouldShowSearch = computed(() => {
   return !noSearchPages.includes(route.path)
@@ -202,11 +205,14 @@ const menuItems = ref([
   { title: 'Events', path: '/events', icon: 'mdi-trophy' },
   { title: 'Matches', path: '/matches', icon: 'mdi-gamepad-variant' },
   { title: 'Teams', path: '/teams', icon: 'mdi-account-group' },
-  { title: 'Dashboard', path: '/dashboard', icon: 'mdi-paw' },
+  {
+      title: 'Dashboard',
+      path: dashboardPath.value,
+      icon: 'mdi-paw'
+    },
   { title: 'Login', path: '/login', icon: 'mdi-account' },
   { title: 'Register', path: '/register', icon: 'mdi-account-plus' },
-  { title: 'About', path: '/about', icon: 'mdi-information' },
-  // {title: 'Dashboard', path: '/dashboard-user', icon: 'mdi-paw'},
+  { title: 'About', path: '/about', icon: 'mdi-information' }
 ]);
 
 const handleLogout = async () => {
