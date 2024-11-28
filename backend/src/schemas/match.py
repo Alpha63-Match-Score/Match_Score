@@ -25,9 +25,9 @@ class MatchResponse(BaseConfig):
     team1_score: int
     team2_score: int
     team1_name: str
-    team1_logo: str
+    team1_logo: str | None
     team2_name: str
-    team2_logo: str
+    team2_logo: str | None
     winner_id: UUID | None = None
     tournament_id: UUID
     tournament_title: str
