@@ -131,10 +131,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { API_URL } from '@/config'
+import { initializeFromToken } from '@/utils/auth'
 import Logo from '@/assets/logo.png'
 
 const router = useRouter()
@@ -218,6 +219,10 @@ const handleLogout = async () => {
     console.error('Failed to logout')
   }
 }
+
+onMounted(async () => {
+  await authStore.initializeFromToken()
+})
 </script>
 
 <style>

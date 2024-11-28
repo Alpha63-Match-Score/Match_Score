@@ -1,0 +1,79 @@
+/* Global styles for v-select dropdown */
+.v-overlay-container .v-overlay__content .v-list {
+  background-color: rgba(45, 55, 75, 0.95) !important;
+  border: 1px solid #42DDF2FF !important;
+}
+
+.v-overlay-container .v-overlay__content .v-list-item-title {
+  color: white !important;
+}
+
+.v-overlay-container .v-overlay__content .v-list-item:hover,
+.v-overlay-container .v-overlay__content .v-list-item--active {
+  background-color: rgba(66, 221, 242, 0.1) !important;
+}
+
+.v-overlay-container .v-overlay__content .v-list-item--active .v-list-item-title {
+  color: #42DDF2FF !important;
+}
+
+
+/* Global styles for calendar */
+
+/* Button for calendar */
+:deep(.v-field__append-inner) {
+  color: #42DDF2FF !important;
+}
+
+/* Calendar */
+:deep(.v-picker__title) {
+  background-color: rgba(45, 55, 75, 0.95) !important;
+  color: #42DDF2FF !important;
+}
+
+:deep(.v-date-picker-month) {
+  background-color: rgba(45, 55, 75, 0.95) !important;
+}
+
+:deep(.v-date-picker-month__day) {
+  color: white !important;
+}
+
+:deep(.v-date-picker-month__day--selected) {
+  background-color: #42DDF2FF !important;
+  color: rgb(45, 55, 75) !important;
+}
+
+:deep(.v-date-picker-month__day:hover) {
+  background-color: rgba(66, 221, 242, 0.1) !important;
+}
+
+:deep(.v-date-picker-month__day--disabled) {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.v-date-picker-controls .v-btn) {
+  color: #42DDF2FF !important;
+}
+
+:deep(.v-time-picker-clock) {
+  background-color: rgba(45, 55, 75, 0.95) !important;
+}
+
+:deep(.v-time-picker-clock__item--active) {
+  background-color: #42DDF2FF !important;
+  color: rgb(45, 55, 75) !important;
+}
+
+:deep(.v-time-picker-clock__hand) {
+  background-color: #42DDF2FF !important;
+}
+
+:deep(.v-picker__actions) {
+  background-color: rgba(45, 55, 75, 0.95) !important;
+}
+
+/* Current date */
+:deep(.v-date-picker-month__day--current) {
+  border-color: #42DDF2FF !important;
+}

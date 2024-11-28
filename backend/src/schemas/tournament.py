@@ -29,6 +29,7 @@ class TournamentListResponse(BaseConfig):
 
 
 class TournamentDetailResponse(TournamentListResponse):
+    director_id: UUID
     matches_of_current_stage: list[MatchListResponse]
     teams: list[TeamListResponse]
     prizes: list["PrizeCutResponse"]

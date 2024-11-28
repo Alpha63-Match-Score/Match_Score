@@ -31,10 +31,9 @@ def get_all_matches(
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-    one_per_tournament: bool = False,
 ) -> list[MatchListResponse]:
 
-    query = db.query(Match).order_by(Match.start_time.asc())
+    query = db.query(Match).order_by(Match.start_time.desc())
 
     filters = []
     if tournament_title:
@@ -47,24 +46,6 @@ def get_all_matches(
     if team_name:
         v.team_exists(db, team_name=team_name)
         filters.append(or_(Match.team1_id == team_name, Match.team2_id == team_name))
-
-    if one_per_tournament:
-        # get tournament id and min start time for each tournament
-        subquery = (
-            db.query(
-                Match.tournament_id, func.min(Match.start_time).label("min_start_time")
-            )
-            .group_by(Match.tournament_id)
-            .subquery()
-        )
-        # join the subquery to the main query to get the first match for each tournament
-        query = query.join(
-            subquery,
-            and_(
-                Match.tournament_id == subquery.c.tournament_id,
-                Match.start_time == subquery.c.min_start_time,
-            ),
-        )
 
     if filters:
         query = query.filter(*filters)

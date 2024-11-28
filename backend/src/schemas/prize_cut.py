@@ -17,6 +17,7 @@ class PrizeCutResponse(BaseConfig):
     tournament_name: str
     team_id: UUID | None
     team_name: str | None
+    team_logo: str | None
 
 
 class PrizeCutUpdate(BaseConfig):
