@@ -25,8 +25,9 @@ class TeamDetailedResponse(BaseConfig):
     id: UUID
     name: str
     logo: str | None
-    matches: list["MatchResponse"]
     tournament_id: UUID | None
+    matches: list["MatchResponse"]
+    players: list[PlayerBaseResponse]
     prize_cuts: list["PrizeCutResponse"]
     team_stats: dict
 

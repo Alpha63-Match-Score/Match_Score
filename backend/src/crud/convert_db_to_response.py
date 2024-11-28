@@ -97,9 +97,9 @@ def convert_db_to_team_detailed_response(
         id=db_team.id,
         name=db_team.name,
         logo=db_team.logo,
-        players=db_team.players,
-        matches=[convert_db_to_match_list_response(match) for match in matches],
+        players=[convert_db_to_player_list_response(player) for player in db_team.players],
         tournament_id=db_team.tournament_id,
+        matches=[convert_db_to_match_list_response(match) for match in matches],
         prize_cuts=[
             convert_db_to_prize_cut_response(prize_cut)
             for prize_cut in db_team.prize_cuts
