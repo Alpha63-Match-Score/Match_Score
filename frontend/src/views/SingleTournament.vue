@@ -75,8 +75,8 @@
                   >
                     <v-avatar size="32">
                       <v-img
-                        v-if="getTeamLogo(prize.team_id)"
-                        :src="getTeamLogo(prize.team_id)"
+                        v-if="prize.team_logo"
+                        :src="prize.team_logo"
                         alt="Winner team logo"
                       ></v-img>
                       <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
@@ -179,11 +179,19 @@
       </div>
     </div>
 
-    <!-- Edit Dialogs -->
+    <!-- Title Edit Dialog -->
     <v-dialog v-model="showTitleEdit" max-width="500px">
       <v-card class="edit-dialog">
         <v-card-title>Edit Tournament Title</v-card-title>
         <v-card-text>
+          <v-alert
+            v-if="titleError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ titleError }}
+          </v-alert>
           <v-text-field
             v-model="editedTitle"
             label="Tournament Title"
@@ -198,10 +206,19 @@
       </v-card>
     </v-dialog>
 
+    <!-- End Date Edit Dialog -->
     <v-dialog v-model="showEndDateEdit" max-width="500px">
       <v-card class="edit-dialog">
         <v-card-title>Edit End Date</v-card-title>
         <v-card-text>
+          <v-alert
+            v-if="endDateError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ endDateError }}
+          </v-alert>
           <v-text-field
             v-model="editedEndDate"
             label="End Date"
@@ -217,10 +234,19 @@
       </v-card>
     </v-dialog>
 
+    <!-- Prize Edit Dialog -->
     <v-dialog v-model="showPrizeEdit" max-width="500px">
       <v-card class="edit-dialog">
         <v-card-title>Edit Prize Pool</v-card-title>
         <v-card-text>
+          <v-alert
+            v-if="prizeError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ prizeError }}
+          </v-alert>
           <v-text-field
             v-model="editedPrizePool"
             label="Prize Pool (Kitty Kibbles)"
@@ -239,7 +265,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
@@ -292,6 +318,7 @@ interface Prize {
   tournament_name: string
   team_id: string | null
   team_name: string | null
+  team_logo: string | null
 }
 
 interface Tournament {
@@ -311,6 +338,7 @@ interface Tournament {
 const route = useRoute()
 const authStore = useAuthStore()
 
+const isInitialized = ref(false)
 const tournament = ref<Tournament | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -322,9 +350,12 @@ const showPrizeEdit = ref(false)
 const editedTitle = ref('')
 const editedEndDate = ref('')
 const editedPrizePool = ref(0)
+const titleError = ref('')
+const endDateError = ref('')
+const prizeError = ref('')
 
 const canEdit = computed(() => {
-  if (!tournament.value || !authStore.isAuthenticated) return false
+  if (!isInitialized.value || !tournament.value || !authStore.isAuthenticated) return false
   return authStore.userRole === 'admin' || tournament.value.director_id === authStore.userId
 })
 
@@ -356,11 +387,6 @@ const formatPlace = (place: number): string => {
   return place === 1 ? '1st' : place === 2 ? '2nd' : `${place}th`
 }
 
-const getTeamLogo = (teamId: string): string | null => {
-  const team = tournament.value?.teams.find(t => t.id === teamId)
-  return team?.logo || null
-}
-
 const fetchTournament = async () => {
   try {
     isLoading.value = true
@@ -368,7 +394,6 @@ const fetchTournament = async () => {
     const response = await fetch(`${API_URL}/tournaments/${route.params.id}`)
     if (!response.ok) throw new Error('Failed to fetch tournament details')
     const data = await response.json()
-    console.log('Fetched tournament data:', data) // Debug log
     tournament.value = data
   } catch (e) {
     console.error('Error fetching tournament:', e)
@@ -397,15 +422,34 @@ const openPrizeEdit = () => {
   showPrizeEdit.value = true
 }
 
-const updateTitle = async (event: Event) => {
-  event.preventDefault()
-  console.log("Update title clicked")
+const extractErrorMessage = async (response: Response) => {
   try {
-    if (!tournament.value) {
-      console.log("No tournament value")
-      return
+    const responseClone = response.clone()
+    const text = await responseClone.text()
+    const data = JSON.parse(text)
+
+    // Ако detail е масив (FastAPI validation errors)
+    if (data.detail && Array.isArray(data.detail) && data.detail.length > 0) {
+      return data.detail[0].msg
     }
-    console.log("Sending update request for title:", editedTitle.value)
+
+    // Ако detail е string (HTTP exceptions)
+    if (data.detail && typeof data.detail === 'string') {
+      return data.detail
+    }
+
+    return 'An error occurred'
+  } catch (e) {
+    console.error('Error extracting message:', e)
+    return 'An error occurred'
+  }
+}
+
+const updateTitle = async () => {
+  try {
+    titleError.value = ''
+    if (!tournament.value) return
+
     const response = await fetch(
       `${API_URL}/tournaments/${tournament.value.id}?title=${encodeURIComponent(editedTitle.value)}`,
       {
@@ -416,21 +460,26 @@ const updateTitle = async (event: Event) => {
         }
       }
     )
-    console.log("Response status:", response.status)
+
     if (!response.ok) {
-      throw new Error('Failed to update title')
+
+      titleError.value = await extractErrorMessage(response)
+      return
     }
+
     await fetchTournament()
     showTitleEdit.value = false
   } catch (e) {
-    console.error('Error updating title:', e)
+    console.error('Update error:', e)
+    titleError.value = 'An unexpected error occurred'
   }
 }
 
 const updateEndDate = async () => {
   try {
+    endDateError.value = ''
     if (!tournament.value) return
-    console.log('Sending end date:', editedEndDate.value) // Debug log
+
     const response = await fetch(
       `${API_URL}/tournaments/${tournament.value.id}?end_date=${encodeURIComponent(editedEndDate.value)}`,
       {
@@ -441,20 +490,24 @@ const updateEndDate = async () => {
         }
       }
     )
+
     if (!response.ok) {
-      throw new Error('Failed to update end date')
+      endDateError.value = await extractErrorMessage(response)
+      return
     }
+
     await fetchTournament()
     showEndDateEdit.value = false
   } catch (e) {
-    console.error('Error updating end date:', e)
+    endDateError.value = 'An unexpected error occurred'
   }
 }
 
 const updatePrizePool = async () => {
   try {
+    prizeError.value = ''
     if (!tournament.value) return
-    console.log('Updating prize pool:', editedPrizePool.value) // Debug log
+
     const response = await fetch(
       `${API_URL}/tournaments/${tournament.value.id}?prize_pool=${editedPrizePool.value}`,
       {
@@ -465,20 +518,26 @@ const updatePrizePool = async () => {
         }
       }
     )
+
     if (!response.ok) {
-      throw new Error('Failed to update prize pool')
+      prizeError.value = await extractErrorMessage(response)
+      return
     }
+
     await fetchTournament()
     showPrizeEdit.value = false
   } catch (e) {
-    console.error('Error updating prize pool:', e)
+    prizeError.value = 'An unexpected error occurred'
   }
 }
 
 
 onMounted(async () => {
+  await authStore.initializeFromToken()
+  isInitialized.value = true
   await fetchTournament()
 })
+
 
 </script>
 
@@ -921,5 +980,17 @@ onMounted(async () => {
   text-transform: none;
 }
 
+:deep(.v-alert) {
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  color: #fed854 !important;
+  border-color: #fed854 !important;
+}
 
+:deep(.v-alert__close-button) {
+  color: #fed854 !important;
+}
+
+:deep(.v-alert__prepend) {
+  color: #fed854 !important;
+}
 </style>

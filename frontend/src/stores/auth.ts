@@ -12,6 +12,8 @@ interface LoginCredentials {
 interface LoginResponse {
   access_token: string
   token_type: string
+  user_id: string
+  role: string
 }
 
 interface RegisterCredentials {
@@ -19,16 +21,23 @@ interface RegisterCredentials {
   password: string
 }
 
-interface RegisterResponse {
-  email: string
-  role: string
-}
-
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const token = ref<string | null>(localStorage.getItem('token') || null)
   const userEmail = ref<string | null>(null)
+  const userId = ref<string | null>(null)
+  const userRole = ref<string | null>(null)
   const isAuthenticated = ref(!!token.value)
+
+
+  const clearUserData = () => {
+    token.value = null
+    userEmail.value = null
+    userId.value = null
+    userRole.value = null
+    isAuthenticated.value = false
+    localStorage.removeItem('token')
+  }
 
   const setToken = (newToken: string | null) => {
     token.value = newToken
@@ -40,6 +49,33 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.removeItem('token')
     }
   }
+
+  const initializeFromToken = async () => {
+    const savedToken = localStorage.getItem('token')
+    if (savedToken) {
+      try {
+        const response = await fetch(`${API_URL}/users/me`, {
+          headers: {
+            'Authorization': `Bearer ${savedToken}`
+          }
+        })
+        if (response.ok) {
+          const userData = await response.json()
+          userId.value = userData.id
+          userRole.value = userData.role
+          userEmail.value = userData.email
+          token.value = savedToken
+          isAuthenticated.value = true
+        } else {
+          clearUserData()
+        }
+      } catch (error) {
+        console.error('Failed to initialize user data:', error)
+        clearUserData()
+      }
+    }
+  }
+
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
@@ -61,7 +97,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Store the token and email
       setToken(data.access_token)
-      userEmail.value = credentials.username // Store the email used to login
+      userEmail.value = credentials.username
+      userId.value = data.user_id
+      userRole.value = data.role
 
       await router.push('/')
 
@@ -123,7 +161,10 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     userEmail,
+    userId,
+    userRole,
     isAuthenticated,
+    initializeFromToken,
     login,
     register,
     logout
