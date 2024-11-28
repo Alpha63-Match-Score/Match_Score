@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.schemas.match import MatchListResponse
+from src.schemas.match import MatchResponse
 from src.schemas.player import PlayerBaseResponse
 from src.schemas.prize_cut import PrizeCutResponse
 
@@ -25,7 +25,7 @@ class TeamDetailedResponse(BaseConfig):
     id: UUID
     name: str
     logo: str | None
-    matches: list["MatchListResponse"]
+    matches: list["MatchResponse"]
     tournament_id: UUID | None
     prize_cuts: list["PrizeCutResponse"]
     team_stats: dict

@@ -8,14 +8,12 @@ from sqlalchemy.orm import Session
 from src.crud import constants as c, team as crud_team
 from src.crud.convert_db_to_response import (
     convert_db_to_match_list_response,
-    convert_db_to_match_response,
 )
 from src.models import Team, Tournament
 from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.models.match import Match
 from src.schemas.match import (
-    MatchDetailResponse,
-    MatchListResponse,
+    MatchResponse,
     MatchUpdate,
 )
 from src.utils import validators as v
@@ -31,7 +29,7 @@ def get_all_matches(
     stage: Stage | None = None,
     is_finished: bool | None = None,
     team_name: str | None = None,
-) -> list[MatchListResponse]:
+) -> list[MatchResponse]:
 
     query = db.query(Match).order_by(Match.start_time.desc())
 
@@ -57,7 +55,7 @@ def get_all_matches(
     return [convert_db_to_match_list_response(db_match) for db_match in db_matches]
 
 
-def get_match(db: Session, match_id: UUID) -> MatchDetailResponse:
+def get_match(db: Session, match_id: UUID) -> MatchResponse:
 
     db_match = v.match_exists(db, match_id)
 
@@ -168,7 +166,7 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
 
 def update_match(
     db: Session, match_id: UUID, match: MatchUpdate, current_user
-) -> MatchDetailResponse:
+) -> MatchResponse:
     time_format = "%B %d, %Y at %H:%M"
 
     try:
@@ -266,7 +264,7 @@ def update_match_score(
     match_id: UUID,
     team_to_upvote_score: Literal["team1", "team2"],
     current_user,
-) -> MatchDetailResponse:
+) -> MatchResponse:
     try:
         db.begin_nested()
 

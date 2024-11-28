@@ -1,7 +1,7 @@
 from typing import Type
 
 from src.models import Match, Player, PrizeCut, Team, Tournament
-from src.schemas.match import MatchDetailResponse, MatchListResponse
+from src.schemas.match import MatchResponse
 from src.schemas.player import PlayerListResponse, PlayerDetailResponse
 from src.schemas.prize_cut import PrizeCutResponse
 from src.schemas.team import TeamDetailedResponse, TeamListResponse
@@ -10,8 +10,8 @@ from src.schemas.tournament import TournamentListResponse, TournamentDetailRespo
 
 def convert_db_to_match_list_response(
     db_match: Match | Type[Match],
-) -> MatchListResponse:
-    return MatchListResponse(
+) -> MatchResponse:
+    return MatchResponse(
         id=db_match.id,
         match_format=db_match.match_format,
         start_time=db_match.start_time,

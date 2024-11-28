@@ -14,7 +14,7 @@ class BaseConfig(BaseModel):
 
 
 # Match schemas
-class MatchListResponse(BaseConfig):
+class MatchResponse(BaseConfig):
     id: UUID
     match_format: MatchFormat
     start_time: datetime
