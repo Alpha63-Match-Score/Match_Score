@@ -44,11 +44,6 @@ def logout(token: str = Depends(oauth2_scheme)):
     return {"message": "Logout successful."}
 
 
-@router.get("/role")
-def get_user_role(current_user: User = Depends(get_current_user)):
-    return UserRole(role=current_user.role)
-
-
 @router.get("/me")
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return {
@@ -56,3 +51,8 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "role": current_user.role,
     }
+
+
+# @router.get("/role")
+# def get_user_role(current_user: User = Depends(get_current_user)):
+#     return UserRole(role=current_user.role)
