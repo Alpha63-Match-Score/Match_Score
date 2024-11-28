@@ -383,6 +383,8 @@ onMounted(() => {
   margin-bottom: 24px;
   padding: 24px;
   width: 55%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .welcome-content,
