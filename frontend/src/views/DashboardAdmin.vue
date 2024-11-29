@@ -20,35 +20,28 @@
           <div class="actions-content">
             <h3 class="section-title">Admin Actions</h3>
             <div class="actions-buttons">
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-tournament"
-                @click="openAddTournamentDialog"
-              >
-                Add Tournament
-              </v-btn>
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-soccer"
-                @click="openAddMatchDialog"
-              >
-                Add Match
-              </v-btn>
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-account-plus"
-                @click="openAddPlayerDialog"
-              >
-                Add Player
-              </v-btn>
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-account-group"
-                @click="openAssignPlayerDialog"
-              >
-                Assign Player to Team
-              </v-btn>
-            </div>
+                <v-btn
+                  class="action-btn"
+                  prepend-icon="mdi-tournament"
+                  @click="openAddTournamentDialog"
+                >
+                  Add Tournament
+                </v-btn>
+                <v-btn
+                  class="action-btn"
+                  prepend-icon="mdi-account-group"
+                  @click="openAddTeamDialog"
+                >
+                  Add Team
+                </v-btn>
+                <v-btn
+                  class="action-btn"
+                  prepend-icon="mdi-account-edit"
+                  @click="openUpdatePlayerDialog"
+                >
+                  Update Player
+                </v-btn>
+              </div>
 
             <!-- Display Error for Admin Actions -->
             <div v-if="actionsError" class="error-message">
@@ -204,7 +197,9 @@
 
                 <v-select
                   v-model="tournamentFormat"
-                  :items="tournamentFormats"
+                  :items="tournamentFormatOptions"
+                  item-title="label"
+                  item-value="value"
                   label="Tournament Format"
                   variant="outlined"
                   :rules="[rules.required]"
@@ -239,57 +234,164 @@
           </v-card>
         </v-dialog>
 
-        <!-- Add Match Dialog -->
-        <v-dialog v-model="showAddMatchDialog" max-width="500">
+        <!-- Add Team Dialog -->
+        <v-dialog v-model="showAddTeamDialog" max-width="500">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
-                <span>Add Match</span>
+                <span>Add New Team</span>
               </v-card-title>
               <v-card-text>
-                <!-- Match details inputs -->
+                <!-- Team Name Field -->
                 <v-text-field
-                  v-model="matchDetails"
-                  label="Match Details"
+                  v-model="teamName"
+                  label="Team Name"
                   variant="outlined"
                   :rules="[rules.required]"
                 ></v-text-field>
+
+                <!-- Team Logo Upload -->
+                <v-file-input
+                  v-model="teamLogo"
+                  label="Team Logo"
+                  variant="outlined"
+                  accept="image/*"
+                  prepend-icon="mdi-camera"
+                  :show-size="true"
+                  class="mt-4"
+                  :rules="[]"
+                >
+                  <template v-slot:selection="{ fileNames }">
+                    <template v-for="fileName in fileNames" :key="fileName">
+                      {{ fileName }}
+                    </template>
+                  </template>
+                </v-file-input>
+
                 <!-- Display Error -->
-                <div v-if="matchError" class="error-message">
-                  {{ matchError }}
+                <div v-if="teamError" class="error-message">
+                  {{ teamError }}
                 </div>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="showAddMatchDialog = false">
+                <v-btn class="cancel-btn" @click="showAddTeamDialog = false">
                   Cancel
                 </v-btn>
                 <v-btn
                   class="submit-btn"
-                  @click="submitAddMatch"
+                  @click="submitAddTeam"
                   :loading="isSubmitting"
                 >
-                  Submit
+                  Create Team
                 </v-btn>
               </v-card-actions>
             </div>
           </v-card>
         </v-dialog>
 
-        <!-- Add Player Dialog -->
-        <v-dialog v-model="showAddPlayerDialog" max-width="500">
+        <!-- Update Player Dialog -->
+        <v-dialog v-model="showUpdatePlayerDialog" max-width="500">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
-                <span>Add Player</span>
+                <span>Update Player</span>
               </v-card-title>
               <v-card-text>
-                <v-text-field
-                  v-model="playerName"
-                  label="Player Name"
-                  variant="outlined"
-                  :rules="[rules.required]"
-                ></v-text-field>
+                <!-- Username Check Step -->
+                <div v-if="!selectedPlayer">
+                  <v-text-field
+                    v-model="playerUsername"
+                    label="Player Username"
+                    variant="outlined"
+                    :rules="[rules.required]"
+                  ></v-text-field>
+                    <v-btn
+                      class="check-player-btn mt-4 action-btn"
+                      block
+                      @click="checkPlayer"
+                      :loading="isCheckingPlayer"
+                    >
+                      Check Player
+                    </v-btn>
+                </div>
+
+                <!-- Player Update Form -->
+                <div v-else>
+                  <div class="player-status mb-4">
+                    <v-chip
+                      :color="selectedPlayer.user_email ? 'error' : 'success'"
+                      class="status-chip"
+                    >
+                      {{ selectedPlayer.user_email ? 'Linked to User' : 'Available for Update' }}
+                    </v-chip>
+                  </div>
+
+                  <template v-if="!selectedPlayer.user_email">
+                    <div class="avatar-section mb-4">
+                    <v-avatar size="64" class="mr-4">
+                      <v-img
+                        v-if="previewAvatar || selectedPlayer.avatar"
+                        :src="previewAvatar || selectedPlayer.avatar"
+                        alt="Player avatar"
+                      ></v-img>
+                      <v-icon
+                        v-else
+                        icon="mdi-account"
+                        color="#42DDF2FF"
+                        size="32"
+                      ></v-icon>
+                    </v-avatar>
+
+                    <v-file-input
+                      v-model="playerAvatar"
+                      label="Player Avatar (Optional)"
+                      variant="outlined"
+                      accept="image/*"
+                      prepend-icon="mdi-camera"
+                      :show-size="true"
+                      class="mt-4"
+                      :rules="[]"
+                      @change="onAvatarChange"
+                    ></v-file-input>
+                  </div>
+
+                  <v-text-field
+                    v-model="playerFirstName"
+                    label="First Name"
+                    variant="outlined"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-model="playerLastName"
+                    label="Last Name"
+                    variant="outlined"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-model="playerCountry"
+                    label="Country"
+                    variant="outlined"
+                  ></v-text-field>
+
+                  <v-autocomplete
+                    v-model="selectedTeam"
+                    :items="teams"
+                    item-title="name"
+                    item-value="id"
+                    label="Team"
+                    variant="outlined"
+                    :search-input.sync="teamSearch"
+                    :loading="loadingTeams"
+                    :filter="teamFilter"
+                    clearable
+                  ></v-autocomplete>
+                  </template>
+                  <div v-else class="text-center mt-4">
+                    This player is linked to a user and cannot be updated.
+                  </div>
+                </div>
+
                 <!-- Display Error -->
                 <div v-if="playerError" class="error-message">
                   {{ playerError }}
@@ -297,15 +399,19 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="showAddPlayerDialog = false">
+                <v-btn
+                  class="cancel-btn"
+                  @click="closeUpdatePlayerDialog"
+                >
                   Cancel
                 </v-btn>
                 <v-btn
+                  v-if="selectedPlayer && !selectedPlayer.user_email"
                   class="submit-btn"
-                  @click="submitAddPlayer"
+                  @click="submitUpdatePlayer"
                   :loading="isSubmitting"
                 >
-                  Submit
+                  Update Player
                 </v-btn>
               </v-card-actions>
             </div>
@@ -347,8 +453,6 @@
                   v-model="tournamentFormat"
                   :items="tournamentFormats"
                   label="Tournament Format"
-                  item-text="label"
-                  item-value="value"
                   variant="outlined"
                   :rules="[rules.required]"
                 ></v-select>
@@ -412,6 +516,16 @@ interface Request {
   username: string | null;
 }
 
+interface Player {
+  id: string
+  username: string
+  first_name: string
+  last_name: string
+  country: string
+  user_email: string | null
+  avatar: string | null
+}
+
 const requests = ref<Request[]>([]);
 const isLoading = ref(true);
 const requestHistoryError = ref<string | null>(null);
@@ -434,20 +548,41 @@ const startDateMenu = ref(false);
 // Form data and errors
 const tournamentName = ref('');
 const matchDetails = ref('');
-const playerName = ref('');
-const assignPlayerName = ref('');
-const assignTeamName = ref('');
+// Player dialog state
+const showUpdatePlayerDialog = ref(false)
+const playerUsername = ref('')
+const playerError = ref('')
+const isCheckingPlayer = ref(false)
+const selectedPlayer = ref<Player | null>(null)
+const playerFirstName = ref('')
+const playerLastName = ref('')
+const playerCountry = ref('')
+const playerAvatar = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const teams = ref<Array<{ id: string, name: string }>>([])
+const selectedTeam = ref<string>('')
+const teamSearch = ref('')
+const loadingTeams = ref(false)
 
 const tournamentError = ref<string | null>(null);
 const matchError = ref<string | null>(null);
-const playerError = ref<string | null>(null);
 const assignError = ref<string | null>(null);
 
 const tournamentTitle = ref('');
 const tournamentTeams = ref('');
 const tournamentStartDate = ref('');
-const tournamentFormat = ['single elimination', 'round robin', 'one off match']
-const tournamentPrizePool = ref(0);
+const tournamentPrizePool = ref<number | null>(null);
+const tournamentFormat = ref<string | null>(null);
+const tournamentFormatOptions = [
+  { label: 'Single Elimination', value: 'single elimination' },
+  { label: 'Round Robin', value: 'round robin' },
+  { label: 'One-Off Match', value: 'one-off match' },
+];
+
+const showAddTeamDialog = ref(false)
+const teamName = ref('')
+const teamError = ref('')
+const teamLogo = ref<File | null>(null)
 
 const rules = {
   required: (v: string) => !!v || 'This field is required',
@@ -474,6 +609,33 @@ const getRequestTypeIcon = (type: string): string => {
   if (type === 'link user to player') return 'mdi-account-plus';
   return 'mdi-help';
 };
+
+const onAvatarChange = (file: File | null) => {
+  if (file) {
+    previewAvatar.value = URL.createObjectURL(file)
+  } else {
+    previewAvatar.value = null
+  }
+}
+
+const teamFilter = (item: any, query: string) => {
+  if (!query) return true
+
+  const teamName = item.name.toLowerCase()
+  const searchTerm = query.toLowerCase()
+
+  return teamName.includes(searchTerm)
+}
+
+const fetchTeams = async () => {
+  try {
+    const response = await fetch(`${API_URL}/teams`)
+    const data = await response.json()
+    teams.value = data
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+  }
+}
 
 const fetchRequests = async () => {
   try {
@@ -568,217 +730,324 @@ const openAddTournamentDialog = () => {
   showAddTournamentDialog.value = true;
 };
 
-// Tournament Formats
-const tournamentFormats = [
-  { label: 'Single Elimination', value: 'single elimination' },
-  { label: 'Round Robin', value: 'round robin' },
-  { label: 'One Off Match', value: 'one off match' },
-];
 
-const submitAddTournament = async () => {
-  // Reset error message
-  tournamentError.value = '';
+// const submitAddTournament = async () => {
+//   try {
+//     // Reset any previous errors
+//     tournamentError.value = null;
+//
+//     // Validate required fields
+//     validateTournamentFields();
+//
+//     // Set loading state to true
+//     isSubmitting.value = true;
+//
+//     // Prepare the tournament data
+//     const requestBody = prepareTournamentData();
+//
+//     // Make the API request to create the tournament
+//     const response = await fetch(`${API_URL}/tournaments`, {
+//       method: 'POST',
+//       headers: {
+//         Authorization: `Bearer ${authStore.token}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(requestBody),
+//     });
+//
+//     // Check if the response is successful
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       handleValidationErrors(errorData);
+//       return; // Exit the method if there are validation errors
+//     }
+//
+//     // Success: Close the dialog and show a success alert
+//     showAddTournamentDialog.value = false;
+//     successMessage.value = 'Tournament added successfully!';
+//     showSuccessAlert.value = true;
+//
+//     // Reset the form fields
+//     resetTournamentForm();
+//   } catch (e) {
+//     console.error('Error adding tournament:', e);
+//
+//     // Display the error to the user
+//     tournamentError.value = e.message || 'An unexpected error occurred. Please try again.';
+//   } finally {
+//     // Reset the loading state
+//     isSubmitting.value = false;
+//   }
+// };
+//
+// const validateTournamentFields = () => {
+//   if (!tournamentTitle.value.trim()) {
+//     throw new Error('Tournament title is required.');
+//   }
+//   if (!tournamentTeams.value || tournamentTeams.value.split(',').length < 2) {
+//     throw new Error('At least two teams are required.');
+//   }
+//   if (!tournamentStartDate.value) {
+//     throw new Error('Tournament start date is required.');
+//   }
+//   if (!tournamentFormat.value) {
+//     throw new Error('Tournament format is required.');
+//   }
+// };
+//
+// const prepareTournamentData = () => {
+//   const teamNames = tournamentTeams.value
+//     .split(',')
+//     .map((team) => team.trim())
+//     .filter((team) => team);
+//
+//   return {
+//     title: tournamentTitle.value.trim(),
+//     team_names: teamNames,
+//     start_date: tournamentStartDate.value,
+//     tournament_format: tournamentFormat.value,
+//     prize_pool: tournamentPrizePool.value ? Number(tournamentPrizePool.value) : 0,
+//   };
+// };
 
-  // Validate required fields
-  if (!tournamentTitle.value) {
-    tournamentError.value = 'Tournament title is required.';
-    return;
+// const submitTournamentRequest = async (requestBody) => {
+//   const response = await fetch(`${API_URL}/tournaments`, {
+//     method: 'POST',
+//     headers: {
+//       Authorization: `Bearer ${authStore.token}`,
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(requestBody),
+//   });
+//
+//   if (!response.ok) {
+//     const errorData = await response.json();
+//     handleValidationErrors(errorData);
+//   }
+// };
+
+const handleValidationErrors = (errorData) => {
+  if (Array.isArray(errorData.detail)) {
+    const errorMessages = errorData.detail
+      .map((err) => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
+      .join(', ');
+    throw new Error(errorMessages);
   }
+  throw new Error(errorData.detail || 'Failed to add tournament');
+};
 
-  if (!tournamentTeams.value || tournamentTeams.value.split(',').length < 2) {
-    tournamentError.value = 'At least two teams are required.';
-    return;
-  }
+// const resetTournamentForm = () => {
+//   tournamentTitle.value = '';
+//   tournamentTeams.value = '';
+//   tournamentStartDate.value = '';
+//   tournamentFormat.value = null;
+//   tournamentPrizePool.value = null;
+// };
 
-  if (!tournamentStartDate.value) {
-    tournamentError.value = 'Tournament start date is required.';
-    return;
-  }
-
-  if (!tournamentFormat.value) {
-    tournamentError.value = 'Tournament format is required.';
-    return;
+const submitAddTeam = async () => {
+  if (!teamName.value) {
+    teamError.value = 'Team name is required'
+    return
   }
 
   try {
-    isSubmitting.value = true;
+    isSubmitting.value = true
+    teamError.value = ''
 
-    // Prepare the data
-    const teamNames = tournamentTeams.value.split(',').map((team) => team.trim());
+    const teamData = {
+      name: teamName.value
+    }
 
-    // Build the request body
-    const requestBody = {
-      title: tournamentTitle.value,
-      team_names: teamNames,
-      start_date: tournamentStartDate.value,
-      tournament_format: tournamentFormat.value || tournamentFormat.value, // Use .value if tournamentFormat is a ref
-      prize_pool: Number(tournamentPrizePool.value) || 0,
-    };
+    const formData = new FormData()
 
-    // Make the POST request
-    const response = await fetch(`${API_URL}/tournaments`, {
+    formData.append('team', JSON.stringify(teamData))
+
+    if (teamLogo.value) {
+      formData.append('logo', teamLogo.value)
+    }
+
+    const response = await fetch(`${API_URL}/teams`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`,
       },
-      body: JSON.stringify(requestBody),
-    });
+      body: formData
+    })
 
-    // Check if the response is successful
+    console.log('Response status:', response.status)
+    const data = await response.json()
+    console.log('Response data:', data)
+
     if (!response.ok) {
-      const errorData = await response.json();
-      // Handle validation errors from backend
-      if (Array.isArray(errorData.detail)) {
-        const errorMessages = errorData.detail
-          .map((err) => {
-            const field = err.loc[err.loc.length - 1];
-            const message = err.msg;
-            return `${field}: ${message}`;
-          })
-          .join(', ');
-        throw new Error(errorMessages || 'Failed to add tournament');
+      if (data.detail) {
+        if (Array.isArray(data.detail)) {
+          teamError.value = data.detail[0].msg
+        } else {
+          teamError.value = data.detail
+        }
       } else {
-        throw new Error(errorData.detail || 'Failed to add tournament');
+        teamError.value = 'Failed to create team'
+      }
+      return
+    }
+
+    showAddTeamDialog.value = false
+    successMessage.value = 'Team created successfully! 🎉'
+    showSuccessAlert.value = true
+
+    teamName.value = ''
+    teamLogo.value = null
+
+  } catch (e) {
+    console.error('Error creating team:', e)
+    teamError.value = e instanceof Error ? e.message : 'An unexpected error occurred'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const openAddTeamDialog = () => {
+  teamName.value = ''
+  teamLogo.value = null
+  teamError.value = ''
+  showAddTeamDialog.value = true
+}
+
+// Player methods
+const openUpdatePlayerDialog = async () => {
+  playerUsername.value = ''
+  playerError.value = ''
+  selectedPlayer.value = null
+  playerFirstName.value = ''
+  playerLastName.value = ''
+  playerCountry.value = ''
+  playerAvatar.value = null
+  selectedTeam.value = ''
+  showUpdatePlayerDialog.value = true
+
+  await fetchTeams()
+}
+
+const checkPlayer = async () => {
+  if (!playerUsername.value) {
+    playerError.value = 'Username is required'
+    return
+  }
+
+  try {
+    isCheckingPlayer.value = true
+    playerError.value = ''
+
+    const response = await fetch(`${API_URL}/players?search=${encodeURIComponent(playerUsername.value)}`)
+    const players = await response.json()
+
+    if (!players || players.length === 0) {
+      playerError.value = 'Player not found'
+      return
+    }
+
+    selectedPlayer.value = players[0]
+
+    // Pre-fill form if player exists and is not linked
+    if (!selectedPlayer.value.user_email) {
+      playerFirstName.value = selectedPlayer.value.first_name || ''
+      playerLastName.value = selectedPlayer.value.last_name || ''
+      playerCountry.value = selectedPlayer.value.country || ''
+      selectedTeam.value = selectedPlayer.value.team_id || ''
+
+      // Load teams if not loaded yet
+      if (teams.value.length === 0) {
+        await fetchTeams()
       }
     }
 
-    // Success case: Update UI state
-    showAddTournamentDialog.value = false;
-    successMessage.value = 'Tournament added successfully.';
-    showSuccessAlert.value = true;
-
-    // Reset form fields
-    tournamentTitle.value = '';
-    tournamentTeams.value = '';
-    tournamentStartDate.value = '';
-    tournamentFormat.value = '';
-    tournamentPrizePool.value = 0;
-
   } catch (e) {
-    // Handle errors
-    console.error('Error adding tournament:', e);
-    tournamentError.value = e.message || 'Failed to add tournament. Please try again.';
+    console.error('Error checking player:', e)
+    playerError.value = 'Failed to check player'
   } finally {
-    // Always reset submitting state
-    isSubmitting.value = false;
+    isCheckingPlayer.value = false
   }
-};
+}
 
-const openAddMatchDialog = () => {
-  matchDetails.value = '';
-  matchError.value = null;
-  showAddMatchDialog.value = true;
-};
+const submitUpdatePlayer = async () => {
+  if (!selectedPlayer.value) {
+    playerError.value = 'No player selected'
+    return
+  }
 
-const submitAddMatch = async () => {
-  if (!matchDetails.value) {
-    matchError.value = 'Match details are required.';
-    return;
+  if (selectedPlayer.value.user_email) {
+    playerError.value = 'Cannot update player linked to user'
+    return
   }
 
   try {
-    isSubmitting.value = true;
+    isSubmitting.value = true
+    playerError.value = ''
 
-    const response = await fetch(`${API_URL}/matches`, {
-      method: 'POST',
+    const updateData = {
+    username: playerUsername.value,
+    first_name: playerFirstName.value,
+    last_name: playerLastName.value,
+    country: playerCountry.value,
+    team_id: selectedTeam.value || null
+  }
+
+    const response = await fetch(`${API_URL}/players/${selectedPlayer.value.id}`, {
+      method: 'PUT',
       headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ details: matchDetails.value }),
-    });
+      body: JSON.stringify(updateData)
+    })
 
-    if (!response.ok) throw new Error('Failed to add match');
+    console.log('Response status:', response.status)
+    const data = await response.json()
+    console.log('Response data:', data)
 
-    showAddMatchDialog.value = false;
-    successMessage.value = 'Match added successfully.';
-    showSuccessAlert.value = true;
+    if (!response.ok) {
+      if (data.detail) {
+        if (Array.isArray(data.detail)) {
+          playerError.value = data.detail[0].msg
+        } else {
+          playerError.value = data.detail
+        }
+      } else {
+        playerError.value = 'Failed to update player'
+      }
+      return
+    }
+
+    showUpdatePlayerDialog.value = false
+    successMessage.value = 'Player updated successfully!'
+    showSuccessAlert.value = true
+
+    closeUpdatePlayerDialog()
+
   } catch (e) {
-    console.error('Error adding match:', e);
-    matchError.value = 'Failed to add match. Please try again.';
+    console.error('Error updating player:', e)
+    playerError.value = 'Failed to connect to server. Please try again.'
   } finally {
-    isSubmitting.value = false;
+    isSubmitting.value = false
   }
-};
-
-const openAddPlayerDialog = () => {
-  playerName.value = '';
-  playerError.value = null;
-  showAddPlayerDialog.value = true;
-};
-
-const submitAddPlayer = async () => {
-  if (!playerName.value) {
-    playerError.value = 'Player name is required.';
-    return;
+}
+const closeUpdatePlayerDialog = () => {
+  showUpdatePlayerDialog.value = false
+  playerUsername.value = ''
+  playerError.value = ''
+  selectedPlayer.value = null
+  playerFirstName.value = ''
+  playerLastName.value = ''
+  playerCountry.value = ''
+  playerAvatar.value = null
+  selectedTeam.value = ''
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value)
   }
+  previewAvatar.value = null
+}
 
-  try {
-    isSubmitting.value = true;
 
-    const response = await fetch(`${API_URL}/players`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: playerName.value }),
-    });
-
-    if (!response.ok) throw new Error('Failed to add player');
-
-    showAddPlayerDialog.value = false;
-    successMessage.value = 'Player added successfully.';
-    showSuccessAlert.value = true;
-  } catch (e) {
-    console.error('Error adding player:', e);
-    playerError.value = 'Failed to add player. Please try again.';
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const openAssignPlayerDialog = () => {
-  assignPlayerName.value = '';
-  assignTeamName.value = '';
-  assignError.value = null;
-  showAssignPlayerDialog.value = true;
-};
-
-const submitAssignPlayer = async () => {
-  if (!assignPlayerName.value || !assignTeamName.value) {
-    assignError.value = 'Both player name and team name are required.';
-    return;
-  }
-
-  try {
-    isSubmitting.value = true;
-
-    const response = await fetch(`${API_URL}/teams/assign-player`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        playerName: assignPlayerName.value,
-        teamName: assignTeamName.value,
-      }),
-    });
-
-    if (!response.ok) throw new Error('Failed to assign player to team');
-
-    showAssignPlayerDialog.value = false;
-    successMessage.value = 'Player assigned to team successfully.';
-    showSuccessAlert.value = true;
-  } catch (e) {
-    console.error('Error assigning player to team:', e);
-    assignError.value = 'Failed to assign player. Please try again.';
-  } finally {
-    isSubmitting.value = false;
-  }
-};
 
 onMounted(() => {
   fetchRequests();
@@ -786,9 +1055,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Transparent dropdown styles */
 :deep(.v-select) {
-  background: transparent !important; /* Transparent background for the dropdown */
+  background: transparent !important;
 }
 
 :deep(.filter-select) {
@@ -799,25 +1067,82 @@ onMounted(() => {
 
 :deep(.v-select:focus),
 :deep(.v-select--active) {
-  background: transparent !important; /* Transparent when focused or active */
-  border-color: #42DDF2FF !important; /* Optional: Add a border to highlight focus */
+  background: transparent !important;
+  border-color: #42DDF2FF !important;
 }
 
 :deep(.v-menu__content) {
-  background: transparent !important; /* Transparent menu background */
-  box-shadow: none !important; /* Remove shadow */
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 :deep(.v-list-item) {
-  background: transparent !important; /* Transparent menu items */
-  color: #ffffff !important; /* Ensure text remains readable */
+  background: transparent !important;
+  color: #ffffff !important;
 }
 
 :deep(.v-list-item:hover) {
-  background: rgba(66, 221, 242, 0.2) !important; /* Optional: Light highlight on hover */
-  color: #42DDF2FF !important; /* Accent color for hover text */
+  background: rgba(66, 221, 242, 0.2) !important;
+  color: #42DDF2FF !important;
 }
-/* Same styles as the user dashboard, plus any additional styles needed */
+
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 14px;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--variant-outlined.v-field--error) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline) {
+  color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error input::placeholder),
+:deep(.v-field--error .v-label.v-field-label) {
+  color: #fed854 !important;
+}
+
+:deep(.v-file-input .v-field) {
+  border-color: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.v-file-input .v-field:hover) {
+  border-color: #42ddf2 !important;
+}
+
+:deep(.v-file-input .v-field.v-field--focused) {
+  border-color: #42ddf2 !important;
+}
+
+:deep(.v-file-input .v-field__input) {
+  color: white !important;
+  font-size: 0.9rem;
+}
+
+:deep(.v-file-input .v-field__append-inner) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+:deep(.v-file-input .v-field__input) {
+  color: white !important;
+  font-size: 0.9rem;
+}
+
+:deep(.v-file-input .v-field__append-inner) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
 
 .header-image {
   position: fixed;
@@ -980,6 +1305,21 @@ onMounted(() => {
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 0.9rem;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar-section .v-avatar {
+  border: 2px solid #42DDF2FF;
+  background: rgba(8, 87, 144, 0.1);
+}
+
+.avatar-section .v-file-input {
+  flex: 1;
 }
 
 .status-pending {
