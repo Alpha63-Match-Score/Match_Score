@@ -197,7 +197,7 @@ def update_match(
 
         db.commit()
         db.refresh(db_match)
-        return convert_db_to_match_response(db_match)
+        return convert_db_to_match_list_response(db_match)
 
     except Exception as e:
         db.rollback()
@@ -289,7 +289,7 @@ def update_match_score(
         db.refresh(db_match)
         db.refresh(db_match.tournament)
 
-        return convert_db_to_match_response(db_match)
+        return convert_db_to_match_list_response(db_match)
 
     except Exception as e:
         db.rollback()

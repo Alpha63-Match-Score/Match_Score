@@ -29,7 +29,8 @@ class S3Service:
         if ext not in self.ALLOWED_FORMATS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file format. Allowed formats: {', '.join(self.ALLOWED_FORMATS)}"
+                detail=f"Unsupported file format. "
+                       f"Allowed formats: {', '.join(self.ALLOWED_FORMATS)}"
             )
 
         # Check file size
@@ -40,7 +41,8 @@ class S3Service:
         if size > self.MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
-                detail=f"File too large. Maximum size is {self.MAX_FILE_SIZE / 1024 / 1024}MB"
+                detail=f"File too large. "
+                       f"Maximum size is {self.MAX_FILE_SIZE / 1024 / 1024}MB"
             )
 
     def process_image(self, image_data: bytes) -> bytes:
