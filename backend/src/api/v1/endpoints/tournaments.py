@@ -4,18 +4,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
-from src.models.enums import TournamentFormat
 from src.crud import tournament as tournament_crud
+from src.models.enums import TournamentFormat
 from src.schemas.tournament import (
     TournamentCreate,
     TournamentDetailResponse,
     TournamentListResponse,
-    TournamentUpdate
+    TournamentUpdate,
 )
 from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
-
-
 
 router = APIRouter()
 

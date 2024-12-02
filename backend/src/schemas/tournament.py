@@ -37,27 +37,17 @@ class TournamentDetailResponse(TournamentListResponse):
 
 class TournamentCreate(BaseConfig):
     title: str = Field(
-        min_length=3,
-        max_length=50,
-        examples=["Example Tournament Title"]
+        min_length=3, max_length=50, examples=["Example Tournament Title"]
     )
     tournament_format: TournamentFormat
     start_date: datetime
     team_names: List[str]
-    prize_pool: int = Field(
-        ge=1,
-        examples=[1000])
+    prize_pool: int = Field(ge=1, examples=[1000])
 
 
 class TournamentUpdate(BaseConfig):
     title: str | None = Field(
-        default=None,
-        min_length=3,
-        max_length=50,
-        examples=["Example Tournament Title"]
+        default=None, min_length=3, max_length=50, examples=["Example Tournament Title"]
     )
     end_date: datetime | None = None
-    prize_pool: int | None = Field(
-        default=None,
-        ge=1,
-        examples=[1000])
+    prize_pool: int | None = Field(default=None, ge=1, examples=[1000])

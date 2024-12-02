@@ -7,15 +7,13 @@ from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud.request import (
     get_all,
+    get_current_user_request,
     send_director_request,
     send_link_to_player_request,
     update_request,
-    get_current_user_request,
 )
 from src.models import User
 from src.utils.pagination import PaginationParams, get_pagination
-
-
 
 router = APIRouter()
 

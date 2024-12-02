@@ -2,10 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
-from src.models.enums import (
-    MatchFormat,
-    Stage
-)
+from src.models.enums import MatchFormat, Stage
 
 
 # Base configs
@@ -31,6 +28,7 @@ class MatchResponse(BaseConfig):
     winner_id: UUID | None = None
     tournament_id: UUID
     tournament_title: str
+
 
 class MatchUpdate(BaseConfig):
     start_time: datetime | None = None

@@ -3,7 +3,7 @@ import random
 from typing import Literal, Type
 
 from fastapi import HTTPException
-from sqlalchemy import UUID, and_, func, or_
+from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from src.crud import constants as c, team as crud_team
 from src.crud.convert_db_to_response import (
@@ -193,7 +193,6 @@ def update_match(
             _update_team_and_notify_players(
                 db, db_match, db_team2.id, db_match.team1, time_format, False
             )
-
 
         db.commit()
         db.refresh(db_match)
