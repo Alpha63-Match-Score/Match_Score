@@ -61,18 +61,16 @@
               <v-select
                 v-model="filterStatus"
                 :items="statusOptions"
+                item-title="text"
+                item-value="value"
+                variant="outlined"
+                density="comfortable"
                 label="Filter by Status"
-                class="filter-select"
-                dense
-                :style="{ background: 'transparent', color: '#ffffff', borderColor: '#42DDF2FF' }"
+                bg-color="rgba(45, 55, 75, 0.8)"
+                color="#ffffff"
+                menu-icon="mdi-chevron-down"
+                @update:model-value="fetchRequests"
               ></v-select>
-              <v-btn
-                class="filter-btn"
-                @click="fetchRequests"
-                :loading="isLoading"
-              >
-                Apply Filter
-              </v-btn>
             </div>
 
             <!-- Loading state -->
@@ -1296,7 +1294,7 @@ onMounted(() => {
   overflow: hidden;
   margin-bottom: 24px;
   padding: 24px;
-  width: 80%;
+  width: 65%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1305,6 +1303,7 @@ onMounted(() => {
 .actions-content,
 .history-content {
   position: relative;
+  justify-items: center;
   z-index: 2;
 }
 
@@ -1347,19 +1346,9 @@ onMounted(() => {
 
 .filter-options {
   display: flex;
-  align-items: center;
   gap: 16px;
   margin-bottom: 24px;
-  justify-content: center;
-}
-
-.filter-select {
-  width: 200px;
-}
-
-.filter-btn {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
+  width: 300px;
 }
 
 .request-list {

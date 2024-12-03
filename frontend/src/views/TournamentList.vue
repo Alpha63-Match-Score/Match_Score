@@ -17,12 +17,11 @@
             label="Period"
             variant="outlined"
             density="comfortable"
-            class="filter-select"
             bg-color="rgba(45, 55, 75, 0.8)"
             color="#ffffff"
             menu-icon="mdi-chevron-down"
             @update:model-value="handleFiltersChange"
-/>
+          />
 
           <v-select
             v-model="selectedStatus"
