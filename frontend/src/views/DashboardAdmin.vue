@@ -183,46 +183,40 @@
                   label="Teams (comma-separated)"
                   variant="outlined"
                   :rules="[rules.required]"
-                  :hint="teamsHelpText"
+                  :hint="getTeamsHelpText"
                   persistent-hint
                 ></v-text-field>
 
+                <v-text-field
+                  v-model="formattedStartDate"
+                  label="Start Date"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                  readonly
+                  @click="openDatePicker"
+                  prepend-icon="mdi-calendar"
+                ></v-text-field>
+
+                <!-- Calendar Picker -->
                 <v-dialog
-                  v-model="showDatePicker"
+                  v-model="datePickerDialog"
                   width="auto"
                 >
-                  <template #activator="{ props }">
-                    <v-text-field
-                      v-model="tournamentStartDate"
-                      label="Start Date"
-                      prepend-icon="mdi-calendar"
-                      readonly
-                      v-bind="props"
-                      variant="outlined"
-                      :rules="[rules.required]"
-                    ></v-text-field>
-                  </template>
                   <v-date-picker
                     v-model="tournamentStartDate"
-                    @update:modelValue="showDatePicker = false"
+                    @update:model-value="handleDateSelect"
                   ></v-date-picker>
                 </v-dialog>
 
                 <v-select
                   v-model="tournamentFormat"
-                  :items="tournamentFormatOptions"
-                  item-title="text"
-                  item-value="value"
+                  :items="formattedFormatOptions"
                   label="Tournament Format"
                   variant="outlined"
                   :rules="[rules.required]"
-                >
-                  <template #item="{ props, item }">
-                    <v-list-item v-bind="props">
-                      {{ item.raw.text }}
-                    </v-list-item>
-                  </template>
-                </v-select>
+                  menu-props="auto"
+                  class="format-select"
+                ></v-select>
 
                 <v-text-field
                   v-model="tournamentPrizePool"
@@ -238,7 +232,7 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="showAddTournamentDialog = false">
+                <v-btn class="cancel-btn" @click="handleCancel">
                   Cancel
                 </v-btn>
                 <v-btn
@@ -450,7 +444,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref,computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { format } from 'date-fns';
 import { API_URL } from '@/config';
@@ -458,6 +452,12 @@ import { API_URL } from '@/config';
 const authStore = useAuthStore();
 const adminEmail = ref(authStore.userEmail);
 
+// Props and Emits
+const props = defineProps({
+  showDialog: Boolean,
+  isSubmitting: Boolean
+})
+const emit = defineEmits(['update:showDialog', 'submit', 'cancel'])
 // Data
 interface Request {
   id: string;
@@ -527,10 +527,11 @@ const tournamentTeams = ref('')
 const tournamentStartDate = ref('')
 const tournamentFormat = ref('')
 const tournamentPrizePool = ref(null)
-const tournamentFormatOptions = [
-  { text: 'Single Elimination', value: 'single_elimination' },
-  { text: 'Round Robin', value: 'round_robin' },
-  { text: 'One-Off Match', value: 'one_off_match' }
+const datePickerDialog = ref(false)
+const formattedFormatOptions = [
+  { title: 'Single Elimination', value: 'single_elimination' },
+  { title: 'Round Robin', value: 'round_robin' },
+  { title: 'One-Off Match', value: 'one_off_match' }
 ]
 const showDatePicker = ref(false)
 
@@ -541,8 +542,8 @@ const teamError = ref('')
 const teamLogo = ref<File | null>(null)
 
 const rules = {
-  required: (v: string) => !!v || 'This field is required',
-};
+  required: v => !!v || 'This field is required'
+}
 
 // const teamsHelpText = ref('')
 // const updateTeamsHelpText = () => {
@@ -565,7 +566,50 @@ const rules = {
 //
 // watch(tournamentFormat, updateTeamsHelpText)
 
+// Computed
+const formattedStartDate = computed(() => {
+  if (!tournamentStartDate.value) return ''
+  return format(new Date(tournamentStartDate.value), 'dd MMM yyyy')
+})
+
+const getTeamsHelpText = computed(() => {
+  if (!tournamentFormat.value) return 'Please select a tournament format first'
+
+  const formatHelp = {
+    'single_elimination': 'Requires 4, 8 or 16 teams',
+    'round_robin': 'Requires 4 or 5 teams',
+    'one_off_match': 'Requires exactly 2 teams'
+  }
+
+  return formatHelp[tournamentFormat.value]
+})
+
+
+
 // Methods
+
+const openDatePicker = () => {
+  datePickerDialog.value = true
+}
+
+const handleDateSelect = (date) => {
+  tournamentStartDate.value = date
+  datePickerDialog.value = false
+}
+
+const handleCancel = () => {
+  emit('update:showDialog', false)
+  resetForm()
+}
+
+const resetForm = () => {
+  tournamentTitle.value = ''
+  tournamentTeams.value = ''
+  tournamentStartDate.value = ''
+  tournamentFormat.value = null
+  tournamentPrizePool.value = null
+  tournamentError.value = ''
+}
 const formatRequestType = (type: string): string => {
   return type
     .split(' ')
@@ -826,19 +870,31 @@ const submitAddTeam = async () => {
     return
   }
 
+  // Валидация на файла
+  if (teamLogo.value) {
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+
+    if (teamLogo.value.size > maxSize) {
+      teamError.value = 'Logo file size must be less than 2MB'
+      return
+    }
+
+    if (!allowedTypes.includes(teamLogo.value.type)) {
+      teamError.value = 'Logo must be JPG or PNG file'
+      return
+    }
+  }
+
   try {
     isSubmitting.value = true
     teamError.value = ''
 
-    const teamData = {
-      name: teamName.value
-    }
-
     const formData = new FormData()
+    formData.append('name', teamName.value)
 
-    formData.append('team', JSON.stringify(teamData))
-
-    if (teamLogo.value) {
+    // Добавяме логото само ако има валиден файл
+    if (teamLogo.value && teamLogo.value.size > 0) {
       formData.append('logo', teamLogo.value)
     }
 
@@ -868,7 +924,7 @@ const submitAddTeam = async () => {
     }
 
     showAddTeamDialog.value = false
-    successMessage.value = 'Team created successfully! 🎉'
+    successMessage.value = 'Отборът е създаден успешно! 🎉'
     showSuccessAlert.value = true
 
     teamName.value = ''
@@ -876,7 +932,7 @@ const submitAddTeam = async () => {
 
   } catch (e) {
     console.error('Error creating team:', e)
-    teamError.value = e instanceof Error ? e.message : 'An unexpected error occurred'
+    teamError.value = e instanceof Error ? e.message : 'Възникна неочаквана грешка'
   } finally {
     isSubmitting.value = false
   }
@@ -1045,6 +1101,11 @@ onMounted(() => {
   background: transparent !important;
 }
 
+:deep(.v-text-field),
+:deep(.v-select) {
+  margin-bottom: 16px;
+}
+
 :deep(.filter-select) {
   background: transparent !important;
   color: #ffffff !important;
@@ -1099,6 +1160,15 @@ onMounted(() => {
 :deep(.v-field--error input::placeholder),
 :deep(.v-field--error .v-label.v-field-label) {
   color: #fed854 !important;
+}
+:deep(.v-label) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+:deep(.v-field__outline) {
+  color: rgba(66, 221, 242, 0.3) !important;
+}
+.format-select :deep(.v-select__selection) {
+  color: white !important;
 }
 
 :deep(.v-file-input .v-field) {
@@ -1375,6 +1445,7 @@ onMounted(() => {
   font-weight: bold;
   font-size: 1.25rem;
   text-align: center;
+  margin-bottom: 16px;
 }
 
 .error-message {
@@ -1435,12 +1506,29 @@ onMounted(() => {
   background-color: rgba(66, 221, 242, 0.7);
 }
 
-/* За правилно показване на текущия отбор */
 .custom-autocomplete :deep(.v-field__input) {
   color: white !important;
 }
 
 .custom-autocomplete :deep(.v-field--focused) {
   color: #42DDF2FF !important;
+}
+:deep(.v-date-picker) {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  color: white !important;
+}
+
+:deep(.v-date-picker-month) {
+  color: white !important;
+}
+
+:deep(.v-date-picker-month__day) {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:deep(.v-date-picker-month__day--selected) {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
 }
 </style>
