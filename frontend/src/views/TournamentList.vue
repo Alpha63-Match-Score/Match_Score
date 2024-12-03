@@ -241,6 +241,7 @@ const handleFormatClick = async (format: string) => {
     tournamentsError.value = null;
     currentLimit.value = 10; // Reset limit
     const encodedFormat = encodeURIComponent(format.toLowerCase());
+    console.log('Encoded Format:', encodedFormat);
 
     const response = await fetch(
       `${API_URL}/tournaments/?tournament_format=${encodedFormat}&offset=0&limit=${currentLimit.value}`

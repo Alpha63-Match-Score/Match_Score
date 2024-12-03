@@ -224,9 +224,11 @@
 
                 <!-- Step 2: Team Selection -->
                 <v-form v-else ref="teamForm">
-                  <div class="team-slots">
-                    <div v-for="index in getMaxTeams" :key="index" class="team-slot">
+                  <div class="team-slot" v-for="index in getMaxTeams" :key="index">
+                    <div class="d-flex gap-2 align-center">
+                      <!-- Normal autocomplete for existing teams -->
                       <v-autocomplete
+                        v-if="!isCustomTeam[index - 1]"
                         v-model="selectedTeams[index - 1]"
                         :items="getAvailableTeamsForSlot(index - 1)"
                         item-title="name"
@@ -236,7 +238,7 @@
                         :loading="loadingTeams"
                         clearable
                         class="custom-autocomplete"
-                        :rules="[rules.required]"
+                        :rules="getTeamRules(index - 1)"
                       >
                         <template v-slot:item="{ props, item }">
                           <v-list-item
@@ -246,6 +248,28 @@
                           ></v-list-item>
                         </template>
                       </v-autocomplete>
+
+                      <!-- Custom team input -->
+                      <v-text-field
+                        v-else
+                        v-model="customTeamNames[index - 1]"
+                        :label="`Custom Team ${index}`"
+                        variant="outlined"
+                        :rules="getTeamRules(index - 1)"
+                      ></v-text-field>
+
+                      <!-- Toggle button -->
+                      <v-btn
+                        icon
+                        class="custom-toggle-btn"
+                        @click="toggleCustomTeam(index - 1)"
+                        :title="isCustomTeam[index - 1] ? 'Switch to existing teams' : 'Add custom team'"
+                        variant="outlined"
+                      >
+                        <v-icon size="20">
+                          {{ isCustomTeam[index - 1] ? 'mdi-format-list-bulleted' : 'mdi-plus' }}
+                        </v-icon>
+                      </v-btn>
                     </div>
                   </div>
                 </v-form>
@@ -353,7 +377,7 @@
                     @click="checkPlayer"
                     :loading="isCheckingPlayer"
                   >
-                    Check Player
+                    Next
                   </v-btn>
                 </div>
 
@@ -526,16 +550,20 @@ const tournamentTitle = ref('')
 const tournamentFormat = ref('')
 const tournamentStartDate = ref('')
 const tournamentPrizePool = ref('')
-const selectedTeams = ref<Array<string | null>>(Array(4).fill(null))
+const selectedTeams = ref<Array<string | null>>(Array(8).fill(null))
 const loadingTeams = ref(false)
 const isSubmitting = ref(false)
 const tournamentError = ref('')
 const teams = ref([])
+const customInputs = ref(Array(8).fill(''))
+const isCustomTeam = ref(Array(8).fill(false))
+const customTeamNames = ref(Array(8).fill(''))
+
 
 const formattedFormatOptions = [
-  { title: 'Single Elimination', value: 'single_elimination' },
-  { title: 'Round Robin', value: 'round_robin' },
-  { title: 'One-Off Match', value: 'one_off_match' }
+  { title: 'Single Elimination', value: 'single elimination' },
+  { title: 'Round Robin', value: 'round robin' },
+  { title: 'One-Off Match', value: 'one off match' }
 ]
 
 const rules = {
@@ -549,13 +577,11 @@ const filterStatus = ref('');
 const statusOptions = ['All', 'Pending', 'Accepted', 'Rejected'];
 
 // Dialog visibility
-const showAddTournamentDialog = ref(false);
-const showAddPlayerDialog = ref(false);
-const showAssignPlayerDialog = ref(false);
-const startDateMenu = ref(false);
+const showAddTournamentDialog = ref(false)
 
 // Form data and errors
-const tournamentName = ref('');
+const tournamentName = ref('')
+
 // Player dialog state
 const showUpdatePlayerDialog = ref(false)
 const playerUsername = ref('')
@@ -568,16 +594,8 @@ const playerCountry = ref('')
 const playerAvatar = ref<File | null>(null)
 const previewAvatar = ref<string | null>(null)
 const selectedTeam = ref<string>('')
-const teamSearch = ref('')
-
-const matchError = ref<string | null>(null);
-const assignError = ref<string | null>(null);
 
 const tournamentTeams = ref('')
-
-
-const showDatePicker = ref(false)
-
 
 const showAddTeamDialog = ref(false)
 const teamName = ref('')
@@ -585,36 +603,15 @@ const teamError = ref('')
 const teamLogo = ref<File | null>(null)
 
 
-// const teamsHelpText = ref('')
-// const updateTeamsHelpText = () => {
-//   if (!tournamentFormat.value) {
-//     teamsHelpText.value = 'Please select a tournament format first'
-//     return
-//   }
-//
-//   const allowedTeams = {
-//     'single elimination': [4, 8, 16],
-//     'round robin': [4, 5],
-//     'one-off match': [2]
-//   }
-//
-//   const teams = allowedTeams[tournamentFormat.value]
-//   if (teams) {
-//     teamsHelpText.value = `This format requires ${teams.join(' or ')} teams`
-//   }
-// }
-//
-// watch(tournamentFormat, updateTeamsHelpText)
-
 // Computed
 
 // Add Tournament
 
 const getMaxTeams = computed(() => {
   const formatTeamCounts = {
-    'single_elimination': 8,
-    'round_robin': 5,
-    'one_off_match': 2
+    'single elimination': 8,
+    'round robin': 5,
+    'one off match': 2
   }
   return formatTeamCounts[tournamentFormat.value] || 0
 })
@@ -628,28 +625,21 @@ const canProceedToTeams = computed(() => {
 
 const canSubmit = computed(() => {
   const requiredTeams = {
-    'single_elimination': 4,
-    'round_robin': 4,
-    'one_off_match': 2
+    'single elimination': 4,
+    'round robin': 4,
+    'one off match': 2
   }
-  const validTeams = selectedTeams.value.filter(Boolean).length === requiredTeams[tournamentFormat.value]
-  return validTeams
+
+  const validTeamsCount = selectedTeams.value.reduce((count, team, index) => {
+    if (isCustomTeam.value[index]) {
+      return customTeamNames.value[index]?.trim() ? count + 1 : count
+    } else {
+      return team ? count + 1 : count
+    }
+  }, 0)
+
+  return validTeamsCount >= requiredTeams[tournamentFormat.value]
 })
-
-const teamFilter = (item: any, query: string) => {
-  if (!query) return true
-  const teamName = item.name.toLowerCase()
-  const searchTerm = query.toLowerCase()
-  return teamName.includes(searchTerm)
-}
-
-const getAvailableTeamsForSlot = (currentIndex: number) => {
-  return teams.value.filter(team => {
-    return !selectedTeams.value.some(
-      (selectedId, index) => selectedId === team.id && index !== currentIndex
-    )
-  })
-}
 
 const handleNext = async () => {
   if (!form.value) return
@@ -676,6 +666,33 @@ const handleNext = async () => {
   currentStep.value = 2
 }
 
+const teamFilter = (item: any, query: string) => {
+  if (!query) return true
+  const teamName = item.name.toLowerCase()
+  const searchTerm = query.toLowerCase()
+  return teamName.includes(searchTerm)
+}
+
+const getTeamRules = (index: number) => {
+  if (tournamentFormat.value === 'single elimination') {
+    return index < 4 ? [rules.required] : []
+  } else if (tournamentFormat.value === 'round robin') {
+    return index < 4 ? [rules.required] : []
+  } else if (tournamentFormat.value === 'one off match') {
+    return index < 2 ? [rules.required] : []
+  }
+
+  return []
+}
+
+const getAvailableTeamsForSlot = (currentIndex: number) => {
+  return teams.value.filter(team => {
+    return !selectedTeams.value.some(
+      (selectedId, index) => selectedId === team.id && index !== currentIndex
+    )
+  })
+}
+
 const handleCancel = () => {
   showAddTournamentDialog.value = false
   resetForm()
@@ -687,7 +704,10 @@ const resetForm = () => {
   tournamentFormat.value = ''
   tournamentStartDate.value = ''
   tournamentPrizePool.value = ''
-  selectedTeams.value = []
+  selectedTeams.value = Array(8).fill(null)
+  customInputs.value = Array(8).fill('')
+  isCustomTeam.value = Array(8).fill(false)
+  customTeamNames.value = Array(8).fill('')
   tournamentError.value = ''
 }
 
@@ -700,67 +720,75 @@ const submitTournament = async () => {
     isSubmitting.value = true
     tournamentError.value = ''
 
-    const formData = {
+    const formattedDate = new Date(tournamentStartDate.value).toISOString()
+
+    const teamNames = selectedTeams.value.map((selectedTeam, index) => {
+      if (isCustomTeam.value[index]) {
+        return customTeamNames.value[index]
+      }
+      const existingTeam = teams.value.find(t => t.id === selectedTeam)
+      return existingTeam?.name || ''
+    }).filter(name => name !== '')
+
+    console.log('Team names to send:', teamNames)
+
+    const params = new URLSearchParams({
       title: tournamentTitle.value,
       tournament_format: tournamentFormat.value,
-      start_date: tournamentStartDate.value,
-      team_names: selectedTeams.value.map(teamId => {
-        const team = teams.value.find(t => t.id === teamId)
-        return team ? team.name : ''
-      }).filter(Boolean),
-      prize_pool: parseInt(tournamentPrizePool.value)
-    }
+      start_date: formattedDate,
+      prize_pool: tournamentPrizePool.value.toString()
+    })
 
-    const response = await fetch(`${API_URL}/tournaments`, {
+    const response = await fetch(`${API_URL}/tournaments/?${params.toString()}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(teamNames)
     })
 
+    console.log('Full URL:', `${API_URL}/tournaments/?${params.toString()}`)
+    console.log('Team names in body:', teamNames)
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.detail || 'Failed to create tournament')
+      const errorData = await response.json()
+      console.log('Full error response:', errorData)
+
+      if (errorData.detail && Array.isArray(errorData.detail)) {
+        const errorMessages = errorData.detail.map((err: any) => {
+          console.log('Individual error:', err)
+          return `${err.msg} (${err.loc.join('.')})`
+        })
+        throw new Error(errorMessages.join('\n'))
+      } else {
+        throw new Error('Unknown error occurred')
+      }
     }
 
     showAddTournamentDialog.value = false
-    successMessage.value = 'Tournament created successfully! 🎉'
+    successMessage.value = 'Tournament created successfully!'
     showSuccessAlert.value = true
     resetForm()
 
   } catch (e) {
-    console.error('Error creating tournament:', e)
+    console.error('Full error:', e)
     tournamentError.value = e.message
   } finally {
     isSubmitting.value = false
   }
 }
 
-
-// The rest
-const formattedStartDate = computed(() => {
-  if (!tournamentStartDate.value) return ''
-  return format(new Date(tournamentStartDate.value), 'dd MMM yyyy')
-})
-
-const getTeamsHelpText = computed(() => {
-  if (!tournamentFormat.value) return 'Please select a tournament format first'
-
-  const formatHelp = {
-    'single_elimination': 'Requires 4, 8 or 16 teams',
-    'round_robin': 'Requires 4 or 5 teams',
-    'one_off_match': 'Requires exactly 2 teams'
+const toggleCustomTeam = (index: number) => {
+  isCustomTeam.value[index] = !isCustomTeam.value[index]
+  if (!isCustomTeam.value[index]) {
+    customTeamNames.value[index] = ''
+  } else {
+    selectedTeams.value[index] = null
   }
+}
 
-  return formatHelp[tournamentFormat.value]
-})
-
-
-
-// Methods
-
+// Add Teams
 
 const formatRequestType = (type: string): string => {
   return type
@@ -895,154 +923,26 @@ const openAddTournamentDialog = () => {
   showAddTournamentDialog.value = true;
 };
 
-
-const submitAddTournament = async () => {
-  try {
-    // Валидация
-    if (!isTeamsCountValid.value) {
-      tournamentError.value = teamsHelperText.value
-      return
-    }
-
-    isSubmitting.value = true
-    tournamentError.value = null
-
-    const formData = {
-      title: tournamentTitle.value,
-      team_names: tournamentTeams.value.split(',').map(t => t.trim()).filter(Boolean),
-      start_date: tournamentStartDate.value,
-      tournament_format: tournamentFormat.value,
-      prize_pool: tournamentPrizePool.value || 0
-    }
-
-    const response = await fetch(`${API_URL}/tournaments`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.detail || 'Failed to create tournament')
-    }
-
-    showAddTournamentDialog.value = false
-    successMessage.value = 'Tournament created successfully! 🎉'
-    showSuccessAlert.value = true
-
-    // Reset form
-    resetTournamentForm()
-
-  } catch (e) {
-    console.error('Error creating tournament:', e)
-    tournamentError.value = e.message
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const validateTournamentFields = () => {
-  if (!tournamentTitle.value.trim()) {
-    throw new Error('Tournament title is required.');
-  }
-  if (!tournamentTeams.value || tournamentTeams.value.split(',').length < 2) {
-    throw new Error('At least two teams are required.');
-  }
-  if (!tournamentStartDate.value) {
-    throw new Error('Tournament start date is required.');
-  }
-  if (!tournamentFormat.value) {
-    throw new Error('Tournament format is required.');
-  }
-};
-
-const prepareTournamentData = () => {
-  const teamNames = tournamentTeams.value
-    .split(',')
-    .map((team) => team.trim())
-    .filter((team) => team);
-
-  return {
-    title: tournamentTitle.value.trim(),
-    team_names: teamNames,
-    start_date: tournamentStartDate.value,
-    tournament_format: tournamentFormat.value,
-    prize_pool: tournamentPrizePool.value ? Number(tournamentPrizePool.value) : 0,
-  };
-};
-
-const submitTournamentRequest = async (requestBody) => {
-  const response = await fetch(`${API_URL}/tournaments`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${authStore.token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    handleValidationErrors(errorData);
-  }
-};
-
-const handleValidationErrors = (errorData) => {
-  if (Array.isArray(errorData.detail)) {
-    const errorMessages = errorData.detail
-      .map((err) => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
-      .join(', ');
-    throw new Error(errorMessages);
-  }
-  throw new Error(errorData.detail || 'Failed to add tournament');
-};
-
-const resetTournamentForm = () => {
-  tournamentTitle.value = '';
-  tournamentTeams.value = '';
-  tournamentStartDate.value = '';
-  tournamentFormat.value = null;
-  tournamentPrizePool.value = null;
-};
-
 const submitAddTeam = async () => {
   if (!teamName.value) {
-    teamError.value = 'Team name is required'
-    return
+    teamError.value = 'Team name is required';
+    return;
   }
-
-  // Валидация на файла
-  if (teamLogo.value) {
-    const maxSize = 2 * 1024 * 1024 // 2MB
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
-
-    if (teamLogo.value.size > maxSize) {
-      teamError.value = 'Logo file size must be less than 2MB'
-      return
-    }
-
-    if (!allowedTypes.includes(teamLogo.value.type)) {
-      teamError.value = 'Logo must be JPG or PNG file'
-      return
-    }
-  }
-
+  console.log('Team name:', teamName.value);
   try {
-    isSubmitting.value = true
-    teamError.value = ''
+    isSubmitting.value = true;
+    teamError.value = '';
 
-    const formData = new FormData()
-    formData.append('name', teamName.value)
-
-    // Добавяме логото само ако има валиден файл
+    const formData = new FormData();
     if (teamLogo.value && teamLogo.value.size > 0) {
-      formData.append('logo', teamLogo.value)
+      formData.append('logo', teamLogo.value);
     }
 
-    const response = await fetch(`${API_URL}/teams`, {
+    const params = new URLSearchParams({
+      name: teamName.value,
+    })
+
+    const response = await fetch(`${API_URL}/teams/?${params.toString()}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
@@ -1050,37 +950,34 @@ const submitAddTeam = async () => {
       body: formData
     })
 
-    console.log('Response status:', response.status)
-    const data = await response.json()
-    console.log('Response data:', data)
+    const data = await response.json();
 
     if (!response.ok) {
+      console.error('Response not OK:', data);
       if (data.detail) {
         if (Array.isArray(data.detail)) {
-          teamError.value = data.detail[0].msg
+          teamError.value = data.detail[0].msg;
         } else {
-          teamError.value = data.detail
+          teamError.value = data.detail;
         }
       } else {
-        teamError.value = 'Failed to create team'
+        teamError.value = 'Failed to create team';
       }
-      return
+      return;
     }
 
-    showAddTeamDialog.value = false
-    successMessage.value = 'Отборът е създаден успешно! 🎉'
-    showSuccessAlert.value = true
-
-    teamName.value = ''
-    teamLogo.value = null
-
+    showAddTeamDialog.value = false;
+    successMessage.value = 'Team added successfully!';
+    showSuccessAlert.value = true;
+    teamName.value = '';
+    teamLogo.value = null;
   } catch (e) {
-    console.error('Error creating team:', e)
-    teamError.value = e instanceof Error ? e.message : 'Възникна неочаквана грешка'
+    console.error('Error creating team:', e);
+    teamError.value = e instanceof Error ? e.message : 'Unknown error occured';
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
-}
+};
 
 const openAddTeamDialog = () => {
   teamName.value = ''
@@ -1170,21 +1067,25 @@ const submitUpdatePlayer = async () => {
     isSubmitting.value = true
     playerError.value = ''
 
-    const updateData = {
-    username: playerUsername.value,
-    first_name: playerFirstName.value,
-    last_name: playerLastName.value,
-    country: playerCountry.value,
-    team_id: selectedTeam.value || null
-  }
+    const params = new URLSearchParams({
+      username: playerUsername.value,
+      first_name: playerFirstName.value,
+      last_name: playerLastName.value,
+      country: playerCountry.value,
+      team_name: teamName.value
+  })
 
-    const response = await fetch(`${API_URL}/players/${selectedPlayer.value.id}`, {
+    const formData = new FormData();
+    if (playerAvatar.value && playerAvatar.value.size > 0) {
+      formData.append('avatar', playerAvatar.value);
+    }
+
+    const response = await fetch(`${API_URL}/players/${selectedPlayer.value.id}?${params.toString()}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(updateData)
+      body: formData
     })
 
     console.log('Response status:', response.status)
@@ -1618,16 +1519,13 @@ onMounted(() => {
   margin-left: 16px;
 }
 
-
-.team-slots {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
 .team-slot {
   width: 100%;
+}
+
+.team-slot .v-autocomplete,
+.team-slot .v-text-field {
+  flex: 1;
 }
 
 
@@ -1688,10 +1586,26 @@ onMounted(() => {
 }
 
 .custom-autocomplete :deep(.v-field__input) {
-  color: rgba(255, 255, 255, 0) !important;
+  color: rgb(255, 255, 255) !important;
 }
 
 .custom-autocomplete :deep(.v-field--focused) {
   color: #42DDF2FF !important;
+}
+
+.custom-toggle-btn {
+  color: #42DDF2FF !important;
+  height: 40px !important;
+  width: 40px !important;
+  border: 2px solid rgba(66, 221, 242, 0.3) !important;
+  margin-left: 8px !important;
+  align-self: center;
+  transition: all 0.3s ease;
+}
+
+.custom-toggle-btn:hover {
+  border-color: #42DDF2FF !important;
+  background: rgba(66, 221, 242, 0.1) !important;
+  transform: scale(1.05);
 }
 </style>
