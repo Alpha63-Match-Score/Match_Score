@@ -1466,13 +1466,29 @@ onMounted(() => {
 }
 
 .approve-btn {
-  background: #00ff9d !important;
-  color: #171c26 !important;
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.3);
 }
 
 .reject-btn {
-  background: #ff6363 !important;
-  color: #171c26 !important;
+  background: rgba(255, 99, 99, 0.1);
+  color: #ff6363;
+  border: 1px solid rgba(255, 99, 99, 0.3);
+}
+
+.reject-btn:disabled {
+  opacity: 0.3;
+  background-color: rgba(255, 99, 99, 0.1);
+  color: #ff6363;
+  border: 1px solid rgba(255, 99, 99, 0.3);
+}
+
+.approve-btn:disabled {
+  opacity: 0.3;
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.3);
 }
 
 .dialog-card {
