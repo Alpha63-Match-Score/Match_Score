@@ -1,27 +1,27 @@
-from fastapi import UploadFile, HTTPException
-import boto3
-import os
 from datetime import datetime
-import uuid
-from PIL import Image
 import io
+import os
+import uuid
 
+import boto3
+from fastapi import HTTPException, UploadFile
+from PIL import Image
 from src.core.config import settings
 
 
 class S3Service:
     MAX_SIZE = (300, 300)
-    ALLOWED_FORMATS = {'.jpg', '.jpeg', '.png'}
+    ALLOWED_FORMATS = {".jpg", ".jpeg", ".png"}
     JPEG_QUALITY = 90
     MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
 
     def __init__(self):
         self.bucket_name = settings.AWS_BUCKET_NAME
         self.s3_client = boto3.client(
-            's3',
+            "s3",
             aws_access_key_id=settings.AWS_ACCESS_KEY,
             aws_secret_access_key=settings.AWS_SECRET_KEY,
-            region_name=settings.AWS_REGION
+            region_name=settings.AWS_REGION,
         )
 
     def validate_image(self, file: UploadFile) -> None:
@@ -29,7 +29,8 @@ class S3Service:
         if ext not in self.ALLOWED_FORMATS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file format. Allowed formats: {', '.join(self.ALLOWED_FORMATS)}"
+                detail=f"Unsupported file format. "
+                f"Allowed formats: {', '.join(self.ALLOWED_FORMATS)}",
             )
 
         # Check file size
@@ -40,7 +41,8 @@ class S3Service:
         if size > self.MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
-                detail=f"File too large. Maximum size is {self.MAX_FILE_SIZE / 1024 / 1024}MB"
+                detail=f"File too large. "
+                f"Maximum size is {self.MAX_FILE_SIZE / 1024 / 1024}MB",
             )
 
     def process_image(self, image_data: bytes) -> bytes:
@@ -48,8 +50,8 @@ class S3Service:
             image = Image.open(io.BytesIO(image_data))
 
             # Convert to RGB if needed
-            if image.mode in ('RGBA', 'P'):
-                image = image.convert('RGB')
+            if image.mode in ("RGBA", "P"):
+                image = image.convert("RGB")
 
             # Resize if needed
             if image.size[0] > self.MAX_SIZE[0] or image.size[1] > self.MAX_SIZE[1]:
@@ -57,24 +59,18 @@ class S3Service:
 
             # Optimize and convert to bytes
             output = io.BytesIO()
-            image.save(
-                output,
-                format='JPEG',
-                quality=self.JPEG_QUALITY,
-                optimize=True
-            )
+            image.save(output, format="JPEG", quality=self.JPEG_QUALITY, optimize=True)
             return output.getvalue()
 
         except Exception as e:
             raise HTTPException(
-                status_code=400,
-                detail=f"Error processing image: {str(e)}"
+                status_code=400, detail=f"Error processing image: {str(e)}"
             )
 
     def upload_file(self, file: UploadFile, folder: str) -> str:
         try:
             # Generate unique filename
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             unique_id = str(uuid.uuid4())[:8]
             extension = os.path.splitext(file.filename)[1]
             new_filename = f"{folder}/{timestamp}_{unique_id}{extension}"
@@ -87,7 +83,7 @@ class S3Service:
                 Bucket=self.bucket_name,
                 Key=new_filename,
                 Body=contents,
-                ContentType=file.content_type
+                ContentType=file.content_type,
             )
 
             # Generate URL
@@ -95,8 +91,7 @@ class S3Service:
 
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error uploading file: {str(e)}"
+                status_code=500, detail=f"Error uploading file: {str(e)}"
             )
         finally:
             file.file.close()
@@ -107,16 +102,14 @@ class S3Service:
                 return True
 
             # Extract key from URL
-            key = file_url.split('.com/')[1]
+            key = file_url.split(".com/")[1]
 
             # Delete from S3
-            self.s3_client.delete_object(
-                Bucket=self.bucket_name,
-                Key=key
-            )
+            self.s3_client.delete_object(Bucket=self.bucket_name, Key=key)
             return True
         except Exception as e:
             print(f"Error deleting file: {e}")
             return False
+
 
 s3_service = S3Service()

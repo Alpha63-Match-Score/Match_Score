@@ -72,6 +72,6 @@ default-section = "THIRDPARTY"
 force-sort-within-sections = true
 combine-as-imports = true
 
-[tools.black]
+[tool.black]
 line-length = 88
 target-version = ["py312"]

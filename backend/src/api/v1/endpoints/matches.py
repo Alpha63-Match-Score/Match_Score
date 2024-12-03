@@ -40,6 +40,7 @@ def read_match(match_id: UUID, db: Session = Depends(get_db)):
 
     return match_crud.get_match(db, match_id)
 
+
 @router.put("/{match_id}", response_model=MatchResponse)
 def update_match(
     match_id: UUID,

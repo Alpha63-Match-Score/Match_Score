@@ -9,13 +9,17 @@ from src.crud.convert_db_to_response import (
 )
 from src.models import Match, Team, Tournament
 from src.models.enums import Stage
-from src.schemas.team import TeamListResponse, TeamCreate, TeamDetailedResponse, TeamUpdate
+from src.schemas.team import (
+    TeamCreate,
+    TeamDetailedResponse,
+    TeamListResponse,
+    TeamUpdate,
+)
 from src.schemas.user import UserResponse
 from src.utils import validators as v
 from src.utils.pagination import PaginationParams
-from starlette.status import HTTP_400_BAD_REQUEST
-
 from src.utils.s3 import s3_service
+from starlette.status import HTTP_400_BAD_REQUEST
 
 
 def get_teams(
@@ -37,7 +41,6 @@ def get_teams(
     # elif sort_by == "desc":
     #     query = query.order_by(team_win_ratio.desc())
 
-
     db_results = query.all()
     sorted_teams = sorted(
         db_results,
@@ -47,16 +50,15 @@ def get_teams(
         reverse=(sort_by == "desc"),
     )
 
-    sorted_teams = sorted_teams[pagination.offset:pagination.offset + pagination.limit]
+    sorted_teams = sorted_teams[
+        pagination.offset : pagination.offset + pagination.limit
+    ]
 
     return [convert_db_to_team_list_response(team) for team in sorted_teams]
 
 
 def create_team(
-    db: Session,
-    team: TeamCreate,
-    logo: UploadFile | None,
-    current_user: UserResponse
+    db: Session, team: TeamCreate, logo: UploadFile | None, current_user: UserResponse
 ) -> TeamListResponse:
 
     v.director_or_admin(current_user)
@@ -77,6 +79,7 @@ def create_team(
     db.refresh(db_team)
 
     return convert_db_to_team_list_response(db_team)
+
 
 def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     db_team = v.team_exists(db, team_id=team_id)
@@ -110,10 +113,17 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
             tournaments_played.add(match.tournament_id)
 
         opponent_id = match.team2_id if match.team1_id == team_id else match.team1_id
-        opponent_name = match.team2.name if match.team1_id == team_id else match.team1.name
+        opponent_name = (
+            match.team2.name if match.team1_id == team_id else match.team1.name
+        )
 
         if opponent_id not in opponent_stats:
-            opponent_stats[opponent_id] = {"wins": 0, "losses": 0, "games": 0, "opponent_name": opponent_name}
+            opponent_stats[opponent_id] = {
+                "wins": 0,
+                "losses": 0,
+                "games": 0,
+                "opponent_name": opponent_name,
+            }
 
         opponent_stats[opponent_id]["games"] += 1
         if match.winner_team_id == team_id:
@@ -122,20 +132,42 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
             opponent_stats[opponent_id]["losses"] += 1
 
     stats["tournaments_played"] = len(tournaments_played)
-    stats["tournaments_won"] = sum(1 for match in matches if match.winner_team_id == team_id and match.stage == Stage.FINAL)
+    stats["tournaments_won"] = sum(
+        1
+        for match in matches
+        if match.winner_team_id == team_id and match.stage == Stage.FINAL
+    )
 
     if opponent_stats:
-        stats["most_often_played_opponent"] = max(opponent_stats, key=lambda k: opponent_stats[k]["games"])
-        stats["best_opponent"] = max(opponent_stats, key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"])
-        stats["worst_opponent"] = min(opponent_stats, key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"])
+        stats["most_often_played_opponent"] = max(
+            opponent_stats, key=lambda k: opponent_stats[k]["games"]
+        )
+        stats["best_opponent"] = max(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"],
+        )
+        stats["worst_opponent"] = min(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"],
+        )
 
     stats["match_win_loss_ratio"]["wins"] = stats["matches_won"]
-    stats["match_win_loss_ratio"]["losses"] = stats["matches_played"] - stats["matches_won"]
-    stats["match_win_loss_ratio"]["ratio"] = f"{(stats['matches_won'] / stats['matches_played']) * 100:.0f}%" if stats["matches_played"] > 0 else "0%"
+    stats["match_win_loss_ratio"]["losses"] = (
+        stats["matches_played"] - stats["matches_won"]
+    )
+    stats["match_win_loss_ratio"]["ratio"] = (
+        f"{(stats['matches_won'] / stats['matches_played']) * 100:.0f}%"
+        if stats["matches_played"] > 0
+        else "0%"
+    )
 
     stats["tournament_win_loss_ratio"]["won"] = stats["tournaments_won"]
     stats["tournament_win_loss_ratio"]["played"] = stats["tournaments_played"]
-    stats["tournament_win_loss_ratio"]["ratio"] = f"{(stats['tournaments_won'] / stats['tournaments_played']) * 100:.0f}%" if stats["tournaments_played"] > 0 else "0%"
+    stats["tournament_win_loss_ratio"]["ratio"] = (
+        f"{(stats['tournaments_won'] / stats['tournaments_played']) * 100:.0f}%"
+        if stats["tournaments_played"] > 0
+        else "0%"
+    )
 
     return convert_db_to_team_detailed_response(db_team, matches, stats)
 
@@ -145,7 +177,7 @@ def update_team(
     team_id: UUID,
     team: TeamUpdate,
     logo: UploadFile | None,
-    current_user: UserResponse
+    current_user: UserResponse,
 ) -> TeamListResponse:
 
     db_team = v.team_exists(db, team_id=team_id)

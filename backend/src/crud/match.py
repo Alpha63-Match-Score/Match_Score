@@ -3,7 +3,7 @@ import random
 from typing import Literal, Type
 
 from fastapi import HTTPException
-from sqlalchemy import UUID, and_, func, or_
+from sqlalchemy import UUID, or_
 from sqlalchemy.orm import Session
 from src.crud import constants as c, team as crud_team
 from src.crud.convert_db_to_response import (
@@ -194,10 +194,9 @@ def update_match(
                 db, db_match, db_team2.id, db_match.team1, time_format, False
             )
 
-
         db.commit()
         db.refresh(db_match)
-        return convert_db_to_match_response(db_match)
+        return convert_db_to_match_list_response(db_match)
 
     except Exception as e:
         db.rollback()
@@ -289,7 +288,7 @@ def update_match_score(
         db.refresh(db_match)
         db.refresh(db_match.tournament)
 
-        return convert_db_to_match_response(db_match)
+        return convert_db_to_match_list_response(db_match)
 
     except Exception as e:
         db.rollback()

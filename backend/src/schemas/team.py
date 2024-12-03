@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-
 from src.schemas.match import MatchResponse
 from src.schemas.player import PlayerBaseResponse
 from src.schemas.prize_cut import PrizeCutResponse
@@ -49,4 +48,3 @@ class TeamUpdate(BaseConfig):
         pattern="^[a-zA-Z0-9_-]+$",
         examples=["example_team"],
     )
-

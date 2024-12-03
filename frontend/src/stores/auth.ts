@@ -29,10 +29,8 @@ interface RegisterResponse {
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const token = ref<string | null>(localStorage.getItem('token') || null)
-  const userEmail = ref<string | null>(null)
-  const userId = ref<string | null>(null)
-  // const userRole = ref<string | null>(null)
-  // const userEmail = ref<string | null>(localStorage.getItem('userEmail') || null)
+  const userEmail = ref<string | null>(localStorage.getItem('userEmail') || null) // Добавяме взимане от localStorage
+  const userId = ref<string | null>(localStorage.getItem('userId') || null) // Добавяме взимане от localStorage
   const userRole = ref<string | null>(localStorage.getItem('userRole') || null)
   const isAuthenticated = ref(!!token.value)
 
@@ -44,7 +42,11 @@ export const useAuthStore = defineStore('auth', () => {
     userRole.value = null
     isAuthenticated.value = false
     localStorage.removeItem('token')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userRole')
   }
+
 
   const setToken = (newToken: string | null) => {
     token.value = newToken
@@ -63,6 +65,15 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('userEmail', email)
     } else {
       localStorage.removeItem('userEmail')
+    }
+  }
+
+      const setUserId = (id: string | null) => {
+    userId.value = id
+    if (id) {
+      localStorage.setItem('userId', id)
+    } else {
+      localStorage.removeItem('userId')
     }
   }
 
@@ -86,10 +97,10 @@ export const useAuthStore = defineStore('auth', () => {
         })
         if (response.ok) {
           const userData = await response.json()
-          userId.value = userData.id
-          userRole.value = userData.role
-          userEmail.value = userData.email
-          token.value = savedToken
+          setUserId(userData.id)
+          setUserRole(userData.role)
+          setUserEmail(userData.email)
+          setToken(savedToken)
           isAuthenticated.value = true
         } else {
           clearUserData()
@@ -180,6 +191,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       setToken(null)
       setUserEmail(null)
+      setUserId(null)
       setUserRole(null)
       // userEmail.value = null
       // userRole.value = null
@@ -212,6 +224,8 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await response.json()
       const role = data.role
       setUserRole(role)
+      setUserId(data.id)
+      setUserEmail(data.email)
       return role
     } catch (error) {
       console.error('Error fetching user role:', error)

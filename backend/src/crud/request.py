@@ -71,10 +71,9 @@ def get_all(
     return result
 
 
-def get_current_user_request(db: Session,
-                            current_user: User,
-                            pagination: PaginationParams
-                             ):
+def get_current_user_request(
+    db: Session, current_user: User, pagination: PaginationParams
+):
 
     query = db.query(Request).filter(Request.user_id == current_user.id)
     query = query.order_by(desc(Request.request_date))
@@ -82,10 +81,10 @@ def get_current_user_request(db: Session,
 
     result = [
         ResponseRequest(
-        request_type=request.request_type,
-        status=request.status,
-        request_date=request.request_date,
-        response_date=request.response_date,
+            request_type=request.request_type,
+            status=request.status,
+            request_date=request.request_date,
+            response_date=request.response_date,
         )
         for request in query
     ]
