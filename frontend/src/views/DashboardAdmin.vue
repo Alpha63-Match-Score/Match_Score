@@ -163,84 +163,115 @@
           </div>
         </div>
 
-        <!-- Add Tournament Dialog -->
+        <!-- Create Tournament Dialog -->
         <v-dialog v-model="showAddTournamentDialog" max-width="500">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
-                <span>Add Tournament</span>
+                <span>{{ currentStep === 1 ? 'Tournament Details' : 'Select Teams' }}</span>
               </v-card-title>
+
               <v-card-text>
-                <v-text-field
-                  v-model="tournamentTitle"
-                  label="Tournament Title"
-                  variant="outlined"
-                  :rules="[rules.required]"
-                ></v-text-field>
-
-                <v-text-field
-                  v-model="tournamentTeams"
-                  label="Teams (comma-separated)"
-                  variant="outlined"
-                  :rules="[rules.required]"
-                  :hint="getTeamsHelpText"
-                  persistent-hint
-                ></v-text-field>
-
-                <v-text-field
-                  v-model="formattedStartDate"
-                  label="Start Date"
-                  variant="outlined"
-                  :rules="[rules.required]"
-                  readonly
-                  @click="openDatePicker"
-                  prepend-icon="mdi-calendar"
-                ></v-text-field>
-
-                <!-- Calendar Picker -->
-                <v-dialog
-                  v-model="datePickerDialog"
-                  width="auto"
+                <!-- Error Alert -->
+                <v-alert
+                  v-if="tournamentError"
+                  type="error"
+                  variant="tonal"
+                  closable
+                  class="mb-4"
                 >
-                  <v-date-picker
-                    v-model="tournamentStartDate"
-                    @update:model-value="handleDateSelect"
-                  ></v-date-picker>
-                </v-dialog>
-
-                <v-select
-                  v-model="tournamentFormat"
-                  :items="formattedFormatOptions"
-                  label="Tournament Format"
-                  variant="outlined"
-                  :rules="[rules.required]"
-                  menu-props="auto"
-                  class="format-select"
-                ></v-select>
-
-                <v-text-field
-                  v-model="tournamentPrizePool"
-                  label="Prize Pool"
-                  variant="outlined"
-                  type="number"
-                ></v-text-field>
-
-                <!-- Display Error -->
-                <div v-if="tournamentError" class="error-message">
                   {{ tournamentError }}
-                </div>
+                </v-alert>
+
+                <!-- Step 1: Tournament Details -->
+                <v-form v-if="currentStep === 1" ref="form">
+                  <!-- Title Field -->
+                  <v-text-field
+                    v-model="tournamentTitle"
+                    label="Tournament Title"
+                    variant="outlined"
+                    :rules="[rules.required, rules.minLength]"
+                  ></v-text-field>
+
+                  <!-- Format Selection -->
+                  <v-select
+                    v-model="tournamentFormat"
+                    :items="formattedFormatOptions"
+                    label="Tournament Format"
+                    variant="outlined"
+                    :rules="[rules.required]"
+                    class="format-select"
+                  ></v-select>
+
+                  <!-- Date Selection -->
+                  <v-text-field
+                    v-model="tournamentStartDate"
+                    label="Start Date"
+                    type="datetime-local"
+                    variant="outlined"
+                    :rules="[rules.required]"
+                  ></v-text-field>
+
+                  <!-- Prize Pool -->
+                  <v-text-field
+                    v-model="tournamentPrizePool"
+                    label="Prize Pool (Kitty Kibbles)"
+                    variant="outlined"
+                    type="number"
+                    :rules="[rules.required, rules.minPrize]"
+                  ></v-text-field>
+                </v-form>
+
+                <!-- Step 2: Team Selection -->
+                <v-form v-else ref="teamForm">
+                  <div class="team-slots">
+                    <div v-for="index in getMaxTeams" :key="index" class="team-slot">
+                      <v-autocomplete
+                        v-model="selectedTeams[index - 1]"
+                        :items="getAvailableTeamsForSlot(index - 1)"
+                        item-title="name"
+                        item-value="id"
+                        :label="`Team ${index}`"
+                        variant="outlined"
+                        :loading="loadingTeams"
+                        clearable
+                        class="custom-autocomplete"
+                        :rules="[rules.required]"
+                      >
+                        <template v-slot:item="{ props, item }">
+                          <v-list-item
+                            v-bind="props"
+                            :title="item.raw.name"
+                            class="team-list-item"
+                          ></v-list-item>
+                        </template>
+                      </v-autocomplete>
+                    </div>
+                  </div>
+                </v-form>
               </v-card-text>
+
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn class="cancel-btn" @click="handleCancel">
                   Cancel
                 </v-btn>
                 <v-btn
-                  class="submit-btn"
-                  @click="submitAddTournament"
-                  :loading="isSubmitting"
+                  v-if="currentStep === 1"
+                  class="next-btn"
+                  @click="handleNext"
+                  :disabled="!canProceedToTeams"
                 >
-                  Submit
+                  Next
+                </v-btn>
+                <v-btn
+                  v-else
+                  class="submit-btn"
+                  @click="submitTournament"
+                  :loading="isSubmitting"
+                  :disabled="!canSubmit"
+                >
+                  Create Tournament
                 </v-btn>
               </v-card-actions>
             </div>
@@ -449,8 +480,8 @@ import { useAuthStore } from '@/stores/auth';
 import { format } from 'date-fns';
 import { API_URL } from '@/config';
 
+
 const authStore = useAuthStore();
-const adminEmail = ref(authStore.userEmail);
 
 // Props and Emits
 const props = defineProps({
@@ -480,13 +511,38 @@ interface Player {
   avatar: string | null
 }
 
-const requests = ref<Request[]>([]);
-const isLoading = ref(true);
-const requestHistoryError = ref<string | null>(null);
-const actionsError = ref<string | null>(null);
-const isSubmitting = ref(false);
-const showSuccessAlert = ref(false);
-const successMessage = ref('');
+const requests = ref<Request[]>([])
+const isLoading = ref(true)
+const requestHistoryError = ref<string | null>(null)
+const actionsError = ref<string | null>(null)
+const showSuccessAlert = ref(false)
+const successMessage = ref('')
+const currentStep = ref(1)
+const form = ref(null)
+const teamForm = ref(null)
+
+// Add Tournament consts
+const tournamentTitle = ref('')
+const tournamentFormat = ref('')
+const tournamentStartDate = ref('')
+const tournamentPrizePool = ref('')
+const selectedTeams = ref<Array<string | null>>(Array(4).fill(null))
+const loadingTeams = ref(false)
+const isSubmitting = ref(false)
+const tournamentError = ref('')
+const teams = ref([])
+
+const formattedFormatOptions = [
+  { title: 'Single Elimination', value: 'single_elimination' },
+  { title: 'Round Robin', value: 'round_robin' },
+  { title: 'One-Off Match', value: 'one_off_match' }
+]
+
+const rules = {
+  required: (v: string) => !!v || 'This field is required',
+  minLength: (v: string) => v.length >= 3 || 'Title must be at least 3 characters',
+  minPrize: (v: number) => v >= 1 || 'Prize pool must be at least 1 Kitty Kibble'
+}
 
 // Filter Options
 const filterStatus = ref('');
@@ -494,14 +550,12 @@ const statusOptions = ['All', 'Pending', 'Accepted', 'Rejected'];
 
 // Dialog visibility
 const showAddTournamentDialog = ref(false);
-const showAddMatchDialog = ref(false);
 const showAddPlayerDialog = ref(false);
 const showAssignPlayerDialog = ref(false);
 const startDateMenu = ref(false);
 
 // Form data and errors
 const tournamentName = ref('');
-const matchDetails = ref('');
 // Player dialog state
 const showUpdatePlayerDialog = ref(false)
 const playerUsername = ref('')
@@ -513,26 +567,15 @@ const playerLastName = ref('')
 const playerCountry = ref('')
 const playerAvatar = ref<File | null>(null)
 const previewAvatar = ref<string | null>(null)
-const teams = ref<Array<{ id: string, name: string }>>([])
 const selectedTeam = ref<string>('')
 const teamSearch = ref('')
-const loadingTeams = ref(false)
 
-const tournamentError = ref<string | null>(null);
 const matchError = ref<string | null>(null);
 const assignError = ref<string | null>(null);
 
-const tournamentTitle = ref('')
 const tournamentTeams = ref('')
-const tournamentStartDate = ref('')
-const tournamentFormat = ref('')
-const tournamentPrizePool = ref(null)
-const datePickerDialog = ref(false)
-const formattedFormatOptions = [
-  { title: 'Single Elimination', value: 'single_elimination' },
-  { title: 'Round Robin', value: 'round_robin' },
-  { title: 'One-Off Match', value: 'one_off_match' }
-]
+
+
 const showDatePicker = ref(false)
 
 
@@ -541,9 +584,6 @@ const teamName = ref('')
 const teamError = ref('')
 const teamLogo = ref<File | null>(null)
 
-const rules = {
-  required: v => !!v || 'This field is required'
-}
 
 // const teamsHelpText = ref('')
 // const updateTeamsHelpText = () => {
@@ -567,6 +607,139 @@ const rules = {
 // watch(tournamentFormat, updateTeamsHelpText)
 
 // Computed
+
+// Add Tournament
+
+const getMaxTeams = computed(() => {
+  const formatTeamCounts = {
+    'single_elimination': 8,
+    'round_robin': 5,
+    'one_off_match': 2
+  }
+  return formatTeamCounts[tournamentFormat.value] || 0
+})
+
+const canProceedToTeams = computed(() => {
+  return tournamentTitle.value.length >= 3 &&
+         tournamentFormat.value &&
+         tournamentStartDate.value &&
+         tournamentPrizePool.value >= 1
+})
+
+const canSubmit = computed(() => {
+  const requiredTeams = {
+    'single_elimination': 4,
+    'round_robin': 4,
+    'one_off_match': 2
+  }
+  const validTeams = selectedTeams.value.filter(Boolean).length === requiredTeams[tournamentFormat.value]
+  return validTeams
+})
+
+const teamFilter = (item: any, query: string) => {
+  if (!query) return true
+  const teamName = item.name.toLowerCase()
+  const searchTerm = query.toLowerCase()
+  return teamName.includes(searchTerm)
+}
+
+const getAvailableTeamsForSlot = (currentIndex: number) => {
+  return teams.value.filter(team => {
+    return !selectedTeams.value.some(
+      (selectedId, index) => selectedId === team.id && index !== currentIndex
+    )
+  })
+}
+
+const handleNext = async () => {
+  if (!form.value) return
+  const { valid } = await form.value.validate()
+  if (!valid) return
+
+  // Fetch teams if not already loaded
+  if (teams.value.length === 0) {
+    try {
+      loadingTeams.value = true
+      const response = await fetch(`${API_URL}/teams`)
+      if (!response.ok) throw new Error('Failed to load teams')
+      const data = await response.json()
+      teams.value = data
+    } catch (e) {
+      console.error('Error fetching teams:', e)
+      tournamentError.value = 'Failed to load teams. Please try again.'
+      return
+    } finally {
+      loadingTeams.value = false
+    }
+  }
+
+  currentStep.value = 2
+}
+
+const handleCancel = () => {
+  showAddTournamentDialog.value = false
+  resetForm()
+}
+
+const resetForm = () => {
+  currentStep.value = 1
+  tournamentTitle.value = ''
+  tournamentFormat.value = ''
+  tournamentStartDate.value = ''
+  tournamentPrizePool.value = ''
+  selectedTeams.value = []
+  tournamentError.value = ''
+}
+
+const submitTournament = async () => {
+  if (!teamForm.value) return
+  const { valid } = await teamForm.value.validate()
+  if (!valid) return
+
+  try {
+    isSubmitting.value = true
+    tournamentError.value = ''
+
+    const formData = {
+      title: tournamentTitle.value,
+      tournament_format: tournamentFormat.value,
+      start_date: tournamentStartDate.value,
+      team_names: selectedTeams.value.map(teamId => {
+        const team = teams.value.find(t => t.id === teamId)
+        return team ? team.name : ''
+      }).filter(Boolean),
+      prize_pool: parseInt(tournamentPrizePool.value)
+    }
+
+    const response = await fetch(`${API_URL}/tournaments`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Failed to create tournament')
+    }
+
+    showAddTournamentDialog.value = false
+    successMessage.value = 'Tournament created successfully! 🎉'
+    showSuccessAlert.value = true
+    resetForm()
+
+  } catch (e) {
+    console.error('Error creating tournament:', e)
+    tournamentError.value = e.message
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+
+// The rest
 const formattedStartDate = computed(() => {
   if (!tournamentStartDate.value) return ''
   return format(new Date(tournamentStartDate.value), 'dd MMM yyyy')
@@ -588,28 +761,7 @@ const getTeamsHelpText = computed(() => {
 
 // Methods
 
-const openDatePicker = () => {
-  datePickerDialog.value = true
-}
 
-const handleDateSelect = (date) => {
-  tournamentStartDate.value = date
-  datePickerDialog.value = false
-}
-
-const handleCancel = () => {
-  emit('update:showDialog', false)
-  resetForm()
-}
-
-const resetForm = () => {
-  tournamentTitle.value = ''
-  tournamentTeams.value = ''
-  tournamentStartDate.value = ''
-  tournamentFormat.value = null
-  tournamentPrizePool.value = null
-  tournamentError.value = ''
-}
 const formatRequestType = (type: string): string => {
   return type
     .split(' ')
@@ -639,14 +791,6 @@ const onAvatarChange = (file: File | null) => {
   }
 }
 
-const teamFilter = (item: any, query: string) => {
-  if (!query) return true
-
-  const teamName = item.name.toLowerCase()
-  const searchTerm = query.toLowerCase()
-
-  return teamName.includes(searchTerm)
-}
 
 const fetchTeams = async () => {
   try {
@@ -1441,11 +1585,20 @@ onMounted(() => {
 }
 
 .dialog-title {
-  color: #42ddf2;
+  color: #42ddf2 !important;
   font-weight: bold;
   font-size: 1.25rem;
   text-align: center;
   margin-bottom: 16px;
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 14px;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
 }
 
 .error-message {
@@ -1464,6 +1617,34 @@ onMounted(() => {
   color: #171c26 !important;
   margin-left: 16px;
 }
+
+
+.team-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.team-slot {
+  width: 100%;
+}
+
+
+.team-list-item {
+  transition: background-color 0.2s;
+}
+
+.team-list-item:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
+.next-btn {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
+  margin-left: 16px;
+}
+
 
 :deep(.v-text-field) {
   margin-top: 16px;
@@ -1507,28 +1688,10 @@ onMounted(() => {
 }
 
 .custom-autocomplete :deep(.v-field__input) {
-  color: white !important;
+  color: rgba(255, 255, 255, 0) !important;
 }
 
 .custom-autocomplete :deep(.v-field--focused) {
   color: #42DDF2FF !important;
-}
-:deep(.v-date-picker) {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
-  color: white !important;
-}
-
-:deep(.v-date-picker-month) {
-  color: white !important;
-}
-
-:deep(.v-date-picker-month__day) {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-:deep(.v-date-picker-month__day--selected) {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
 }
 </style>
