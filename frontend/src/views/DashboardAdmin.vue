@@ -18,7 +18,6 @@
         <div class="actions-card">
           <div class="actions-background"></div>
           <div class="actions-content">
-            <h3 class="section-title">Admin Actions</h3>
             <div class="actions-buttons">
               <v-btn
                 class="action-btn"
@@ -54,7 +53,6 @@
         <div class="history-card">
           <div class="history-background"></div>
           <div class="history-content">
-            <h3 class="section-title">Manage Requests</h3>
 
             <!-- Filter Options -->
             <div class="filter-options">
@@ -1265,8 +1263,8 @@ onMounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 30%,
+    rgba(23, 28, 38, 1) 60%
   );
   z-index: 2;
 }
@@ -1274,7 +1272,7 @@ onMounted(() => {
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 200px;
+  padding-top: 50px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1347,8 +1345,7 @@ onMounted(() => {
 .filter-options {
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
-  width: 300px;
+  width: 400px;
 }
 
 .request-list {
