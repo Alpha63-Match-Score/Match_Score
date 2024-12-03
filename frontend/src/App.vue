@@ -147,6 +147,8 @@ const dashboardPath = computed(() => {
       return '/dashboard-user'
     case 'PLAYER':
       return '/dashboard-player'
+    case 'DIRECTOR':
+      return '/dashboard-director'
     default:
       return '/login'
   }
