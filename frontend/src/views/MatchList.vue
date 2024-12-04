@@ -17,8 +17,8 @@
         </div>
 
         <!-- Matches Grid -->
-        <v-row v-else>
-          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="6" class="match-column">
+        <v-row v-else justify="center">
+          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="auto" class="match-column">
             <v-card class="match-card" @click="openMatchDialog(match)">
               <div class="match-background"></div>
               <div class="match-content">
@@ -312,7 +312,13 @@ onUnmounted(() => {
 }
 
 .match-column {
-  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.match-column:nth-child(even) {
+  justify-content: flex-start;
 }
 
 .match-card {
@@ -325,8 +331,7 @@ onUnmounted(() => {
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  width: 100%;
-  max-width: 650px;
+  width: 500px;
 }
 
 .match-card:hover {
