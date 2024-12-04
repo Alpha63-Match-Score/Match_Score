@@ -423,95 +423,77 @@
 
     <!-- Team Edit Dialog -->
     <v-dialog v-model="showTeamEdit" max-width="500px">
-      <v-card class="edit-dialog">
-        <v-card-title>Edit Teams</v-card-title>
-        <v-card-text>
-          <v-alert
-            v-if="editError"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-          >
-            {{ editError }}
-          </v-alert>
-          <v-text-field
-            v-model="editedTeam1Name"
-            label="Team 1 Name"
-            variant="outlined"
-            class="mb-4"
-          ></v-text-field>
-          <v-text-field
-            v-model="editedTeam2Name"
-            label="Team 2 Name"
-            variant="outlined"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
-          <v-btn color="primary" @click="updateTeams">Save</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <v-card class="dialog-card">
+        <div class="dialog-content">
+          <v-card-title class="dialog-title">Edit Teams</v-card-title>
+          <v-card-text>
+            <v-alert
+              v-if="editError"
+              type="error"
+              variant="tonal"
+              class="mb-4"
+            >
+              {{ editError }}
+            </v-alert>
 
-    <!-- Time Edit Dialog -->
-    <v-dialog v-model="showTimeEdit" max-width="500px">
-      <v-card class="edit-dialog">
-        <v-card-title>Edit Match Time</v-card-title>
-        <v-card-text>
-          <v-alert
-            v-if="editError"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-          >
-            {{ editError }}
-          </v-alert>
-          <v-text-field
-            v-model="editedStartTime"
-            label="Match Time"
-            type="datetime-local"
-            variant="outlined"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="error" @click="showTimeEdit = false">Cancel</v-btn>
-          <v-btn color="primary" @click="updateTime">Save</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            <v-form ref="teamForm">
+              <div class="team-slot">
+                <div class="d-flex align-center">
+                  <v-autocomplete
+                    v-model="newTeam1"
+                    :items="availableTeams"
+                    item-title="name"
+                    item-value="id"
+                    label="Team 1"
+                    variant="outlined"
+                    :loading="loadingTeams"
+                    clearable
+                    class="flex-grow-1 custom-autocomplete"
+                    :rules="[]"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item
+                        v-bind="props"
+                        :title="item.raw.name"
+                        class="team-list-item"
+                      ></v-list-item>
+                    </template>
+                  </v-autocomplete>
+                </div>
+              </div>
 
-    <!-- Team Edit Dialog -->
-    <v-dialog v-model="showTeamEdit" max-width="500px">
-      <v-card class="edit-dialog">
-        <v-card-title>Edit Teams</v-card-title>
-        <v-card-text>
-          <v-alert
-            v-if="editError"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-          >
-            {{ editError }}
-          </v-alert>
-          <v-text-field
-            v-model="editedTeam1Name"
-            label="Team 1 Name"
-            variant="outlined"
-            class="mb-4"
-          ></v-text-field>
-          <v-text-field
-            v-model="editedTeam2Name"
-            label="Team 2 Name"
-            variant="outlined"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
-          <v-btn color="primary" @click="updateTeams">Save</v-btn>
-        </v-card-actions>
+              <div class="team-slot">
+                <div class="d-flex align-center">
+                  <v-autocomplete
+                    v-model="newTeam2"
+                    :items="availableTeams"
+                    item-title="name"
+                    item-value="id"
+                    label="Team 2"
+                    variant="outlined"
+                    :loading="loadingTeams"
+                    clearable
+                    class="flex-grow-1 custom-autocomplete"
+                    :rules="[]"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item
+                        v-bind="props"
+                        :title="item.raw.name"
+                        class="team-list-item"
+                      ></v-list-item>
+                    </template>
+                  </v-autocomplete>
+                </div>
+              </div>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
+            <v-btn color="primary" @click="updateTeams">Save</v-btn>
+          </v-card-actions>
+        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -613,13 +595,23 @@ const prizeError = ref('')
 // Match pop up
 const showMatchModal = ref(false)
 const selectedMatch = ref<Match | null>(null)
-const showScoreEdit = ref(false)
 const showTimeEdit = ref(false)
 const showTeamEdit = ref(false)
 const editedStartTime = ref('')
 const editedTeam1Name = ref('')
 const editedTeam2Name = ref('')
 const editError = ref('')
+
+const newTeam1 = ref('')
+const newTeam2 = ref('')
+const availableTeams = ref([])
+const loadingTeams = ref(false)
+const teamForm = ref(null)
+
+const rules = {
+  required: (v: string) => !!v || 'This field is required',
+  min: (v: string) => v.length >= 3 || 'Must be at least 3 characters'
+}
 
 const canEdit = computed(() => {
   if (!isInitialized.value || !tournament.value || !authStore.isAuthenticated) return false
@@ -667,6 +659,21 @@ const fetchTournament = async () => {
     error.value = 'Failed to load tournament details'
   } finally {
     isLoading.value = false
+  }
+}
+
+const fetchAvailableTeams = async () => {
+  try {
+    loadingTeams.value = true
+    const response = await fetch(`${API_URL}/teams/?is_available=true`)
+    if (!response.ok) throw new Error('Failed to load teams')
+    const data = await response.json()
+    availableTeams.value = data
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+    editError.value = 'Failed to load teams'
+  } finally {
+    loadingTeams.value = false
   }
 }
 
@@ -733,12 +740,22 @@ const openTimeEdit = () => {
   showTimeEdit.value = true
 }
 
-const openTeamEdit = () => {
-  if (!selectedMatch.value) return
-  editedTeam1Name.value = selectedMatch.value.team1_name
-  editedTeam2Name.value = selectedMatch.value.team2_name
+const openTeamEdit = async () => {
+  // Зареждаме отборите преди да отворим диалога
+  await fetchAvailableTeams()
+
+  // Попълваме текущите отбори
+  if (selectedMatch.value) {
+    const team1 = availableTeams.value.find(t => t.name === selectedMatch.value.team1_name)
+    const team2 = availableTeams.value.find(t => t.name === selectedMatch.value.team2_name)
+
+    newTeam1.value = team1?.id || ''
+    newTeam2.value = team2?.id || ''
+  }
+
   showTeamEdit.value = true
 }
+
 
 const updateTime = async () => {
   try {
@@ -774,35 +791,55 @@ const updateTime = async () => {
 }
 
 const updateTeams = async () => {
+  if (!selectedMatch.value) return
+
   try {
     editError.value = ''
-    if (!selectedMatch.value) return
+    let params = new URLSearchParams()
 
-    const response = await fetch(
-      `${API_URL}/matches/${selectedMatch.value.id}?team1_name=${encodeURIComponent(editedTeam1Name.value)}&team2_name=${encodeURIComponent(editedTeam2Name.value)}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${authStore.token}`
-        }
+    if (newTeam1.value) {
+      const team1 = availableTeams.value.find(t => t.id === newTeam1.value)
+      if (team1) {
+        params.append('team1_name', team1.name)
       }
-    )
-
-    if (!response.ok) {
-      editError.value = await extractErrorMessage(response)
-      return
     }
 
-    await fetchTournament()
-    const updatedMatch = tournament.value?.matches_of_current_stage.find(
-      m => m.id === selectedMatch.value?.id
-    )
-    if (updatedMatch) {
-      selectedMatch.value = updatedMatch
+    if (newTeam2.value) {
+      const team2 = availableTeams.value.find(t => t.id === newTeam2.value)
+      if (team2) {
+        params.append('team2_name', team2.name)
+      }
     }
-    showTeamEdit.value = false
+
+    if (params.toString()) {
+      const response = await fetch(
+        `${API_URL}/matches/${selectedMatch.value.id}?${params.toString()}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        const error = await extractErrorMessage(response)
+        throw new Error(error)
+      }
+
+      await fetchTournament()
+      const updatedMatch = tournament.value?.matches_of_current_stage.find(
+        m => m.id === selectedMatch.value?.id
+      )
+      if (updatedMatch) {
+        selectedMatch.value = updatedMatch
+      }
+
+      showTeamEdit.value = false
+    }
   } catch (e) {
-    editError.value = 'Failed to update teams'
+    console.error('Error updating teams:', e)
+    editError.value = e.message || 'Failed to update teams'
   }
 }
 
@@ -1604,7 +1641,22 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.team-avatar:hover {
-  transform: scale(1.2);
+
+.dialog-card {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
 }
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-title {
+  color: #42ddf2;
+  font-weight: bold;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
 </style>

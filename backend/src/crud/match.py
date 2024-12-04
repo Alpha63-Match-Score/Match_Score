@@ -182,14 +182,12 @@ def update_match(
 
         if match.team1_name is not None:
             db_team1 = v.team_exists(db, team_name=match.team1_name)
-            db_match.team1_id = db_team1.id
             _update_team_and_notify_players(
                 db, db_match, db_team1.id, db_match.team2, time_format, True
             )
 
         if match.team2_name is not None:
             db_team2 = v.team_exists(db, team_name=match.team2_name)
-            db_match.team2_id = db_team2.id
             _update_team_and_notify_players(
                 db, db_match, db_team2.id, db_match.team1, time_format, False
             )
@@ -242,11 +240,17 @@ def _update_team_and_notify_players(
 ):
     if team_id:
         v.team_exists(db, team_id)
-        current_team = db_match.team1 if is_team1 else db_match.team2
-        current_team.tournament_id = None
-        current_team.tournament_id = db_match.tournament_id
+        old_team = db_match.team1 if is_team1 else db_match.team2
+        old_team.tournament_id = None
+        new_team = db.query(Team).filter(Team.id == team_id).first()
+        new_team.tournament_id = db_match.tournament_id
 
-        for player in current_team.players:
+        if is_team1:
+            db_match.team1 = new_team
+        else:
+            db_match.team2 = new_team
+
+        for player in new_team.players:
             if player.user_id:
                 send_email_notification(
                     email=player.user.email,
