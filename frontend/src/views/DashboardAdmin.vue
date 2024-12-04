@@ -18,28 +18,23 @@
         <div class="actions-card">
           <div class="actions-background"></div>
           <div class="actions-content">
-            <div class="actions-buttons">
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-tournament"
-                @click="openAddTournamentDialog"
-              >
-                Add Tournament
-              </v-btn>
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-account-group"
-                @click="openAddTeamDialog"
-              >
-                Add Team
-              </v-btn>
-              <v-btn
-                class="action-btn"
-                prepend-icon="mdi-account-edit"
-                @click="openUpdatePlayerDialog"
-              >
-                Update Player
-              </v-btn>
+            <div class="actions-grid">
+              <div class="actions-row">
+                <v-btn class="action-btn" prepend-icon="mdi-tournament" @click="openAddTournamentDialog">
+                  Add Tournament
+                </v-btn>
+                <v-btn class="action-btn" prepend-icon="mdi-account-group" @click="openAddTeamDialog">
+                  Add Team
+                </v-btn>
+              </div>
+              <div class="actions-row">
+                <v-btn class="action-btn" prepend-icon="mdi-account" @click="openAddPlayerDialog">
+                  Add Player
+                </v-btn>
+                <v-btn class="action-btn" prepend-icon="mdi-account-edit" @click="openUpdatePlayerDialog">
+                  Update Player
+                </v-btn>
+              </div>
             </div>
 
             <!-- Display Error for Admin Actions -->
@@ -48,7 +43,6 @@
             </div>
           </div>
         </div>
-
         <!-- Requests Management Section -->
         <div class="history-card">
           <div class="history-background"></div>
@@ -187,6 +181,7 @@
                     label="Tournament Title"
                     variant="outlined"
                     :rules="[rules.required, rules.minLength]"
+                    :error-messages="titleError"
                   ></v-text-field>
 
                   <!-- Format Selection -->
@@ -206,6 +201,7 @@
                     type="datetime-local"
                     variant="outlined"
                     :rules="[rules.required]"
+                    :error-messages="dateError"
                   ></v-text-field>
 
                   <!-- Prize Pool -->
@@ -221,7 +217,7 @@
                 <!-- Step 2: Team Selection -->
                 <v-form v-else ref="teamForm">
                   <div class="team-slot" v-for="index in getMaxTeams" :key="index">
-                    <div class="d-flex gap-2 align-center">
+                    <div class="d-flex align-center">
                       <!-- Normal autocomplete for existing teams -->
                       <v-autocomplete
                         v-if="!isCustomTeam[index - 1]"
@@ -233,7 +229,7 @@
                         variant="outlined"
                         :loading="loadingTeams"
                         clearable
-                        class="custom-autocomplete"
+                        class="flex-grow-1 custom-autocomplete"
                         :rules="getTeamRules(index - 1)"
                       >
                         <template v-slot:item="{ props, item }">
@@ -251,13 +247,14 @@
                         v-model="customTeamNames[index - 1]"
                         :label="`Custom Team ${index}`"
                         variant="outlined"
+                        class="flex-grow-1"
                         :rules="getTeamRules(index - 1)"
                       ></v-text-field>
 
                       <!-- Toggle button -->
                       <v-btn
                         icon
-                        class="custom-toggle-btn"
+                        class="custom-toggle-btn ml-2"
                         @click="toggleCustomTeam(index - 1)"
                         :title="isCustomTeam[index - 1] ? 'Switch to existing teams' : 'Add custom team'"
                         variant="outlined"
@@ -554,6 +551,8 @@ const teams = ref([])
 const customInputs = ref(Array(8).fill(''))
 const isCustomTeam = ref(Array(8).fill(false))
 const customTeamNames = ref(Array(8).fill(''))
+const titleError = ref('')
+const dateError = ref('')
 
 
 const formattedFormatOptions = [
@@ -639,25 +638,54 @@ const canSubmit = computed(() => {
 
 const handleNext = async () => {
   if (!form.value) return
+
+  titleError.value = ''
+  dateError.value = ''
+  tournamentError.value = ''
+  let hasErrors = false
+
+  try {
+    const response = await fetch(`${API_URL}/tournaments?search=${encodeURIComponent(tournamentTitle.value)}`)
+    const tournaments = await response.json()
+    if (tournaments.some(t => t.title.toLowerCase() === tournamentTitle.value.toLowerCase())) {
+      titleError.value = 'A tournament with this name already exists'
+      hasErrors = true
+    }
+  } catch (e) {
+    console.error('Error checking tournament title:', e)
+  }
+
+  const selectedDate = new Date(tournamentStartDate.value)
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+  const now = new Date()
+
+  if (selectedDate < now) {
+    dateError.value = 'Tournament start date cannot be in the past'
+    hasErrors = true
+  } if (selectedDate < tomorrow) {
+    dateError.value = 'Start date must be at least 1 day in the future'
+    hasErrors = true
+  }
+  if (hasErrors) return
+
+  try {
+    loadingTeams.value = true
+    const response = await fetch(`${API_URL}/teams`)
+    if (!response.ok) throw new Error('Failed to load teams')
+    const data = await response.json()
+    teams.value = data
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+    tournamentError.value = 'Failed to load teams. Please try again.'
+    return
+  } finally {
+    loadingTeams.value = false
+  }
+
   const { valid } = await form.value.validate()
   if (!valid) return
-
-  // Fetch teams if not already loaded
-  if (teams.value.length === 0) {
-    try {
-      loadingTeams.value = true
-      const response = await fetch(`${API_URL}/teams`)
-      if (!response.ok) throw new Error('Failed to load teams')
-      const data = await response.json()
-      teams.value = data
-    } catch (e) {
-      console.error('Error fetching teams:', e)
-      tournamentError.value = 'Failed to load teams. Please try again.'
-      return
-    } finally {
-      loadingTeams.value = false
-    }
-  }
 
   currentStep.value = 2
 }
@@ -718,6 +746,27 @@ const submitTournament = async () => {
 
     const formattedDate = new Date(tournamentStartDate.value).toISOString()
 
+    const teamNamesForCheck = selectedTeams.value
+      .map((selectedTeam, index) => {
+        if (isCustomTeam.value[index]) {
+          return null
+        }
+        const existingTeam = teams.value.find(t => t.id === selectedTeam)
+        return existingTeam?.name
+      })
+      .filter(name => name !== null)
+
+    for (const teamName of teamNamesForCheck) {
+      const response = await fetch(`${API_URL}/teams?search=${encodeURIComponent(teamName)}`)
+      const teamData = await response.json()
+      const team = teamData[0]
+
+      if (team && team.tournament_id) {
+        tournamentError.value = `Team "${teamName}" is already participating in another tournament`
+        return
+      }
+    }
+
     const teamNames = selectedTeams.value.map((selectedTeam, index) => {
       if (isCustomTeam.value[index]) {
         return customTeamNames.value[index]
@@ -725,8 +774,6 @@ const submitTournament = async () => {
       const existingTeam = teams.value.find(t => t.id === selectedTeam)
       return existingTeam?.name || ''
     }).filter(name => name !== '')
-
-    console.log('Team names to send:', teamNames)
 
     const params = new URLSearchParams({
       title: tournamentTitle.value,
@@ -744,21 +791,15 @@ const submitTournament = async () => {
       body: JSON.stringify(teamNames)
     })
 
-    console.log('Full URL:', `${API_URL}/tournaments/?${params.toString()}`)
-    console.log('Team names in body:', teamNames)
-
     if (!response.ok) {
       const errorData = await response.json()
-      console.log('Full error response:', errorData)
-
       if (errorData.detail && Array.isArray(errorData.detail)) {
         const errorMessages = errorData.detail.map((err: any) => {
-          console.log('Individual error:', err)
           return `${err.msg} (${err.loc.join('.')})`
         })
         throw new Error(errorMessages.join('\n'))
       } else {
-        throw new Error('Unknown error occurred')
+        throw new Error(errorData.detail || 'Unknown error occurred')
       }
     }
 
@@ -1326,11 +1367,30 @@ onMounted(() => {
   justify-content: center;
 }
 
+.actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.actions-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  width: 100%;
+}
+
 .action-btn {
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+  height: 56px !important;
   background: #42DDF2FF !important;
   color: #171c26 !important;
   font-weight: bold;
-  padding: 20px 32px !important;
   text-align: center;
   display: flex;
   align-items: center;
@@ -1522,7 +1582,26 @@ onMounted(() => {
 }
 
 .team-slot {
-  width: 100%;
+  margin-bottom: 16px;
+}
+
+.team-slot .d-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.toggle-btn {
+  height: 56px !important;
+  width: 56px !important;
+  margin-top: 0 !important;
+  color: #42DDF2FF !important;
+  border-color: rgba(66, 221, 242, 0.3) !important;
+}
+
+.toggle-btn:hover {
+  border-color: #42DDF2FF !important;
+  background: rgba(66, 221, 242, 0.1) !important;
 }
 
 .team-slot .v-autocomplete,
@@ -1596,18 +1675,43 @@ onMounted(() => {
 }
 
 .custom-toggle-btn {
+  margin-top: -22px !important; /* Малко отместване надолу */
+  height: 48px !important; /* Малко по-малка височина */
+  width: 48px !important;
   color: #42DDF2FF !important;
-  height: 40px !important;
-  width: 40px !important;
   border: 2px solid rgba(66, 221, 242, 0.3) !important;
-  margin-left: 8px !important;
-  align-self: center;
-  transition: all 0.3s ease;
+  flex-shrink: 0; /* Предотвратява свиването на бутона */
 }
 
 .custom-toggle-btn:hover {
   border-color: #42DDF2FF !important;
   background: rgba(66, 221, 242, 0.1) !important;
-  transform: scale(1.05);
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+:deep(.v-alert) {
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  color: #FED854FF !important;
+  border-color: #FED854FF !important;
+}
+
+:deep(.v-alert__close-button) {
+  color: #FED854FF !important;
+}
+
+:deep(.v-alert__prepend) {
+  color: #FED854FF !important;
+}
+
+.error-alert {
+  color: #FED854FF !important;
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  border: 1px solid #FED854FF !important;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
 }
 </style>
