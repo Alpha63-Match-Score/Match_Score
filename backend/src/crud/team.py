@@ -125,9 +125,13 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     stats["tournaments_won"] = sum(1 for match in matches if match.winner_team_id == team_id and match.stage == Stage.FINAL)
 
     if opponent_stats:
-        stats["most_often_played_opponent"] = max(opponent_stats, key=lambda k: opponent_stats[k]["games"])
-        stats["best_opponent"] = max(opponent_stats, key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"])
-        stats["worst_opponent"] = min(opponent_stats, key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"])
+        most_often_played_opponent_id = max(opponent_stats, key=lambda k: opponent_stats[k]["games"])
+        best_opponent_id = max(opponent_stats, key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"])
+        worst_opponent_id = min(opponent_stats, key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"])
+
+        stats["most_often_played_opponent"] = opponent_stats[most_often_played_opponent_id]["opponent_name"]
+        stats["best_opponent"] = opponent_stats[best_opponent_id]["opponent_name"]
+        stats["worst_opponent"] = opponent_stats[worst_opponent_id]["opponent_name"]
 
     stats["match_win_loss_ratio"]["wins"] = stats["matches_won"]
     stats["match_win_loss_ratio"]["losses"] = stats["matches_played"] - stats["matches_won"]
