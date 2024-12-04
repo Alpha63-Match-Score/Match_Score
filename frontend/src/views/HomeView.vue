@@ -7,76 +7,77 @@
 
     <div class="content-wrapper">
       <v-container class="matches-container">
-        <!-- Loading -->
-        <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
-          <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
-        </div>
+        <div class="matches-container-title">Latest Matches</div>
+          <!-- Loading -->
+          <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
+            <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+          </div>
 
-        <!-- Error -->
-        <div v-else-if="error" class="error-text pa-4">
-          {{ error }}
-        </div>
+          <!-- Error -->
+          <div v-else-if="error" class="error-text pa-4">
+            {{ error }}
+          </div>
 
-        <!-- When data is present -->
-        <v-row v-else no-gutters>
-          <v-col
-            v-for="match in matches"
-            :key="match.id"
-            cols="12"
-            sm="4"
-          >
-            <v-sheet class="ma-2 pa-2 transparent">
-              <v-card class="match-card">
-                <div class="match-background"></div>
-                <div class="match-content">
-                  <div class="tournament-tag">{{ match.tournament_title }}</div>
-                  <v-card-text>
-                    <div class="match-layout">
-                      <div class="team-left">
-                        <v-tooltip location="top">
-                          <template v-slot:activator="{ props }">
-                            <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
-                              <v-avatar class="team-avatar" size="60" v-bind="props">
-                                <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
-                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                              </v-avatar>
-                            </router-link>
-                          </template>
-                          {{ match.team1_name }}
-                        </v-tooltip>
-                        <span class="team-score">{{match.team1_score}}</span>
+          <!-- When data is present -->
+          <v-row v-else no-gutters>
+            <v-col
+              v-for="match in matches"
+              :key="match.id"
+              cols="12"
+              sm="4"
+            >
+              <v-sheet class="ma-2 pa-2 transparent">
+                <v-card class="match-card">
+                  <div class="match-background"></div>
+                  <div class="match-content">
+                    <div class="tournament-tag">{{ match.tournament_title }}</div>
+                    <v-card-text>
+                      <div class="match-layout">
+                        <div class="team-left">
+                          <v-tooltip location="top">
+                            <template v-slot:activator="{ props }">
+                              <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
+                                <v-avatar class="team-avatar" size="60" v-bind="props">
+                                  <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                  <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                </v-avatar>
+                              </router-link>
+                            </template>
+                            {{ match.team1_name }}
+                          </v-tooltip>
+                          <span class="team-score">{{match.team1_score}}</span>
+                        </div>
+
+                        <div class="score-divider">:</div>
+
+                        <div class="team-right">
+                          <span class="team-score">{{match.team2_score}}</span>
+                          <v-tooltip location="top">
+                            <template v-slot:activator="{ props }">
+                              <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
+                                <v-avatar class="team-avatar" size="60" v-bind="props">
+                                  <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                  <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                </v-avatar>
+                              </router-link>
+                            </template>
+                            {{ match.team2_name }}
+                          </v-tooltip>
+                        </div>
                       </div>
+                    </v-card-text>
 
-                      <div class="score-divider">:</div>
+                    <v-divider class="match-divider"></v-divider>
 
-                      <div class="team-right">
-                        <span class="team-score">{{match.team2_score}}</span>
-                        <v-tooltip location="top">
-                          <template v-slot:activator="{ props }">
-                            <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
-                              <v-avatar class="team-avatar" size="60" v-bind="props">
-                                <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
-                                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                              </v-avatar>
-                            </router-link>
-                          </template>
-                          {{ match.team2_name }}
-                        </v-tooltip>
-                      </div>
-                    </div>
-                  </v-card-text>
-
-                  <v-divider class="match-divider"></v-divider>
-
-                  <v-card-actions class="justify-center pa-4">
-                    <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-                    <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
-                  </v-card-actions>
-                </div>
-              </v-card>
-            </v-sheet>
-          </v-col>
-        </v-row>
+                    <v-card-actions class="justify-center pa-4">
+                      <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                      <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                    </v-card-actions>
+                  </div>
+                </v-card>
+              </v-sheet>
+            </v-col>
+          </v-row>
       </v-container>
 
 
@@ -326,13 +327,26 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .matches-container {
   background: rgba(30, 30, 30, 0);
   border-radius: 20px;
   border: 2px solid #42ddf2;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
-  height: 250px;
+  height: 350px;
+  width: 80%;
+  max-width: 1500px;
+}
+
+.matches-container-title {
+  color: #42DDF2FF;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(8, 87, 144, 0.3);
+  justify-self: center;
 }
 
 .transparent {
@@ -340,7 +354,7 @@ onMounted(() => {
 }
 
 .match-card {
-  height: 210px;
+  height: 260px;
   margin-top: -16px;
   position: relative;
   border-radius: 15px;
@@ -349,7 +363,8 @@ onMounted(() => {
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
-  padding: 20px;
+  padding: 10px;
+  justify-items: center;
 }
 
 .match-background {
@@ -379,7 +394,6 @@ onMounted(() => {
   justify-content: space-between;
   margin-top: 20px;
   gap: 20px;
-  padding: 0 10px;
 }
 
 .team-left, .team-right {
@@ -387,16 +401,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   flex: 1;
+  gap: 20px;
 }
 
 .team-left .team-score {
   margin-left: auto;
-  margin-right: 10px;
 }
 
 .team-right .team-score {
   margin-right: auto;
-  margin-left: 10px;
 }
 .team-left .team-avatar,
 .team-right .team-avatar {
@@ -418,16 +431,19 @@ onMounted(() => {
   position: relative;
   top: 0;
   left: 0;
-  width: auto; /* Adjust width */
+  width: auto;
+  max-width: 300px;
   background: rgba(45, 55, 75, 0);
   padding: 4px 12px;
-  margin-bottom: -27px;
   border-radius: 12px;
   font-size: 1.2rem;
   color: #42DDF2FF;
   border: 1px solid rgba(0, 255, 157, 0);
   font-weight: bold;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .team-name {
@@ -446,7 +462,7 @@ onMounted(() => {
   font-size: 2rem;
   color: #FED854FF;
   text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
-  margin: 0 8px;
+  margin: 0;
   align-self: center;
 }
 
@@ -466,11 +482,13 @@ onMounted(() => {
 
 .bottom-containers {
   display: flex;
+  justify-content: center;
   gap: 20px;
   margin: 20px auto 0;
-  width: 89%;
-  padding: 0 20px;
-  align-items: center;
+  width: 80%;
+  max-width: 1500px;
+  padding: 0;
+  align-items: flex-start;
 }
 
 .side-container {
@@ -483,6 +501,7 @@ onMounted(() => {
   padding: 20px;
   height: 820px;
   overflow-y: auto;
+  min-width: 0;
 }
 
 .container-title {
