@@ -140,21 +140,41 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     )
 
     if opponent_stats:
-        most_often_played_opponent_id = max(opponent_stats, key=lambda k: opponent_stats[k]["games"])
-        best_opponent_id = max(opponent_stats, key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"])
-        worst_opponent_id = min(opponent_stats, key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"])
+        most_often_played_opponent_id = max(
+            opponent_stats, key=lambda k: opponent_stats[k]["games"]
+        )
+        best_opponent_id = max(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"],
+        )
+        worst_opponent_id = min(
+            opponent_stats,
+            key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"],
+        )
 
-        stats["most_often_played_opponent"] = opponent_stats[most_often_played_opponent_id]["opponent_name"]
+        stats["most_often_played_opponent"] = opponent_stats[
+            most_often_played_opponent_id
+        ]["opponent_name"]
         stats["best_opponent"] = opponent_stats[best_opponent_id]["opponent_name"]
         stats["worst_opponent"] = opponent_stats[worst_opponent_id]["opponent_name"]
 
     stats["match_win_loss_ratio"]["wins"] = stats["matches_won"]
-    stats["match_win_loss_ratio"]["losses"] = stats["matches_played"] - stats["matches_won"]
-    stats["match_win_loss_ratio"]["ratio"] = f"{(stats['matches_won'] / stats['matches_played']) * 100:.0f}%" if stats["matches_played"] > 0 else "0%"
+    stats["match_win_loss_ratio"]["losses"] = (
+        stats["matches_played"] - stats["matches_won"]
+    )
+    stats["match_win_loss_ratio"]["ratio"] = (
+        f"{(stats['matches_won'] / stats['matches_played']) * 100:.0f}%"
+        if stats["matches_played"] > 0
+        else "0%"
+    )
 
     stats["tournament_win_loss_ratio"]["won"] = stats["tournaments_won"]
     stats["tournament_win_loss_ratio"]["played"] = stats["tournaments_played"]
-    stats["tournament_win_loss_ratio"]["ratio"] = f"{(stats['tournaments_won'] / stats['tournaments_played']) * 100:.0f}%" if stats["tournaments_played"] > 0 else "0%"
+    stats["tournament_win_loss_ratio"]["ratio"] = (
+        f"{(stats['tournaments_won'] / stats['tournaments_played']) * 100:.0f}%"
+        if stats["tournaments_played"] > 0
+        else "0%"
+    )
 
     return convert_db_to_team_detailed_response(db_team, matches, stats)
 
