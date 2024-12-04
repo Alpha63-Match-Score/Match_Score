@@ -35,7 +35,7 @@
                       <div class="team-left">
                         <v-tooltip location="top">
                           <template v-slot:activator="{ props }">
-                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                            <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
                               <v-avatar class="team-avatar" size="60" v-bind="props">
                                 <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
                                 <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
@@ -53,7 +53,7 @@
                         <span class="team-score">{{match.team2_score}}</span>
                         <v-tooltip location="top">
                           <template v-slot:activator="{ props }">
-                            <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
+                            <router-link :to="`/teams/${match.team1_id}`" class="foreign-link">
                               <v-avatar class="team-avatar" size="60" v-bind="props">
                                 <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
                                 <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
@@ -99,42 +99,39 @@
           <!-- Teams list -->
           <v-list v-else class="team-list">
             <v-list-item v-for="team in teams" :key="team.id" class="team-item">
-              <div class="team-header">
-                <div class="team-info-left">
-                  <v-avatar class="team-avatar" size="40">
-                    <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                    <v-icon v-else icon="mdi-account" color="#42DDF2FF"></v-icon>
-                  </v-avatar>
-                  <div class="team-name">{{ team.name }}</div>
-                </div>
-
-                  <div class="players-avatars">
-                    <v-avatar
-                      v-for="player in team.players"
-                      :key="player.id"
-                      size="30"
-                      class="player-avatar"
-                    >
-                      <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
-                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="20"></v-icon>
+              <router-link :to="`/teams/${team.id}`" class="foreign-link">
+                <div class="team-header">
+                  <div class="team-info-left">
+                    <v-avatar class="team-avatar" size="40">
+                      <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                      <v-icon v-else icon="mdi-account" color="#42DDF2FF"></v-icon>
                     </v-avatar>
+                    <div class="team-name">{{ team.name }}</div>
                   </div>
-              </div>
 
-              <div class="progress-wrapper">
-                <v-progress-linear
-                  :model-value="parseInt(team.game_win_ratio)"
-                  color="#42DDF2FF"
-                  height="6"
-                  rounded
-                  class="progress-bar"
-                ></v-progress-linear>
-                <span class="win-ratio">{{ team.game_win_ratio }}</span>
-              </div>
-
-
-
-
+                    <div class="players-avatars">
+                      <v-avatar
+                        v-for="player in team.players"
+                        :key="player.id"
+                        size="30"
+                        class="player-avatar"
+                      >
+                        <v-img v-if="player.avatar && player.avatar !== ''" :src="player.avatar" alt="Player avatar"></v-img>
+                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="20"></v-icon>
+                      </v-avatar>
+                    </div>
+                </div>
+                <div class="progress-wrapper">
+                  <v-progress-linear
+                    :model-value="parseInt(team.game_win_ratio)"
+                    color="#42DDF2FF"
+                    height="6"
+                    rounded
+                    class="progress-bar"
+                  ></v-progress-linear>
+                  <span class="win-ratio">{{ team.game_win_ratio }}</span>
+                </div>
+              </router-link>
             </v-list-item>
           </v-list>
         </v-container>
@@ -156,24 +153,24 @@
           <!-- Tournaments list -->
           <div v-else class="tournaments-list">
             <div v-for="tournament in tournaments" :key="tournament.id" class="tournament-item">
-              <div class="tournament-header">
-                <div class="tournament-title">{{ tournament.title }}</div>
-                <div class="format-tag">{{ formatText(tournament.tournament_format) }}</div>
-              </div>
-
-              <div class="tournament-dates">
-                {{ formatDateRange(tournament.start_date, tournament.end_date) }}
-              </div>
-
-              <div class="tournament-footer">
-                <div class="stage-tag">
-                  Stage: {{ formatStage(tournament.current_stage) }}
+              <router-link :to="`/events/${tournament.id}`" class="foreign-link">
+                <div class="tournament-header">
+                  <div class="tournament-title">{{ tournament.title }}</div>
+                  <div class="format-tag">{{ formatText(tournament.tournament_format) }}</div>
                 </div>
-                <div class="teams-count">
-                  <span class="count-circle">{{ tournament.number_of_teams }}</span>
-                  teams
+                <div class="tournament-dates">
+                  {{ formatDateRange(tournament.start_date, tournament.end_date) }}
                 </div>
-              </div>
+                <div class="tournament-footer">
+                  <div class="stage-tag">
+                    Stage: {{ formatStage(tournament.current_stage) }}
+                  </div>
+                  <div class="teams-count">
+                    <span class="count-circle">{{ tournament.number_of_teams }}</span>
+                    teams
+                  </div>
+                </div>
+              </router-link>
             </div>
           </div>
         </v-container>
@@ -530,6 +527,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  margin-top: -10px;
 }
 
 
@@ -572,19 +570,19 @@ onMounted(() => {
 }
 
 .tournament-item {
-  background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(8, 87, 144, 0.2);
-  border-radius: 10px;
-  padding: 16px;
-  transition: all 0.2s;
+  padding: 16px !important;
+  background: rgba(45, 55, 75, 0.8) !important;
+  border: 1px solid rgba(8, 87, 144, 0.2) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s !important;
   height: 130px;
 }
 
 .tournament-item:hover {
-  background: rgb(45, 55, 75);
-  border-color: #42ddf2;
+  background: rgb(45, 55, 75) !important;
+  border-color: #42ddf2 !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
+  box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2) !important;
 }
 
 .tournament-header {
@@ -592,6 +590,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  margin-top: -25px;
 }
 
 .tournament-title {
@@ -693,12 +692,12 @@ onMounted(() => {
   padding: 10px;
 }
 
-.team-avatar-link {
+.foreign-link {
   text-decoration: none;
   background: transparent !important;
 }
 
-.team-avatar-link:hover {
+.foreign-link:hover {
   text-decoration: none;
   background: transparent !important;
 }
