@@ -29,7 +29,7 @@
               <v-card class="match-card">
                 <div class="match-background"></div>
                 <div class="match-content">
-                  <div class="tournament-tag">Tournament {{ match.tournament_title }}</div>
+                  <div class="tournament-tag">{{ match.tournament_title }}</div>
                   <v-card-text>
                     <div class="match-layout">
                       <div class="team-left">
@@ -363,15 +363,20 @@ onMounted(() => {
   opacity: 0.1;
   z-index: 1;
 }
+
 .match-content {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: auto;
 }
 
 .match-layout {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   margin-top: 20px;
   gap: 20px;
   padding: 0 10px;
@@ -380,10 +385,19 @@ onMounted(() => {
 .team-left, .team-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
   flex: 1;
 }
 
+.team-left .team-score {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.team-right .team-score {
+  margin-right: auto;
+  margin-left: 10px;
+}
 .team-left .team-avatar,
 .team-right .team-avatar {
   transition: transform 0.2s ease;
@@ -401,15 +415,15 @@ onMounted(() => {
 }
 
 .tournament-tag {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  width: 290px;
-  transform: translateX(-50%);
+  position: relative;
+  top: 0;
+  left: 0;
+  width: auto; /* Adjust width */
   background: rgba(45, 55, 75, 0);
   padding: 4px 12px;
+  margin-bottom: -27px;
   border-radius: 12px;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   color: #42DDF2FF;
   border: 1px solid rgba(0, 255, 157, 0);
   font-weight: bold;
@@ -433,6 +447,7 @@ onMounted(() => {
   color: #FED854FF;
   text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
   margin: 0 8px;
+  align-self: center;
 }
 
 .match-divider {
