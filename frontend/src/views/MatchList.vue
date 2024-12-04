@@ -297,8 +297,8 @@ onUnmounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 25%,
+    rgba(23, 28, 38, 1) 50%
   );
   z-index: 2;
 }
@@ -572,8 +572,8 @@ onUnmounted(() => {
 }
 
 .custom-dialog-card {
-  width: 600px; /* Adjust the value to make the box smaller */
-  margin: 0 auto; /* Center the box horizontally */
+  width: 600px;
+  margin: 0 auto;
   border-radius: 50px;
   background: rgba(45, 55, 75, 0.8);
   backdrop-filter: blur(10px);

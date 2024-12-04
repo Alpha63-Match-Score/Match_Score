@@ -44,152 +44,160 @@
         </div>
 
         <!-- Tournament Content Grid -->
-        <v-row class="mt-6">
-          <!-- Left Column: Prizes and Teams -->
-          <v-col cols="12" md="4">
-            <!-- Prizes Section -->
-            <div class="prizes-card">
-              <h3 class="section-title">
-                <v-icon icon="mdi-cat" class="mr-2"></v-icon>
-                Prizes
-                <v-icon
-                  v-if="canEdit"
-                  icon="mdi-pencil"
-                  class="edit-icon ml-2"
-                  @click="openPrizeEdit"
-                ></v-icon>
-              </h3>
-              <div class="prizes-list">
-                <div v-for="prize in tournament.prizes" :key="prize.id" class="prize-item">
-                  <div class="prize-trophy" :class="{ 'gold': prize.place === 1, 'silver': prize.place === 2 }">
-                    <v-icon :icon="prize.place === 1 ? 'mdi-trophy' : 'mdi-trophy-variant'" size="32"></v-icon>
+        <div class="tournament-content-wrapper">
+          <v-row class="mt-6">
+            <!-- Left Column: Prizes and Teams -->
+            <v-col cols="12" md="4">
+              <!-- Prizes Section -->
+              <div class="prizes-card">
+                <h3 class="section-title">
+                  <v-icon icon="mdi-cat" class="mr-2"></v-icon>
+                  Prizes
+                  <v-icon
+                    v-if="canEdit"
+                    icon="mdi-pencil"
+                    class="edit-icon ml-2"
+                    @click="openPrizeEdit"
+                  ></v-icon>
+                </h3>
+                <div class="prizes-list">
+                  <div v-for="prize in tournament.prizes" :key="prize.id" class="prize-item">
+                    <div class="prize-trophy" :class="{ 'gold': prize.place === 1, 'silver': prize.place === 2 }">
+                      <v-icon :icon="prize.place === 1 ? 'mdi-trophy' : 'mdi-trophy-variant'" size="32"></v-icon>
+                    </div>
+                    <div class="prize-details">
+                      <span class="prize-place">{{ formatPlace(prize.place) }} place</span>
+                      <span class="prize-amount">{{ prize.prize_cut }} kitty kibbles</span>
+                    </div>
+                    <v-tooltip location="top">
+                      <template v-slot:activator="{ props }">
+                        <router-link
+                          v-if="prize.team_id"
+                          :to="`/teams/${prize.team_id}`"
+                          class="winner-team"
+                          v-bind="props"
+                        >
+                          <v-avatar size="50">
+                            <v-img
+                              v-if="prize.team_logo"
+                              :src="prize.team_logo"
+                              alt="Winner team logo"
+                            ></v-img>
+                            <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                          </v-avatar>
+                        </router-link>
+                      </template>
+                      {{ prize.team_name }}
+                    </v-tooltip>
                   </div>
-                  <div class="prize-details">
-                    <span class="prize-place">{{ formatPlace(prize.place) }} place</span>
-                    <span class="prize-amount">{{ prize.prize_cut }} kitty kibbles</span>
-                  </div>
-                  <v-tooltip location="top">
-                    <template v-slot:activator="{ props }">
-                      <router-link
-                        v-if="prize.team_id"
-                        :to="`/teams/${prize.team_id}`"
-                        class="winner-team"
-                        v-bind="props"
-                      >
-                        <v-avatar size="50">
-                          <v-img
-                            v-if="prize.team_logo"
-                            :src="prize.team_logo"
-                            alt="Winner team logo"
-                          ></v-img>
-                          <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                        </v-avatar>
-                      </router-link>
-                    </template>
-                    {{ prize.team_name }}
-                  </v-tooltip>
                 </div>
               </div>
-            </div>
 
-            <!-- Teams List Section -->
-            <div class="teams-card">
-              <h3 class="section-title">
-                <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
-                Participating Teams
-              </h3>
-              <div class="teams-list">
-                <router-link
-                  v-for="team in tournament.teams"
-                  :key="team.id"
-                  :to="`/teams/${team.id}`"
-                  class="team-item"
-                >
-                  <v-avatar size="40" class="team-avatar">
-                    <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                    <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                  </v-avatar>
-                  <span class="team-name">{{ team.name }}</span>
-                </router-link>
-              </div>
-            </div>
-          </v-col>
-
-          <!-- Right Column: Brackets -->
-            <v-col cols="12" md="8">
-              <div class="brackets-card">
+              <!-- Teams List Section -->
+              <div class="teams-card">
                 <h3 class="section-title">
-                  <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
-                  Tournament Brackets
+                  <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
+                  Participating Teams
                 </h3>
-                <div class="brackets-content">
-                  <div class="stage-header">
-                    <h4 class="stage-name">
-                      {{ formatStage(tournament.current_stage) }}
-                    </h4>
-                  </div>
+                <div class="teams-list">
+                  <router-link
+                    v-for="team in tournament.teams"
+                    :key="team.id"
+                    :to="`/teams/${team.id}`"
+                    class="team-item"
+                  >
+                    <v-avatar size="40" class="team-avatar">
+                      <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                      <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                    </v-avatar>
+                    <span class="team-name">{{ team.name }}</span>
+                  </router-link>
+                </div>
+              </div>
+            </v-col>
 
-                  <div class="matches-grid">
-                    <div v-for="match in tournament.matches_of_current_stage"
-                         :key="match.id"
-                         class="match-card"
-                         :class="{ 'match-finished': match.is_finished }">
+            <!-- Right Column: Brackets -->
+              <v-col cols="12" md="8">
+                <div class="brackets-card">
+                  <h3 class="section-title">
+                    <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
+                    Matches
+                  </h3>
+                  <div class="brackets-content">
+                    <div class="stage-header">
+                      <h4 class="stage-name">
+                        {{ formatStage(tournament.current_stage) }}
+                      </h4>
+                    </div>
 
-                      <div class="match-content">
-                        <div class="match-layout">
-                          <div class="team-left">
-                            <v-tooltip location="top">
-                              <template v-slot:activator="{ props }">
-                                <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
-                                  <v-avatar class="team-avatar" size="60" v-bind="props">
-                                    <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
-                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                                  </v-avatar>
-                                </router-link>
-                              </template>
-                              {{ match.team1_name }}
-                            </v-tooltip>
-                            <span class="team-score">{{match.team1_score}}</span>
+                    <div class="matches-grid">
+                      <div v-for="match in tournament.matches_of_current_stage"
+                           :key="match.id"
+                           class="match-card"
+                           :class="{ 'match-finished': match.is_finished }"
+                           @click="openMatchDialog(match)">
+
+                        <div class="match-content">
+                          <div class="match-layout">
+                            <div class="team-left">
+                              <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-avatar class="team-avatar" size="60" v-bind="props">
+                                      <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                    </v-avatar>
+                                </template>
+                                {{ match.team1_name }}
+                              </v-tooltip>
+                              <span class="team-score">{{match.team1_score}}</span>
+                            </div>
+
+                            <div class="score-divider">:</div>
+
+                            <div class="team-right">
+                              <span class="team-score">{{match.team2_score}}</span>
+                              <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-avatar class="team-avatar" size="60" v-bind="props">
+                                      <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                    </v-avatar>
+                                </template>
+                                {{ match.team2_name }}
+                              </v-tooltip>
+                            </div>
                           </div>
 
-                          <div class="score-divider">:</div>
+                          <v-divider class="match-divider"></v-divider>
 
-                          <div class="team-right">
-                            <span class="team-score">{{match.team2_score}}</span>
-                            <v-tooltip location="top">
-                              <template v-slot:activator="{ props }">
-                                <router-link :to="`/teams/${match.team2_id}`" class="team-avatar-link">
-                                  <v-avatar class="team-avatar" size="60" v-bind="props">
-                                    <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
-                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                                  </v-avatar>
-                                </router-link>
-                              </template>
-                              {{ match.team2_name }}
-                            </v-tooltip>
-                          </div>
-                        </div>
+                          <div class="match-footer">
+                            <div class="match-time">
+                              <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                              <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                            </div>
 
-                        <v-divider class="match-divider"></v-divider>
-
-                        <div class="match-footer">
-                          <div class="match-time">
-                            <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-                            <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
-                          </div>
-
-                          <div v-if="match.is_finished" class="match-winner">
-                            <v-icon icon="mdi-crown" class="winner-icon" color="#FED854FF"></v-icon>
-                            <span class="winner-text">{{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}</span>
+                            <div class="match-winner">
+                              <v-icon
+                                :icon="match.winner_id ? 'mdi-crown' : 'mdi-crown-outline'"
+                                class="winner-icon"
+                                :color="match.winner_id ? '#FED854FF' : '#808080'"
+                              ></v-icon>
+                              <span v-if="match.winner_id" class="winner-text">
+                                {{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}
+                              </span>
+                              <span v-else class="winner-text pending">
+                                pending...
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </v-col>
-        </v-row>
+              </v-col>
+          </v-row>
+        </div>
       </v-container>
 
       <!-- Loading State -->
@@ -282,6 +290,227 @@
           <v-spacer></v-spacer>
           <v-btn color="error" @click="showPrizeEdit = false">Cancel</v-btn>
           <v-btn color="primary" @click="updatePrizePool">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Match Modal -->
+    <v-dialog v-model="showMatchModal" max-width="800px">
+      <v-card class="custom-dialog-card">
+        <v-card-title class="headline text-center">
+          {{ selectedMatch?.team1_name }} vs {{ selectedMatch?.team2_name }}
+        </v-card-title>
+        <v-card-text>
+          <div class="match-details-centered">
+            <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
+            <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
+            <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not Finished' }}</div>
+
+            <div class="match-layout">
+              <div class="team-info-left">
+                <div class="avatar-container">
+                  <div class="edit-container" v-if="canEdit" @click="openTeamEdit">
+                    <v-icon
+                      icon="mdi-pencil"
+                      class="edit-icon"
+                    ></v-icon>
+                    <span class="edit-text">Edit Teams</span>
+                  </div>
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                      <router-link :to="`/teams/${selectedMatch?.team1_id}`" class="team-avatar-link">
+                        <v-avatar class="team-avatar" size="150" v-bind="props">
+                          <v-img v-if="selectedMatch?.team1_logo" :src="selectedMatch.team1_logo" :alt="selectedMatch.team1_name"></v-img>
+                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                        </v-avatar>
+                      </router-link>
+                    </template>
+                    {{ selectedMatch?.team1_name }}
+                  </v-tooltip>
+                </div>
+                <span
+                  class="team-score"
+                  :class="{ 'clickable': canEdit }"
+                  @click="canEdit && handleScoreIncrement('team1')"
+                >
+                  {{ selectedMatch?.team1_score }}
+                </span>
+              </div>
+
+              <div class="score-divider">:</div>
+
+              <div class="team-info-right">
+                <span
+                  class="team-score"
+                  :class="{ 'clickable': canEdit }"
+                  @click="canEdit && handleScoreIncrement('team2')"
+                >
+                  {{ selectedMatch?.team2_score }}
+                </span>
+                <div class="avatar-container">
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                      <router-link :to="`/teams/${selectedMatch?.team2_id}`" class="team-avatar-link">
+                        <v-avatar class="team-avatar" size="150" v-bind="props">
+                          <v-img v-if="selectedMatch?.team2_logo" :src="selectedMatch.team2_logo" :alt="selectedMatch.team2_name"></v-img>
+                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                        </v-avatar>
+                      </router-link>
+                    </template>
+                    {{ selectedMatch?.team2_name }}
+                  </v-tooltip>
+                </div>
+              </div>
+            </div>
+
+            <div class="match-time">
+              <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+              <span class="time-text">
+                {{ selectedMatch ? format(new Date(selectedMatch.start_time), 'HH:mm, dd MMM yyyy') : '' }}
+              </span>
+              <v-icon
+                v-if="canEdit"
+                icon="mdi-pencil"
+                class="edit-icon ml-2"
+                @click="openTimeEdit"
+              ></v-icon>
+            </div>
+
+            <div v-if="selectedMatch?.winner_id" class="winner">
+              <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
+              <span class="winner-name">
+                {{ selectedMatch.winner_id === selectedMatch.team1_id ? selectedMatch.team1_name : selectedMatch.team2_name }}
+              </span>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="showMatchModal = false">
+            <v-icon left class="mr-2">mdi-close</v-icon>
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Time Edit Dialog -->
+    <v-dialog v-model="showTimeEdit" max-width="500px">
+      <v-card class="edit-dialog">
+        <v-card-title>Edit Match Time</v-card-title>
+        <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ editError }}
+          </v-alert>
+          <v-text-field
+            v-model="editedStartTime"
+            label="Match Time"
+            type="datetime-local"
+            variant="outlined"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showTimeEdit = false">Cancel</v-btn>
+          <v-btn color="primary" @click="updateTime">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Team Edit Dialog -->
+    <v-dialog v-model="showTeamEdit" max-width="500px">
+      <v-card class="edit-dialog">
+        <v-card-title>Edit Teams</v-card-title>
+        <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ editError }}
+          </v-alert>
+          <v-text-field
+            v-model="editedTeam1Name"
+            label="Team 1 Name"
+            variant="outlined"
+            class="mb-4"
+          ></v-text-field>
+          <v-text-field
+            v-model="editedTeam2Name"
+            label="Team 2 Name"
+            variant="outlined"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
+          <v-btn color="primary" @click="updateTeams">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Time Edit Dialog -->
+    <v-dialog v-model="showTimeEdit" max-width="500px">
+      <v-card class="edit-dialog">
+        <v-card-title>Edit Match Time</v-card-title>
+        <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ editError }}
+          </v-alert>
+          <v-text-field
+            v-model="editedStartTime"
+            label="Match Time"
+            type="datetime-local"
+            variant="outlined"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showTimeEdit = false">Cancel</v-btn>
+          <v-btn color="primary" @click="updateTime">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Team Edit Dialog -->
+    <v-dialog v-model="showTeamEdit" max-width="500px">
+      <v-card class="edit-dialog">
+        <v-card-title>Edit Teams</v-card-title>
+        <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ editError }}
+          </v-alert>
+          <v-text-field
+            v-model="editedTeam1Name"
+            label="Team 1 Name"
+            variant="outlined"
+            class="mb-4"
+          ></v-text-field>
+          <v-text-field
+            v-model="editedTeam2Name"
+            label="Team 2 Name"
+            variant="outlined"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
+          <v-btn color="primary" @click="updateTeams">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -381,6 +610,17 @@ const titleError = ref('')
 const endDateError = ref('')
 const prizeError = ref('')
 
+// Match pop up
+const showMatchModal = ref(false)
+const selectedMatch = ref<Match | null>(null)
+const showScoreEdit = ref(false)
+const showTimeEdit = ref(false)
+const showTeamEdit = ref(false)
+const editedStartTime = ref('')
+const editedTeam1Name = ref('')
+const editedTeam2Name = ref('')
+const editError = ref('')
+
 const canEdit = computed(() => {
   if (!isInitialized.value || !tournament.value || !authStore.isAuthenticated) return false
   return authStore.userRole === 'admin' || tournament.value.director_id === authStore.userId
@@ -448,6 +688,124 @@ const openPrizeEdit = () => {
   editedPrizePool.value = tournament.value.prizes[0]?.prize_cut || 0
   showPrizeEdit.value = true
 }
+
+
+const openMatchDialog = async (match: Match) => {
+  selectedMatch.value = match
+  showMatchModal.value = true
+}
+
+const handleScoreIncrement = async (team: 'team1' | 'team2') => {
+  if (!selectedMatch.value) return
+  try {
+    const response = await fetch(
+      `${API_URL}/matches/${selectedMatch.value.id}/team-scores?team_to_upvote_score=${team}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (!response.ok) {
+      const error = await extractErrorMessage(response)
+      console.error('Score update error:', error)
+      return
+    }
+    // Re-fetch match details
+    await fetchTournament()
+    // Update selected match
+    const updatedMatch = tournament.value?.matches_of_current_stage.find(
+      m => m.id === selectedMatch.value?.id
+    )
+    if (updatedMatch) {
+      selectedMatch.value = updatedMatch
+    }
+  } catch (e) {
+    console.error('Error updating score:', e)
+  }
+}
+
+const openTimeEdit = () => {
+  if (!selectedMatch.value) return
+  editedStartTime.value = selectedMatch.value.start_time
+  showTimeEdit.value = true
+}
+
+const openTeamEdit = () => {
+  if (!selectedMatch.value) return
+  editedTeam1Name.value = selectedMatch.value.team1_name
+  editedTeam2Name.value = selectedMatch.value.team2_name
+  showTeamEdit.value = true
+}
+
+const updateTime = async () => {
+  try {
+    editError.value = ''
+    if (!selectedMatch.value) return
+
+    const response = await fetch(
+      `${API_URL}/matches/${selectedMatch.value.id}?start_time=${encodeURIComponent(editedStartTime.value)}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      editError.value = await extractErrorMessage(response)
+      return
+    }
+
+    await fetchTournament()
+    const updatedMatch = tournament.value?.matches_of_current_stage.find(
+      m => m.id === selectedMatch.value?.id
+    )
+    if (updatedMatch) {
+      selectedMatch.value = updatedMatch
+    }
+    showTimeEdit.value = false
+  } catch (e) {
+    editError.value = 'Failed to update match time'
+  }
+}
+
+const updateTeams = async () => {
+  try {
+    editError.value = ''
+    if (!selectedMatch.value) return
+
+    const response = await fetch(
+      `${API_URL}/matches/${selectedMatch.value.id}?team1_name=${encodeURIComponent(editedTeam1Name.value)}&team2_name=${encodeURIComponent(editedTeam2Name.value)}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      editError.value = await extractErrorMessage(response)
+      return
+    }
+
+    await fetchTournament()
+    const updatedMatch = tournament.value?.matches_of_current_stage.find(
+      m => m.id === selectedMatch.value?.id
+    )
+    if (updatedMatch) {
+      selectedMatch.value = updatedMatch
+    }
+    showTeamEdit.value = false
+  } catch (e) {
+    editError.value = 'Failed to update teams'
+  }
+}
+
 
 const extractErrorMessage = async (response: Response) => {
   try {
@@ -604,19 +962,22 @@ onMounted(async () => {
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 200px;
+  padding-top: 100px;
   min-height: 100vh;
   width: 100vw !important;
 }
 
 .tournament-header-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.7);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
   padding: 24px;
   margin-bottom: 24px;
+  width: 80%;
+  max-width: 1000px;
+  justify-self: center;
 }
 
 .tournament-title-section {
@@ -632,6 +993,7 @@ onMounted(async () => {
   margin: 0;
   display: flex;
   align-items: center;
+  font-weight: 700;
 }
 
 .format-tag {
@@ -658,8 +1020,28 @@ onMounted(async () => {
   align-items: center;
 }
 
+.tournament-content-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.tournament-header-card {
+  background: rgba(45, 55, 75, 0.4);
+  border-radius: 20px;
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
 .teams-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -668,7 +1050,7 @@ onMounted(async () => {
 }
 
 .prizes-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -785,7 +1167,6 @@ onMounted(async () => {
   border: 2px solid #42DDF2FF;
   transition: transform 0.2s;
   background: transparent !important;
-  transition: transform 0.2s;
 }
 
 .winner-team:hover {
@@ -794,12 +1175,12 @@ onMounted(async () => {
 }
 
 .brackets-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
-  padding: 24px;
+  padding: 24px 10px;
   height: 100%;
   min-height: 600px;
 }
@@ -809,9 +1190,9 @@ onMounted(async () => {
   padding: 24px;
   height: auto;
   min-height: 500px;
-  background: rgba(45, 55, 75, 0.4);
+  background: rgba(45, 55, 75, 0);
   border-radius: 12px;
-  margin-top: 16px;
+  margin-top: -80px;
 }
 
 .stage-header {
@@ -823,18 +1204,6 @@ onMounted(async () => {
   color: #42DDF2FF;
   font-size: 1.6rem;
   font-weight: 500;
-}
-
-.stage-section {
-  margin-bottom: 32px;
-}
-
-.stage-subtitle {
-  color: #FED854FF;
-  font-size: 1.2rem;
-  margin-bottom: 16px;
-  padding-left: 16px;
-  border-left: 3px solid #FED854FF;
 }
 
 .matches-grid {
@@ -849,7 +1218,7 @@ onMounted(async () => {
   /* remove position: fixed */
   border-radius: 15px;
   overflow: hidden;
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0);
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -860,8 +1229,19 @@ onMounted(async () => {
   transform: translateY(-2px);
   border-color: #42DDF2FF;
   box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
+  cursor: pointer;
 }
 
+.match-card.match-finished {
+  border: 2px solid #FED854FF;
+  box-shadow: 0 0 15px rgba(254, 216, 84, 0.2);
+}
+
+/* Можем също да добавим hover ефект специално за finished matches */
+.match-card.match-finished:hover {
+  border-color: #FED854FF;
+  box-shadow: 0 0 20px rgba(254, 216, 84, 0.3);
+}
 .match-content {
   position: relative;
   z-index: 2;
@@ -921,8 +1301,21 @@ onMounted(async () => {
 
 .match-time {
   display: flex;
+  justify-content: center;
   align-items: center;
-  color: rgba(255, 255, 255, 0.7);
+  width: 100%;
+}
+
+.match-details-centered .team-avatar:hover {
+  transform: none;
+  cursor: pointer;
+}
+
+.match-details-centered .team-avatar {
+  border: 3px solid rgba(66, 221, 242, 0);
+  background: rgba(8, 87, 144, 0.2);
+  transition: none;
+  cursor: default;
 }
 
 .neon-text {
@@ -943,6 +1336,11 @@ onMounted(async () => {
 
 .winner-text {
   font-size: 0.9rem;
+}
+
+.winner-text.pending {
+  color: #808080;
+  font-style: italic;
 }
 
 .team-avatar-link {
@@ -973,18 +1371,6 @@ onMounted(async () => {
   padding: 4px 0;
 }
 
-.match-status {
-  text-align: center;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(254, 216, 84, 0.3);
-  color: #FED854FF;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .stage-name {
   color: #42DDF2FF;
   font-size: 1.6rem;
@@ -994,26 +1380,151 @@ onMounted(async () => {
 
 .prize-item {
   padding: 12px;
-  margin-bottom: 8px; /* по-малко отстояние между призите */
+  margin-bottom: 8px;
 }
 
-.placeholder-text {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-}
-
-/* Ако трябва да се намали spacing-а между компонентите */
 .section-title {
-  margin-bottom: 16px;  /* по-малък margin */
+  margin-bottom: 16px;
 }
 
-.placeholder-text {
-  color: rgba(255, 255, 255, 0.6);
+.custom-dialog-card {
+  width: 600px;
+  margin: 0 auto;
+  border-radius: 50px;
+  background: rgba(45, 55, 75, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  padding: 10px;
+}
+
+.custom-dialog-card .v-btn {
+  background: rgba(17, 78, 112, 0.56) !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  border-radius: 50px;
+  min-width: 120px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.custom-dialog-card .v-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.match-details-centered {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tournament-title {
+  color: #42DDF2FF;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-top: -30px;
+  align-self: center;
+}
+
+.tournament-stage {
+  color: #FED854FF;
   font-size: 1.2rem;
+}
+
+.is-finished {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.custom-dialog-card .match-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Важно за вертикалното подравняване */
+  gap: 32px;
+  margin: 24px 0;
+  min-height: 150px; /* Осигуряваме достатъчно пространство */
+}
+
+.custom-dialog-card .team-info-left, .team-info-right {
+  display: flex;
+  align-items: center; /* Променяме от column на center */
+  gap: 16px;
+  height: 150px; /* Фиксирана височина */
+}
+
+.custom-dialog-card .score-container {
   display: flex;
   align-items: center;
+  gap: 8px;
+  height: 48px;
+}
+
+.custom-dialog-card .score-divider {
+  margin: 0 20px;
+  font-size: 2.5rem;
+  color: #FED854FF;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+  align-self: center;
+  padding-bottom: 10px;
+}
+
+.edit-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 25px;
+  border-radius: 50px;
+  transition: all 0.2s;
+}
+
+.edit-container:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
+.edit-text {
+  font-size: 0.8rem;
+  color: #42DDF2FF;
+  opacity: 0.8;
+}
+
+.edit-container:hover .edit-text {
+  opacity: 1;
+}
+
+.winner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.winner-name {
+  color: #FED854FF;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-score.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.team-score.clickable:hover {
+  color: #42DDF2FF;
+  text-shadow: 0 0 15px rgba(66, 221, 242, 0.5);
+  transform: scale(1.1);
 }
 
 .loading-container, .error-container {
