@@ -17,12 +17,12 @@
         </div>
 
         <!-- Matches Grid -->
-        <v-row v-else>
-          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="6" class="match-column">
+        <v-row v-else justify="center">
+          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="auto" class="match-column">
             <v-card class="match-card" @click="openMatchDialog(match)">
               <div class="match-background"></div>
               <div class="match-content">
-                <div class="tournament-tag">Tournament {{ match.tournament_title }}</div>
+                <div class="tournament-tag">{{ match.tournament_title }}</div>
                 <div class="tournament-format" @click.stop="filterByFormat(getTournamentFormat(match.tournament_id))">
                   {{ getTournamentFormat(match.tournament_id) }}
                 </div>
@@ -297,8 +297,8 @@ onUnmounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 25%,
+    rgba(23, 28, 38, 1) 50%
   );
   z-index: 2;
 }
@@ -312,7 +312,13 @@ onUnmounted(() => {
 }
 
 .match-column {
-  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.match-column:nth-child(even) {
+  justify-content: flex-start;
 }
 
 .match-card {
@@ -325,7 +331,7 @@ onUnmounted(() => {
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  width: 100%; /* Adjust the width of the v-card as needed */
+  width: 500px;
 }
 
 .match-card:hover {
@@ -356,15 +362,6 @@ onUnmounted(() => {
   width: auto;
 }
 
-.match-layout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Ensures equal spacing */
-  margin-top: 20px;
-  gap: 20px; /* Adjust if needed for spacing between elements */
-  padding: 0 10px;
-}
-
 .match-details-centered {
   text-align: center;
 }
@@ -384,17 +381,6 @@ onUnmounted(() => {
   padding: 0 10px;
 }
 
-.team-scores-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px 0;
-  background: rgba(45, 55, 75, 0.8);
-  border: 1px solid rgba(8, 87, 144, 0.2);
-  border-radius: 10px;
-  padding: 16px;
-}
-
 .team-info-left, .team-info-right {
   display: flex;
   align-items: center;
@@ -408,14 +394,6 @@ onUnmounted(() => {
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
   transition: transform 0.2s ease;
-}
-
-.team-logo {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 2px solid #42ddf2;
-  margin: 0 10px;
 }
 
 .team-score {
@@ -523,7 +501,7 @@ onUnmounted(() => {
 
 .tournament-tag {
   position: relative;
-  top: 0px; /* Move it downwards */
+  top: 0;
   left: 0;
   width: auto; /* Adjust width */
   background: rgba(45, 55, 75, 0);
@@ -537,9 +515,7 @@ onUnmounted(() => {
 }
 
 .tournament-format {
-  //flex: none !important; /* Prevents it from growing */
   display: inline-block !important; /* Adjust width based on content */
-  //width: auto !important;
   background: rgba(17, 78, 112, 0.56);
   color: #42DDF2FF;
   padding: 6px 16px;
@@ -596,8 +572,8 @@ onUnmounted(() => {
 }
 
 .custom-dialog-card {
-  width: 600px; /* Adjust the value to make the box smaller */
-  margin: 0 auto; /* Center the box horizontally */
+  width: 600px;
+  margin: 0 auto;
   border-radius: 50px;
   background: rgba(45, 55, 75, 0.8);
   backdrop-filter: blur(10px);

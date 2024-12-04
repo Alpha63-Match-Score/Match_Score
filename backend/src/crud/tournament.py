@@ -22,7 +22,7 @@ from src.schemas.tournament import (
     TournamentCreate,
     TournamentDetailResponse,
     TournamentListResponse,
-    TournamentUpdate
+    TournamentUpdate,
 )
 from src.schemas.user import UserResponse
 from src.utils import validators as v
@@ -102,11 +102,13 @@ def _get_status_filter(status: Literal["active", "finished"] | None):
     elif status == "finished":
         return [Tournament.current_stage == Stage.FINISHED]
 
+
 def _get_format_filter(tournament_format: TournamentFormat | None):
     if not tournament_format:
         return []
 
     return [Tournament.tournament_format == tournament_format]
+
 
 def _get_search_filter(search: str | None):
     if not search:

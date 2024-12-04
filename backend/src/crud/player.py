@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from dns.e164 import query
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
@@ -12,7 +11,7 @@ from src.schemas.player import (
     PlayerCreate,
     PlayerDetailResponse,
     PlayerListResponse,
-    PlayerUpdate
+    PlayerUpdate,
 )
 from src.schemas.user import UserResponse
 from src.utils import validators as v
@@ -24,7 +23,7 @@ def create_player(
     db: Session,
     player: PlayerCreate,
     avatar: UploadFile | None,
-    current_user: UserResponse
+    current_user: UserResponse,
 ) -> PlayerListResponse:
 
     v.player_username_unique(db, username=player.username)
@@ -37,7 +36,6 @@ def create_player(
     avatar_url = None
     if not isinstance(avatar, str):
         avatar_url = s3_service.upload_file(avatar, "players")
-
 
     db_player = Player(
         username=player.username,
@@ -74,7 +72,6 @@ def get_players(
     if country:
         filters.append(Player.country.ilike(f"%{country}%"))
 
-
     if filters:
         query = query.filter(*filters)
 
@@ -103,7 +100,9 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
     return convert_db_to_player_detail_response(db_player, tournament_title)
 
 
-def get_player_by_user_id(db: Session, current_user: UserResponse) -> PlayerDetailResponse:
+def get_player_by_user_id(
+    db: Session, current_user: UserResponse
+) -> PlayerDetailResponse:
 
     v.user_associated_with_player(current_user)
     db_player = db.query(Player).filter(Player.user_id == current_user.id).first()
@@ -114,12 +113,13 @@ def get_player_by_user_id(db: Session, current_user: UserResponse) -> PlayerDeta
 
     return convert_db_to_player_detail_response(db_player, tournament_title)
 
+
 def update_player(
     db: Session,
     player_id: UUID,
     player: PlayerUpdate,
     avatar: UploadFile | None,
-    current_user: UserResponse
+    current_user: UserResponse,
 ) -> PlayerListResponse:
 
     db_player = v.player_exists(db, player_id=player_id)

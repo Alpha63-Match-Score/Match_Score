@@ -2,6 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+
 # Base configs
 class BaseConfig(BaseModel):
     model_config = {"from_attributes": True}
@@ -105,4 +106,3 @@ class PlayerUpdate(BaseConfig):
         if value is not None:
             return value.title()
         return value
-

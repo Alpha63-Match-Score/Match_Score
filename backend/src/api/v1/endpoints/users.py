@@ -6,8 +6,13 @@ from src.core.authentication import authenticate_user, create_access_token
 from src.core.config import settings
 from src.crud.user import create_user, update_email
 from src.models import User
-from src.schemas.user import Token, UserCreate, UserRegisterResponse, UserUpdate, UserRole
-
+from src.schemas.user import (
+    Token,
+    UserCreate,
+    UserRegisterResponse,
+    UserRole,
+    UserUpdate,
+)
 
 router = APIRouter()
 
@@ -24,7 +29,12 @@ def login(
 ):
     user = authenticate_user(db, form_data.username, form_data.password)
     access_token = create_access_token(data={"user_id": str(user.id)})
-    return Token(access_token=access_token, token_type="bearer", user_id=str(user.id), role=user.role)
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=str(user.id),
+        role=user.role,
+    )
 
 
 @router.put("/update")

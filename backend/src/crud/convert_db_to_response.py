@@ -2,10 +2,10 @@ from typing import Type
 
 from src.models import Match, Player, PrizeCut, Team, Tournament
 from src.schemas.match import MatchResponse
-from src.schemas.player import PlayerListResponse, PlayerDetailResponse
+from src.schemas.player import PlayerDetailResponse, PlayerListResponse
 from src.schemas.prize_cut import PrizeCutResponse
 from src.schemas.team import TeamDetailedResponse, TeamListResponse
-from src.schemas.tournament import TournamentListResponse, TournamentDetailResponse
+from src.schemas.tournament import TournamentDetailResponse, TournamentListResponse
 
 
 def convert_db_to_match_list_response(
@@ -97,7 +97,9 @@ def convert_db_to_team_detailed_response(
         id=db_team.id,
         name=db_team.name,
         logo=db_team.logo,
-        players=[convert_db_to_player_list_response(player) for player in db_team.players],
+        players=[
+            convert_db_to_player_list_response(player) for player in db_team.players
+        ],
         tournament_id=db_team.tournament_id,
         matches=[convert_db_to_match_list_response(match) for match in matches],
         prize_cuts=[

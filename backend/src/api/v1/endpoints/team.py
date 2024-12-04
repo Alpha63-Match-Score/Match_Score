@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from src.api.deps import get_current_user, get_db
 from src.crud import team as team_crud
@@ -9,7 +9,7 @@ from src.schemas.team import (
     TeamCreate,
     TeamDetailedResponse,
     TeamListResponse,
-    TeamUpdate
+    TeamUpdate,
 )
 from src.schemas.user import UserResponse
 from src.utils.pagination import PaginationParams, get_pagination
@@ -22,9 +22,10 @@ def get_teams(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination),
     search: str | None = None,
+    is_available: Literal["true", "false"] | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ):
-    return team_crud.get_teams(db, pagination, search, sort_by)
+    return team_crud.get_teams(db, pagination, search, is_available, sort_by)
 
 
 @router.get("/{team_id}", response_model=TeamDetailedResponse)
