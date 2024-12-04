@@ -296,7 +296,7 @@
         </v-dialog>
 
         <!-- Add Team Dialog -->
-        <v-dialog v-model="showAddTeamDialog" max-width="500">
+        <v-dialog v-model="showAddTeamDialog" max-width="450">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
@@ -337,23 +337,26 @@
                   v-model="teamName"
                   label="Team Name"
                   variant="outlined"
-                  :rules="[rules.required]"
+                  :error-messages="teamError"
+                  @blur="validateTeamName"
+                  @input="teamError = ''"
                 ></v-text-field>
-
-                <div v-if="teamError" class="error-message">
-                  {{ teamError }}
-                </div>
               </v-card-text>
 
-              <v-card-actions>
+              <v-card-actions class="dialog-actions">
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="handleCancelTeam">
+                <v-btn
+                  class="cancel-btn"
+                  variant="text"
+                  @click="handleCancelTeam"
+                >
                   Cancel
                 </v-btn>
                 <v-btn
                   class="submit-btn"
                   @click="submitAddTeam"
                   :loading="isSubmitting"
+                  :disabled="!teamName"
                 >
                   Create Team
                 </v-btn>
@@ -363,29 +366,25 @@
         </v-dialog>
 
         <!-- Update Player Dialog -->
-        <v-dialog v-model="showUpdatePlayerDialog" max-width="500">
+        <v-dialog v-model="showUpdatePlayerDialog" max-width="450">
           <v-card class="dialog-card">
             <div class="dialog-content">
               <v-card-title class="dialog-title">
                 <span>Update Player</span>
               </v-card-title>
+
               <v-card-text>
                 <!-- Username Check Step -->
-                <div v-if="!selectedPlayer">
+                <div v-if="!selectedPlayer" class="input-wrapper">
                   <v-text-field
                     v-model="playerUsername"
                     label="Player Username"
                     variant="outlined"
                     :rules="[rules.required]"
+                    :error-messages="playerError"
+                    @keyup.enter="checkPlayer"
+                    @input="playerError = ''"
                   ></v-text-field>
-                  <v-btn
-                    class="check-player-btn mt-4 action-btn"
-                    block
-                    @click="checkPlayer"
-                    :loading="isCheckingPlayer"
-                  >
-                    Next
-                  </v-btn>
                 </div>
 
                 <!-- Player Update Form -->
@@ -427,6 +426,7 @@
                         hide-details
                       ></v-file-input>
                     </div>
+
                     <v-text-field
                       v-model="playerUsername"
                       label="Username"
@@ -457,31 +457,66 @@
                       :items="teams"
                       item-title="name"
                       item-value="id"
-                      :model-value="selectedPlayer?.team_name"
                       label="Team"
                       variant="outlined"
                       :loading="loadingTeams"
-                      :filter="teamFilter"
                       clearable
                       class="custom-autocomplete"
-                    ></v-autocomplete>
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item
+                          v-bind="props"
+                          :title="item.raw.name"
+                          class="team-list-item"
+                          :class="{'team-list-item--selected': item.raw.id === selectedTeam}"
+                        >
+                          <template v-slot:prepend>
+                            <v-avatar size="32" class="mr-2">
+                              <v-img v-if="item.raw.logo" :src="item.raw.logo" alt="Team logo"></v-img>
+                              <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                            </v-avatar>
+                          </template>
+                        </v-list-item>
+                      </template>
+                      <template v-slot:prepend>
+                        <v-icon color="#42DDF2FF">mdi-shield-account</v-icon>
+                      </template>
+                      <template v-slot:append>
+                        <v-btn
+                          v-if="selectedTeam"
+                          icon="mdi-close"
+                          variant="text"
+                          size="small"
+                          @click="removeFromTeam"
+                          color="#42DDF2FF"
+                        ></v-btn>
+                      </template>
+                    </v-autocomplete>
                   </template>
+
                   <div v-else class="text-center mt-4">
                     This player is linked to a user and cannot be updated.
                   </div>
                 </div>
-
-                <div v-if="playerError" class="error-message">
-                  {{ playerError }}
-                </div>
               </v-card-text>
-              <v-card-actions>
+
+              <v-card-actions class="dialog-actions">
                 <v-spacer></v-spacer>
                 <v-btn
                   class="cancel-btn"
+                  variant="text"
                   @click="closeUpdatePlayerDialog"
                 >
                   Cancel
+                </v-btn>
+                <v-btn
+                  v-if="!selectedPlayer"
+                  class="next-btn"
+                  @click="checkPlayer"
+                  :loading="isCheckingPlayer"
+                  :disabled="!playerUsername"
+                >
+                  Next
                 </v-btn>
                 <v-btn
                   v-if="selectedPlayer && !selectedPlayer.user_email"
@@ -754,6 +789,13 @@ const handleCancel = () => {
   resetForm()
 }
 
+const validateTeamName = () => {
+  teamError.value = '';
+  if (!teamName.value?.trim()) {
+    teamError.value = 'Team name is required';
+  }
+}
+
 const resetForm = () => {
   currentStep.value = 1
   tournamentTitle.value = ''
@@ -1021,7 +1063,10 @@ const openAddTournamentDialog = () => {
 };
 
 const submitAddTeam = async () => {
-  if (!teamName.value || teamName.value.length < 5) {
+  validateTeamName()
+  if (teamError.value) return
+
+  if (teamName.value.length < 5) {
     teamError.value = 'Team name must be at least 5 characters long';
     return;
   }
@@ -1032,11 +1077,9 @@ const submitAddTeam = async () => {
 
     const formData = new FormData();
     formData.append('name', teamName.value);
-    // Важно: прикачваме logo само ако има такова
     if (teamLogo.value) {
       formData.append('logo', teamLogo.value);
     } else {
-      // Ако няма лого, изпращаме празен string
       formData.append('logo', '');
     }
 
@@ -1099,7 +1142,9 @@ const openUpdatePlayerDialog = async () => {
 }
 
 const checkPlayer = async () => {
-  if (!playerUsername.value) {
+  playerError.value = ''
+
+  if (!playerUsername.value?.trim()) {
     playerError.value = 'Username is required'
     return
   }
@@ -1215,6 +1260,11 @@ const submitUpdatePlayer = async () => {
     isSubmitting.value = false
   }
 }
+
+const removeFromTeam = () => {
+  selectedTeam.value = null
+}
+
 const closeUpdatePlayerDialog = () => {
   showUpdatePlayerDialog.value = false
   playerUsername.value = ''
@@ -1278,7 +1328,13 @@ onMounted(() => {
 
 :deep(.v-messages__message) {
   color: #fed854 !important;
-  font-size: 14px;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  display: block !important;
+}
+
+:deep(.v-input input) {
+  color: white !important;
 }
 
 :deep(.v-field--error) {
@@ -1291,6 +1347,12 @@ onMounted(() => {
 
 :deep(.v-field--error .v-field__outline) {
   color: #fed854 !important;
+}
+:deep(.v-text-field .v-field--error) {
+  --v-field-border-color: #fed854;
+}
+:deep(.v-messages__message) {
+  display: none;
 }
 
 :deep(.v-field--error .v-field__outline__start),
@@ -1616,20 +1678,42 @@ onMounted(() => {
 
 .dialog-card {
   background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
+  border: 1px solid #42DDF2FF;
   backdrop-filter: blur(10px);
+  border-radius: 12px;
 }
 
 .dialog-content {
-  padding: 24px;
+  padding: 20px;
+}
+
+.input-wrapper {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.username-input {
+  margin-bottom: 0;
+}
+
+.dialog-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -32px;
 }
 
 .dialog-title {
-  color: #42ddf2 !important;
-  font-weight: bold;
-  font-size: 1.25rem;
+  color: #42ddf2;
+  font-size: 1.4rem;
+  font-weight: 500;
   text-align: center;
   margin-bottom: 16px;
+}
+:deep(.v-card-text) {
+  padding-bottom: 8px;
 }
 
 :deep(.v-messages__message) {
@@ -1688,19 +1772,49 @@ onMounted(() => {
 
 
 .team-list-item {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
   transition: background-color 0.2s;
+  border-radius: 4px;
+  margin: 2px 0;
 }
 
 .team-list-item:hover {
   background: rgba(66, 221, 242, 0.1);
 }
 
+.team-list-item--selected {
+  background: rgba(66, 221, 242, 0.15);
+}
+
+:deep(.v-autocomplete .v-field__input) {
+  color: white !important;
+  min-height: 56px;
+}
+
+:deep(.v-autocomplete .v-field__append-inner) {
+  padding-top: 14px;
+}
+
+:deep(.v-list-item__content) {
+  color: white;
+}
+
+:deep(.v-list) {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 1px solid rgba(66, 221, 242, 0.3);
+}
+
 .next-btn {
   background: #42DDF2FF !important;
   color: #171c26 !important;
-  margin-left: 16px;
 }
-
+:deep(.v-messages) {
+  min-height: 14px;
+  padding-top: 2px;
+  display: block !important;
+}
 
 :deep(.v-text-field) {
   margin-top: 16px;
@@ -1797,7 +1911,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .preview-avatar {
