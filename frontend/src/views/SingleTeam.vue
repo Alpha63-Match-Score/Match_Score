@@ -1,15 +1,18 @@
 <template>
-  <div class="team-details" v-if="team" :style="{ backgroundImage: `url(${team.logo})` }">
+  <div class="team-details" v-if="team">
+    <!-- Header Section -->
+    <div class="header-image" :style="{ backgroundImage: `url(${team.logo})` }"></div>
+    <div class="header-overlay"></div>
     <v-container>
+      <!-- Main Info Section -->
       <div class="info-container">
-        <!-- Team Header with Player Icons -->
         <v-row justify="center" class="mb-6">
           <v-col cols="12" class="text-center">
-            <v-card class="team-card">
-              <v-card-title>{{ team.name }}</v-card-title>
+            <v-card class="team-card team-header-card">
+              <v-card-title class="team-header-title">{{ team.name }}</v-card-title>
               <v-card-text>
                 <div class="player-icons">
-                  <v-avatar v-for="i in 10" :key="i" size="50" class="player-avatar">
+                  <v-avatar v-for="i in 10" :key="i" size="70" class="player-avatar">
                     <v-img v-if="team.players[i-1]" :src="team.players[i-1].avatar" :alt="team.players[i-1].username"></v-img>
                   </v-avatar>
                 </div>
@@ -106,57 +109,60 @@
         </v-row>
       </div>
 
-      <!-- Prizes and Matches -->
-      <v-row>
-        <v-col cols="12" md="6">
-          <v-card class="team-card">
-            <v-card-title>Prizes</v-card-title>
-            <v-card-text>
-              <v-list>
-                <v-list-item
-                  v-for="prizeCut in team.prize_cuts"
-                  :key="prizeCut.id"
-                  class="mb-2"
-                >
-                  <v-list-item-content>
-                    <span class="stat-title">{{ prizeCut.tournament_name }}:</span>
-                    <span class="stat-value">
-                      <v-icon v-if="prizeCut.place === 1" color="gold">mdi-trophy</v-icon>
-                      <v-icon v-else-if="prizeCut.place === 2" color="silver">mdi-trophy</v-icon>
-                      {{ prizeCut.place === 1 ? '1st place' : '2nd place' }}
-                    </span>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-col>
+      <!-- Prizes and Matches Section -->
+      <div class="info-container prizes-and-matches">
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-card class="team-card">
+              <v-card-title>Prizes</v-card-title>
+              <v-card-text>
+                <v-list>
+                  <v-list-item
+                    v-for="prizeCut in team.prize_cuts"
+                    :key="prizeCut.id"
+                    class="mb-2"
+                  >
+                    <v-list-item-content>
+                      <span class="stat-title">{{ prizeCut.tournament_name }}:</span>
+                      <span class="stat-value">
+                        <v-icon v-if="prizeCut.place === 1" color="yellow">mdi-trophy</v-icon>
+                        <v-icon v-else-if="prizeCut.place === 2" color="silver">mdi-trophy</v-icon>
+                        {{ prizeCut.place === 1 ? '1st place' : '2nd place' }}
+                      </span>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
-        <v-col cols="12" md="6">
-          <v-card class="team-card">
-            <v-card-title>Recent Matches</v-card-title>
-            <v-card-text>
-              <v-list>
-                <v-list-item
-                  v-for="match in team.matches"
-                  :key="match.id"
-                  class="mb-2"
-                >
-                  <v-list-item-title>{{ match.team1_name }} vs {{ match.team2_name }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ match.tournament_title }} - {{ match.stage }}</v-list-item-subtitle>
-                  <template v-slot:append>
-                    <v-chip :color="match.winner_id === team.id ? 'success' : 'error'">
-                      {{ match.winner_id === team.id ? 'Won' : 'Lost' }}
-                    </v-chip>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+          <v-col cols="12" md="6">
+            <v-card class="team-card">
+              <v-card-title>Recent Matches</v-card-title>
+              <v-card-text>
+                <v-list>
+                  <v-list-item
+                    v-for="match in team.matches"
+                    :key="match.id"
+                    class="mb-2"
+                  >
+                    <v-list-item-title>{{ match.team1_name }} vs {{ match.team2_name }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ match.tournament_title }} - {{ match.stage }}</v-list-item-subtitle>
+                    <template v-slot:append>
+                      <v-chip :color="match.winner_id === team.id ? 'success' : 'error'">
+                        {{ match.winner_id === team.id ? 'Won' : 'Lost' }}
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
     </v-container>
   </div>
+
   <v-container v-else>
     <v-row justify="center" align="center">
       <v-col cols="12" class="text-center">
@@ -250,14 +256,50 @@ onMounted(fetchTeamDetails)
 
 <style scoped>
 .team-details {
-  background-image: url('@/assets/team-background.png'), linear-gradient(to bottom, rgba(23, 28, 38, 0) 0%, rgba(23, 28, 38, 0.8) 20%, rgba(23, 28, 38, 1) 40%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 700px;
   background-size: cover;
   background-position: top;
-  background-repeat: no-repeat;
+  z-index: 1;
+  opacity: 1.5;
+}
+
+.header-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 700px;
+  background: linear-gradient(
+    to bottom,
+    rgba(23, 28, 38, 0) 10%,
+    rgba(23, 28, 38, 0.8) 40%,
+    rgba(23, 28, 38, 1) 80%
+  );
+  z-index: 2;
+}
+
+.info-container {
   position: relative;
   z-index: 3;
-  min-height: 100vh;
-  overflow: auto;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.prizes-and-matches {
+  margin-top: 20px;
+  padding-bottom: 50px; /* Prevent clipping */
+  position: relative;
+  z-index: 3;
 }
 
 .team-card {
@@ -270,10 +312,14 @@ onMounted(fetchTeamDetails)
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.team-header-card {
+  padding: 20px;
+}
 
-
-.v-theme--light .v-list {
-  background: transparent !important;
+.team-header-title {
+  font-size: 2.2rem;
+  color: #42DDF2FF;
+  margin-top: -20px;
 }
 
 .player-icons {
@@ -286,13 +332,17 @@ onMounted(fetchTeamDetails)
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
 }
+
 .stat-title {
   font-weight: bold;
   margin-right: 5px;
 }
 
+.v-theme--light .v-list {
+  background: transparent !important;
+}
+
 .stat-value {
   font-weight: normal;
 }
-
 </style>
