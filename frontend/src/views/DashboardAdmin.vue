@@ -302,7 +302,37 @@
               <v-card-title class="dialog-title">
                 <span>Add New Team</span>
               </v-card-title>
+
               <v-card-text>
+                <div class="file-upload-section">
+                  <v-avatar size="120" class="preview-avatar">
+                    <v-img
+                      v-if="previewLogo"
+                      :src="previewLogo"
+                      alt="Team logo"
+                    ></v-img>
+                    <v-icon
+                      v-else
+                      icon="mdi-shield"
+                      color="#42DDF2FF"
+                      size="48"
+                    ></v-icon>
+                  </v-avatar>
+
+                  <v-file-input
+                    v-model="teamLogo"
+                    label="Team Logo"
+                    variant="outlined"
+                    accept="image/*"
+                    :show-size="true"
+                    prepend-icon="mdi-camera"
+                    class="upload-input"
+                    @change="onLogoChange"
+                    @click:clear="clearLogo"
+                    hide-details
+                  ></v-file-input>
+                </div>
+
                 <v-text-field
                   v-model="teamName"
                   label="Team Name"
@@ -310,30 +340,14 @@
                   :rules="[rules.required]"
                 ></v-text-field>
 
-                <v-file-input
-                  v-model="teamLogo"
-                  label="Team Logo"
-                  variant="outlined"
-                  accept="image/*"
-                  prepend-icon="mdi-camera"
-                  :show-size="true"
-                  class="mt-4"
-                  :rules="[]"
-                >
-                  <template v-slot:selection="{ fileNames }">
-                    <template v-for="fileName in fileNames" :key="fileName">
-                      {{ fileName }}
-                    </template>
-                  </template>
-                </v-file-input>
-
                 <div v-if="teamError" class="error-message">
                   {{ teamError }}
                 </div>
               </v-card-text>
+
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="showAddTeamDialog = false">
+                <v-btn class="cancel-btn" @click="handleCancelTeam">
                   Cancel
                 </v-btn>
                 <v-btn
@@ -386,8 +400,8 @@
                   </div>
 
                   <template v-if="!selectedPlayer.user_email">
-                    <div class="avatar-section mb-4">
-                      <v-avatar size="64" class="mr-4">
+                    <div class="file-upload-section">
+                      <v-avatar size="120" class="preview-avatar">
                         <v-img
                           v-if="previewAvatar || selectedPlayer.avatar"
                           :src="previewAvatar || selectedPlayer.avatar"
@@ -397,7 +411,7 @@
                           v-else
                           icon="mdi-account"
                           color="#42DDF2FF"
-                          size="32"
+                          size="48"
                         ></v-icon>
                       </v-avatar>
 
@@ -408,15 +422,16 @@
                         accept="image/*"
                         prepend-icon="mdi-camera"
                         :show-size="true"
-                        class="mt-4"
-                        :rules="[]"
+                        class="upload-input"
                         @change="onAvatarChange"
+                        hide-details
                       ></v-file-input>
                     </div>
                     <v-text-field
                       v-model="playerUsername"
                       label="Username"
                       variant="outlined"
+                      class="mt-4"
                     ></v-text-field>
 
                     <v-text-field
@@ -595,6 +610,7 @@ const tournamentTeams = ref('')
 const showAddTeamDialog = ref(false)
 const teamName = ref('')
 const teamError = ref('')
+const previewLogo = ref<string | null>(null)
 const teamLogo = ref<File | null>(null)
 
 
@@ -697,6 +713,18 @@ const teamFilter = (item: any, query: string) => {
   return teamName.includes(searchTerm)
 }
 
+const resetTeamForm = () => {
+  teamName.value = '';
+  teamLogo.value = null;
+  previewLogo.value = null;
+  teamError.value = '';
+};
+
+const clearLogo = () => {
+  teamLogo.value = null;
+  previewLogo.value = null;
+};
+
 const getTeamRules = (index: number) => {
   if (tournamentFormat.value === 'single elimination') {
     return index < 4 ? [rules.required] : []
@@ -716,6 +744,10 @@ const getAvailableTeamsForSlot = (currentIndex: number) => {
     )
   })
 }
+const handleCancelTeam = () => {
+  resetTeamForm();
+  showAddTeamDialog.value = false;
+};
 
 const handleCancel = () => {
   showAddTournamentDialog.value = false
@@ -848,13 +880,41 @@ const getRequestTypeIcon = (type: string): string => {
   return 'mdi-help';
 };
 
-const onAvatarChange = (file: File | null) => {
+const onAvatarChange = (file) => {
   if (file) {
-    previewAvatar.value = URL.createObjectURL(file)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewAvatar.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
   } else {
-    previewAvatar.value = null
+    previewAvatar.value = null;
   }
-}
+};
+
+const onLogoChange = (event: Event | File[] | File) => {
+  let file: File | null = null;
+
+  if (Array.isArray(event)) {
+    file = event[0];
+  } else if (event instanceof File) {
+    file = event;
+  } else if (event?.target instanceof HTMLInputElement && event.target.files) {
+    file = event.target.files[0];
+  }
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewLogo.value = e.target.result as string;
+    };
+    reader.readAsDataURL(file);
+    teamLogo.value = file;
+  } else {
+    previewLogo.value = null;
+    teamLogo.value = null;
+  }
+};
 
 
 const fetchTeams = async () => {
@@ -961,39 +1021,39 @@ const openAddTournamentDialog = () => {
 };
 
 const submitAddTeam = async () => {
-  if (!teamName.value) {
-    teamError.value = 'Team name is required';
+  if (!teamName.value || teamName.value.length < 5) {
+    teamError.value = 'Team name must be at least 5 characters long';
     return;
   }
-  console.log('Team name:', teamName.value);
+
   try {
     isSubmitting.value = true;
     teamError.value = '';
 
     const formData = new FormData();
-    if (teamLogo.value && teamLogo.value.size > 0) {
+    formData.append('name', teamName.value);
+    // Важно: прикачваме logo само ако има такова
+    if (teamLogo.value) {
       formData.append('logo', teamLogo.value);
+    } else {
+      // Ако няма лого, изпращаме празен string
+      formData.append('logo', '');
     }
 
-    const params = new URLSearchParams({
-      name: teamName.value,
-    })
-
-    const response = await fetch(`${API_URL}/teams/?${params.toString()}`, {
+    const response = await fetch(`${API_URL}/teams/`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${authStore.token}`,
+        'Authorization': `Bearer ${authStore.token}`
       },
       body: formData
-    })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Response not OK:', data);
       if (data.detail) {
         if (Array.isArray(data.detail)) {
-          teamError.value = data.detail[0].msg;
+          teamError.value = data.detail[0].msg || 'Invalid team data';
         } else {
           teamError.value = data.detail;
         }
@@ -1006,15 +1066,15 @@ const submitAddTeam = async () => {
     showAddTeamDialog.value = false;
     successMessage.value = 'Team added successfully!';
     showSuccessAlert.value = true;
-    teamName.value = '';
-    teamLogo.value = null;
+    resetTeamForm();
   } catch (e) {
     console.error('Error creating team:', e);
-    teamError.value = e instanceof Error ? e.message : 'Unknown error occured';
+    teamError.value = 'Failed to connect to server. Please try again.';
   } finally {
     isSubmitting.value = false;
   }
 };
+
 
 const openAddTeamDialog = () => {
   teamName.value = ''
@@ -1456,13 +1516,30 @@ onMounted(() => {
 
 .avatar-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
+  margin-bottom: 24px;
 }
 
 .avatar-section .v-avatar {
   border: 2px solid #42DDF2FF;
   background: rgba(8, 87, 144, 0.1);
+}
+
+.logo-preview {
+  border: 2px solid #42DDF2FF;
+  background: rgba(8, 87, 144, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.logo-preview:hover {
+  transform: scale(1.05);
+}
+
+.logo-upload {
+  width: 100%;
 }
 
 .avatar-section .v-file-input {
@@ -1713,5 +1790,59 @@ onMounted(() => {
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 16px;
+}
+
+.file-upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.preview-avatar {
+  border: 2px solid #42DDF2FF;
+  background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+}
+
+.preview-avatar:hover {
+  transform: scale(1.05);
+}
+
+.upload-input {
+  width: 100%;
+}
+
+.status-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.status-chip {
+  font-size: 0.9rem;
+}
+
+.form-fields {
+  margin-top: 16px;
+}
+
+.preview-avatar .v-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+:deep(.v-field__input) {
+  color: white !important;
+}
+
+:deep(.v-file-input .v-field) {
+  border-color: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.v-file-input .v-field:hover) {
+  border-color: #42ddf2 !important;
 }
 </style>
