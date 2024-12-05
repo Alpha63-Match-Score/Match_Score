@@ -337,9 +337,10 @@
                   v-model="teamName"
                   label="Team Name"
                   variant="outlined"
+                  :rules="rules.team"
                   :error-messages="teamError"
-                  @blur="validateTeamName"
-                  @input="teamError = ''"
+                  @update:model-value="teamError = ''"
+                  @keyup.enter="submitAddTeam"
                 ></v-text-field>
               </v-card-text>
 
@@ -461,25 +462,18 @@
                       variant="outlined"
                       :loading="loadingTeams"
                       clearable
-                      class="custom-autocomplete"
+                      :menu-props="{ contentClass: 'teams-menu' }"
+                      :return-object="false"
+                      :model-value="selectedTeam"
+                      @update:model-value="handleTeamChange"
                     >
                       <template v-slot:item="{ props, item }">
                         <v-list-item
                           v-bind="props"
                           :title="item.raw.name"
                           class="team-list-item"
-                          :class="{'team-list-item--selected': item.raw.id === selectedTeam}"
                         >
-                          <template v-slot:prepend>
-                            <v-avatar size="32" class="mr-2">
-                              <v-img v-if="item.raw.logo" :src="item.raw.logo" alt="Team logo"></v-img>
-                              <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                            </v-avatar>
-                          </template>
                         </v-list-item>
-                      </template>
-                      <template v-slot:prepend>
-                        <v-icon color="#42DDF2FF">mdi-shield-account</v-icon>
                       </template>
                       <template v-slot:append>
                         <v-btn
@@ -487,7 +481,7 @@
                           icon="mdi-close"
                           variant="text"
                           size="small"
-                          @click="removeFromTeam"
+                          @click.stop="removeFromTeam"
                           color="#42DDF2FF"
                         ></v-btn>
                       </template>
@@ -523,8 +517,128 @@
                   class="submit-btn"
                   @click="submitUpdatePlayer"
                   :loading="isSubmitting"
+                  :disabled="!hasChanges"
                 >
                   Update Player
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Add Player Dialog -->
+        <v-dialog v-model="showAddPlayerDialog" max-width="450">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Add New Player</span>
+              </v-card-title>
+
+              <v-card-text>
+                <div class="file-upload-section">
+                  <v-avatar size="120" class="preview-avatar">
+                    <v-img
+                      v-if="previewAvatar"
+                      :src="previewAvatar"
+                      alt="Player avatar"
+                    ></v-img>
+                    <v-icon
+                      v-else
+                      icon="mdi-account"
+                      color="#42DDF2FF"
+                      size="48"
+                    ></v-icon>
+                  </v-avatar>
+
+                  <v-file-input
+                    v-model="playerAvatar"
+                    label="Player Avatar (Optional)"
+                    variant="outlined"
+                    accept="image/*"
+                    :show-size="true"
+                    prepend-icon="mdi-camera"
+                    class="upload-input"
+                    @change="onAvatarChange"
+                    @click:clear="clearAvatar"
+                    hide-details
+                  ></v-file-input>
+                </div>
+
+                <v-form ref="addPlayerForm" v-model="isFormValid">
+                  <v-text-field
+                    v-model="addPlayerUsername"
+                    label="Username"
+                    variant="outlined"
+                    :rules="rules.username"
+                    :error-messages="addPlayerUsernameError"
+                    @input="clearAddPlayerErrors"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-model="addPlayerFirstName"
+                    label="First Name"
+                    variant="outlined"
+                    :rules="rules.firstName"
+                    :error-messages="addPlayerFirstNameError"
+                    @input="clearAddPlayerErrors"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-model="addPlayerLastName"
+                    label="Last Name"
+                    variant="outlined"
+                    :rules="rules.lastName"
+                    :error-messages="addPlayerLastNameError"
+                    @input="clearAddPlayerErrors"
+                  ></v-text-field>
+
+                  <v-text-field
+                    v-model="addPlayerCountry"
+                    label="Country"
+                    variant="outlined"
+                    :rules="rules.country"
+                    :error-messages="addPlayerCountryError"
+                    @input="clearAddPlayerErrors"
+                  ></v-text-field>
+                </v-form>
+
+                <v-autocomplete
+                  v-model="selectedTeam"
+                  :items="teams"
+                  item-title="name"
+                  item-value="id"
+                  label="Team (Optional)"
+                  variant="outlined"
+                  :loading="loadingTeams"
+                  clearable
+                  :menu-props="{ contentClass: 'teams-menu' }"
+                  >
+                  <template v-slot:item="{ props, item }">
+                    <v-list-item
+                      v-bind="props"
+                      :title="item.title"
+                      class="team-list-item"
+                    ></v-list-item>
+                  </template>
+                ></v-autocomplete>
+              </v-card-text>
+
+              <v-card-actions class="dialog-actions">
+                <v-spacer></v-spacer>
+                <v-btn
+                  class="cancel-btn"
+                  variant="text"
+                  @click="closeAddPlayerDialog"
+                >
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAddPlayer"
+                  :loading="isSubmitting"
+                  :disabled="!canSubmitPlayer"
+                >
+                  Create Player
                 </v-btn>
               </v-card-actions>
             </div>
@@ -614,8 +728,38 @@ const formattedFormatOptions = [
 const rules = {
   required: (v: string) => !!v || 'This field is required',
   minLength: (v: string) => v.length >= 3 || 'Title must be at least 3 characters',
-  minPrize: (v: number) => v >= 1 || 'Prize pool must be at least 1 Kitty Kibble'
-}
+  minPrize: (v: number) => v >= 1 || 'Prize pool must be at least 1 Kitty Kibble',
+  username: [
+    (value) => !!value || 'Username is required',
+    (value) => value.length >= 5 || 'Username must be at least 5 characters',
+    (value) => value.length <= 15 || 'Username must not exceed 15 characters',
+    (value) => /^[a-zA-Z0-9_-]+$/.test(value) || 'Username can only contain letters, numbers, underscores, or dashes',
+  ],
+  firstName: [
+    (value) => !!value || 'First name is required',
+    (value) => value.length >= 2 || 'First name must be at least 2 characters',
+    (value) => value.length <= 25 || 'First name must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid first name format',
+  ],
+  lastName: [
+    (value) => !!value || 'Last name is required',
+    (value) => value.length >= 2 || 'Last name must be at least 2 characters',
+    (value) => value.length <= 25 || 'Last name must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid last name format',
+  ],
+  country: [
+    (value) => !!value || 'Country is required',
+    (value) => value.length >= 2 || 'Country must be at least 2 characters',
+    (value) => value.length <= 25 || 'Country must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/.test(value) || 'Invalid country format',
+  ],
+  team: [
+    (v: string) => !!v || 'Team name is required',
+    (v: string) => v.length >= 3 || 'Team name must be at least 3 characters',
+    (v: string) => v.length <= 50 || 'Team name must not exceed 50 characters',
+    (v: string) => /^[a-zA-Z0-9\s-]+$/.test(v) || 'Team name can only contain letters, numbers, spaces and dashes'
+  ],
+};
 
 // Filter Options
 const filterStatus = ref('');
@@ -649,7 +793,31 @@ const previewLogo = ref<string | null>(null)
 const teamLogo = ref<File | null>(null)
 
 
-// Computed
+const canSubmitAddPlayer = computed(() => {
+  return addPlayerUsername.value.trim() &&
+         addPlayerFirstName.value.trim() &&
+         addPlayerLastName.value.trim() &&
+         addPlayerCountry.value.trim() &&
+         !addPlayerUsernameError.value &&
+         !addPlayerFirstNameError.value &&
+         !addPlayerLastNameError.value &&
+         !addPlayerCountryError.value
+})
+const showAddPlayerDialog = ref(false)
+const addPlayerUsername = ref('')
+const addPlayerFirstName = ref('')
+const addPlayerLastName = ref('')
+const addPlayerCountry = ref('')
+const addPlayerAvatar = ref<File | null>(null)
+const addPlayerPreviewAvatar = ref<string | null>(null)
+const addPlayerSelectedTeam = ref<string>('')
+const addPlayerError = ref('')
+const addPlayerUsernameError = ref('')
+const addPlayerFirstNameError = ref('')
+const addPlayerLastNameError = ref('')
+const addPlayerCountryError = ref('')
+const isFormValid = ref(false);
+const addPlayerForm = ref(null)
 
 // Add Tournament
 
@@ -686,6 +854,28 @@ const canSubmit = computed(() => {
 
   return validTeamsCount >= requiredTeams[tournamentFormat.value]
 })
+
+const clearAddPlayerErrors = () => {
+  addPlayerUsernameError.value = ''
+  addPlayerFirstNameError.value = ''
+  addPlayerLastNameError.value = ''
+  addPlayerCountryError.value = ''
+}
+
+const canSubmitPlayer = computed(() => {
+  return isFormValid.value
+})
+
+const clearAddPlayerForm = () => {
+  addPlayerUsername.value = '';
+  addPlayerFirstName.value = '';
+  addPlayerLastName.value = '';
+  addPlayerCountry.value = '';
+  addPlayerAvatar.value = null;
+  addPlayerPreviewAvatar.value = null;
+  addPlayerError.value = '';
+  addPlayerSelectedTeam.value = '';
+};
 
 const handleNext = async () => {
   if (!form.value) return
@@ -922,17 +1112,29 @@ const getRequestTypeIcon = (type: string): string => {
   return 'mdi-help';
 };
 
-const onAvatarChange = (file) => {
+const onAvatarChange = (event: Event | File[] | File) => {
+  let file: File | null = null;
+
+  if (Array.isArray(event)) {
+    file = event[0];
+  } else if (event instanceof File) {
+    file = event;
+  } else if (event?.target instanceof HTMLInputElement && event.target.files) {
+    file = event.target.files[0];
+  }
+
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      previewAvatar.value = e.target.result;
+      previewAvatar.value = e.target.result as string;
     };
     reader.readAsDataURL(file);
+    playerAvatar.value = file;
   } else {
     previewAvatar.value = null;
+    playerAvatar.value = null;
   }
-};
+}
 
 const onLogoChange = (event: Event | File[] | File) => {
   let file: File | null = null;
@@ -958,16 +1160,134 @@ const onLogoChange = (event: Event | File[] | File) => {
   }
 };
 
+const clearAvatar = () => {
+  playerAvatar.value = null;
+  previewAvatar.value = null;
+};
+
+const submitAddPlayer = async () => {
+  const { valid } = await addPlayerForm.value.validate();
+
+  if (!valid) {
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+
+    const params = new URLSearchParams({
+      username: addPlayerUsername.value,
+      first_name: addPlayerFirstName.value,
+      last_name: addPlayerLastName.value,
+      country: addPlayerCountry.value,
+    });
+
+    if (selectedTeam.value) {
+      params.append("team_name", selectedTeam.value);
+    }
+
+    const formData = new FormData();
+    if (addPlayerAvatar.value) {
+      formData.append("avatar", addPlayerAvatar.value);
+    } else {
+      formData.append("avatar", "");
+    }
+
+    const response = await fetch(`${API_URL}/players/?${params.toString()}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      if (data.detail) {
+        if (typeof data.detail === 'string') {
+          if (data.detail.includes("username")) {
+            addPlayerUsernameError.value = "Player with this username already exists";
+          }
+          if (data.detail.includes("first_name")) {
+            addPlayerFirstNameError.value = "Invalid first name";
+          }
+          if (data.detail.includes("last_name")) {
+            addPlayerLastNameError.value = "Invalid last name";
+          }
+          if (data.detail.includes("country")) {
+            addPlayerCountryError.value = "Invalid country";
+          }
+        }
+      } else {
+        throw new Error(data.detail || "Failed to create player");
+      }
+      return;
+    }
+
+    showAddPlayerDialog.value = false;
+    successMessage.value = "Player added successfully!";
+    showSuccessAlert.value = true;
+    clearAddPlayerForm();
+
+  } catch (e) {
+    console.error("Error adding player:", e.message);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+
+const openAddPlayerDialog = async () => {
+  playerUsername.value = ''
+  playerError.value = ''
+  playerFirstName.value = ''
+  playerLastName.value = ''
+  playerCountry.value = ''
+  playerAvatar.value = null
+  selectedTeam.value = ''
+  showAddPlayerDialog.value = true
+
+  // Load teams for the dropdown
+  if (teams.value.length === 0) {
+    await fetchTeams()
+  }
+}
+
+const closeAddPlayerDialog = () => {
+  showAddPlayerDialog.value = false;
+  addPlayerAvatar.value = null;
+  addPlayerPreviewAvatar.value = null;
+  addPlayerUsername.value = '';
+  addPlayerFirstName.value = '';
+  addPlayerLastName.value = '';
+  addPlayerCountry.value = '';
+  addPlayerError.value = '';
+  addPlayerSelectedTeam.value = '';
+
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value);
+    previewAvatar.value = null;
+  }
+
+  if (addPlayerForm.value) {
+    addPlayerForm.value.reset();
+  }
+};
 
 const fetchTeams = async () => {
   try {
-    const response = await fetch(`${API_URL}/teams`)
-    const data = await response.json()
-    teams.value = data
+    loadingTeams.value = true;
+    const response = await fetch(`${API_URL}/teams`);
+    if (!response.ok) throw new Error('Failed to fetch teams');
+    const data = await response.json();
+    teams.value = data;
+    console.log('Loaded teams:', teams.value);
   } catch (e) {
-    console.error('Error fetching teams:', e)
+    console.error('Error fetching teams:', e);
+  } finally {
+    loadingTeams.value = false;
   }
-}
+};
 
 const fetchRequests = async () => {
   try {
@@ -1063,27 +1383,33 @@ const openAddTournamentDialog = () => {
 };
 
 const submitAddTeam = async () => {
-  validateTeamName()
-  if (teamError.value) return
-
-  if (teamName.value.length < 5) {
-    teamError.value = 'Team name must be at least 5 characters long';
-    return;
-  }
-
   try {
     isSubmitting.value = true;
     teamError.value = '';
 
+    if (!teamName.value?.trim()) {
+      teamError.value = 'Team name is required';
+      return;
+    }
+
+    if (teamName.value.length < 3) {
+      teamError.value = 'Team name must be at least 3 characters long';
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('name', teamName.value);
+
     if (teamLogo.value) {
       formData.append('logo', teamLogo.value);
     } else {
       formData.append('logo', '');
     }
 
-    const response = await fetch(`${API_URL}/teams/`, {
+    const params = new URLSearchParams({
+      name: teamName.value.trim()
+    });
+
+    const response = await fetch(`${API_URL}/teams/?${params.toString()}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authStore.token}`
@@ -1091,9 +1417,8 @@ const submitAddTeam = async () => {
       body: formData
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      const data = await response.json();
       if (data.detail) {
         if (Array.isArray(data.detail)) {
           teamError.value = data.detail[0].msg || 'Invalid team data';
@@ -1168,21 +1493,24 @@ const checkPlayer = async () => {
       playerFirstName.value = selectedPlayer.value.first_name || ''
       playerLastName.value = selectedPlayer.value.last_name || ''
       playerCountry.value = selectedPlayer.value.country || ''
-      selectedTeam.value = selectedPlayer.value.team_id || ''
+      playerUsername.value = selectedPlayer.value.username || ''
 
-      if (selectedPlayer.value.team_id) {
-        selectedTeam.value = selectedPlayer.value.team_id
+      if (selectedPlayer.value.avatar) {
+        originalAvatarUrl.value = selectedPlayer.value.avatar
+        previewAvatar.value = selectedPlayer.value.avatar
       }
-      if (selectedPlayer.value.team_name) {
-        const currentTeam = teams.value.find(t => t.name === selectedPlayer.value.team_name)
-      if (currentTeam) {
-        selectedTeam.value = currentTeam.id
-      }
-    }
 
       // Load teams if not loaded yet
       if (teams.value.length === 0) {
         await fetchTeams()
+      }
+
+      // Set player's team if they have one
+      if (selectedPlayer.value.team_name) {
+        const playerTeam = teams.value.find(t => t.name === selectedPlayer.value?.team_name)
+        if (playerTeam) {
+          selectedTeam.value = playerTeam.id
+        }
       }
     }
 
@@ -1194,14 +1522,61 @@ const checkPlayer = async () => {
   }
 }
 
+const handleFieldChange = async (field: string, value: any) => {
+  if (!selectedPlayer.value) return
+
+  try {
+    playerError.value = ''
+    const params = new URLSearchParams()
+    params.append(field, value)
+
+    const response = await fetch(
+      `${API_URL}/players/${selectedPlayer.value.id}?${params.toString()}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+        }
+      }
+    )
+
+    if (!response.ok) {
+      const data = await response.json()
+      handleError(data)
+      return
+    }
+
+    selectedPlayer.value = {
+      ...selectedPlayer.value,
+      [field]: value
+    }
+
+  } catch (e) {
+    console.error(`Error updating ${field}:`, e)
+    playerError.value = 'Failed to update player'
+  }
+}
+const handleTeamChange = (newTeam: string | null) => {
+  handleFieldChange('team_id', newTeam)
+}
+
+const handleUsernameChange = (newUsername: string) => {
+  handleFieldChange('username', newUsername)
+}
+
+const initializeTeam = () => {
+  if (selectedPlayer.value?.team_id) {
+    selectedTeam.value = selectedPlayer.value.team_id
+  }
+}
+
+onMounted(() => {
+  initializeTeam()
+})
+
 const submitUpdatePlayer = async () => {
   if (!selectedPlayer.value) {
     playerError.value = 'No player selected'
-    return
-  }
-
-  if (selectedPlayer.value.user_email) {
-    playerError.value = 'Cannot update player linked to user'
     return
   }
 
@@ -1209,57 +1584,80 @@ const submitUpdatePlayer = async () => {
     isSubmitting.value = true
     playerError.value = ''
 
-    const params = new URLSearchParams({
-      username: playerUsername.value,
-      first_name: playerFirstName.value,
-      last_name: playerLastName.value,
-      country: playerCountry.value,
-      team_name: teamName.value
-  })
+    let url = `${API_URL}/players/${selectedPlayer.value.id}`
+    const params = new URLSearchParams()
 
-    const formData = new FormData();
-    if (playerAvatar.value && playerAvatar.value.size > 0) {
-      formData.append('avatar', playerAvatar.value);
+    if (playerUsername.value !== selectedPlayer.value.username) {
+      params.append('username', playerUsername.value)
+    }
+    if (playerFirstName.value !== selectedPlayer.value.first_name) {
+      params.append('first_name', playerFirstName.value)
+    }
+    if (playerLastName.value !== selectedPlayer.value.last_name) {
+      params.append('last_name', playerLastName.value)
+    }
+    if (playerCountry.value !== selectedPlayer.value.country) {
+      params.append('country', playerCountry.value)
+    }
+    if (selectedTeam.value !== selectedPlayer.value.team_id) {
+      params.append('team_id', selectedTeam.value || '')
     }
 
-    const response = await fetch(`${API_URL}/players/${selectedPlayer.value.id}?${params.toString()}`, {
+    if (params.toString()) {
+      url += '?' + params.toString()
+    }
+
+    const formData = new FormData()
+    if (playerAvatar.value) {
+      formData.append('avatar', playerAvatar.value)
+    } else {
+      formData.append('avatar', '')
+    }
+
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${authStore.token}`,
+        'Authorization': `Bearer ${authStore.token}`
       },
       body: formData
     })
 
-    console.log('Response status:', response.status)
-    const data = await response.json()
-    console.log('Response data:', data)
-
     if (!response.ok) {
-      if (data.detail) {
-        if (Array.isArray(data.detail)) {
-          playerError.value = data.detail[0].msg
-        } else {
-          playerError.value = data.detail
-        }
-      } else {
-        playerError.value = 'Failed to update player'
-      }
-      return
+      const data = await response.json()
+      throw new Error(data.detail || 'Failed to update player')
     }
+
+    const updatedPlayer = await response.json()
+    selectedPlayer.value = updatedPlayer
 
     showUpdatePlayerDialog.value = false
     successMessage.value = 'Player updated successfully!'
     showSuccessAlert.value = true
-
     closeUpdatePlayerDialog()
 
   } catch (e) {
     console.error('Error updating player:', e)
-    playerError.value = 'Failed to connect to server. Please try again.'
+    playerError.value = e.message || 'Failed to connect to server. Please try again.'
   } finally {
     isSubmitting.value = false
   }
 }
+
+const hasChanges = computed(() => {
+  if (!selectedPlayer.value) return false;
+
+  const hasPlayerDataChanges =
+    playerUsername.value !== selectedPlayer.value.username ||
+    playerFirstName.value !== selectedPlayer.value.first_name ||
+    playerLastName.value !== selectedPlayer.value.last_name ||
+    playerCountry.value !== selectedPlayer.value.country ||
+    selectedTeam.value !== selectedPlayer.value.team_id;
+
+  const hasAvatarChanges = playerAvatar.value !== null;
+
+  return hasPlayerDataChanges || hasAvatarChanges;
+});
+
 
 const removeFromTeam = () => {
   selectedTeam.value = null
@@ -1337,9 +1735,9 @@ onMounted(() => {
   color: white !important;
 }
 
-:deep(.v-field--error) {
-  --v-field-border-color: #fed854 !important;
-}
+/*:deep(.v-field--error) {*/
+/*  --v-field-border-color: #fed854 !important;*/
+/*}*/
 
 :deep(.v-field--variant-outlined.v-field--error) {
   border-color: #fed854 !important;
@@ -1352,7 +1750,12 @@ onMounted(() => {
   --v-field-border-color: #fed854;
 }
 :deep(.v-messages__message) {
-  display: none;
+  color: #FED854FF !important;
+  margin-bottom: 8px;
+}
+
+:deep(.v-field--error .v-label) {
+  color: #FED854FF !important;
 }
 
 :deep(.v-field--error .v-field__outline__start),
@@ -1456,6 +1859,7 @@ onMounted(() => {
   margin-bottom: 24px;
   padding: 24px;
   width: 65%;
+  max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1531,9 +1935,10 @@ onMounted(() => {
 }
 
 .request-list {
-  display: flex;
+  display: grid;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .request-item {
@@ -1866,12 +2271,12 @@ onMounted(() => {
 }
 
 .custom-toggle-btn {
-  margin-top: -22px !important; /* Малко отместване надолу */
-  height: 48px !important; /* Малко по-малка височина */
+  margin-top: -22px !important;
+  height: 48px !important;
   width: 48px !important;
   color: #42DDF2FF !important;
   border: 2px solid rgba(66, 221, 242, 0.3) !important;
-  flex-shrink: 0; /* Предотвратява свиването на бутона */
+  flex-shrink: 0;
 }
 
 .custom-toggle-btn:hover {
@@ -1959,4 +2364,33 @@ onMounted(() => {
 :deep(.v-file-input .v-field:hover) {
   border-color: #42ddf2 !important;
 }
+
+.dialog-content .v-card-text > div > * {
+  margin-top: 0 !important;
+}
+
+:deep(.teams-menu) {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 1px solid rgba(66, 221, 242, 0.3);
+  max-height: 300px !important;
+  overflow-y: auto;
+}
+
+:deep(.teams-menu::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb) {
+  background: rgba(66, 221, 242, 0.3);
+  border-radius: 4px;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
+  background: rgba(66, 221, 242, 0.5);
+}
+
 </style>
