@@ -6,6 +6,48 @@
 
     <div class="content-wrapper">
       <v-container>
+        <!-- Filter Fields -->
+        <v-row class="filter-row">
+          <v-col cols="12" md="4">
+            <v-select
+              v-model="selectedStage"
+              :items="stages"
+              label="Stage"
+              clearable
+            ></v-select>
+          </v-col>
+          <v-col cols="12" md="4">
+            <v-select
+              v-model="selectedIsFinished"
+              :items="isFinishedOptions"
+              label="Is Finished"
+              clearable
+            ></v-select>
+          </v-col>
+          <v-col cols="12" md="4">
+            <v-select
+              v-model="selectedTeam"
+              :items="teamOptions"
+              label="Team"
+              clearable
+            ></v-select>
+          </v-col>
+        </v-row>
+
+        <!-- Reset Filters Button -->
+        <v-row class="filter-row">
+          <v-col cols="12" md="4" offset-md="4">
+            <v-btn
+              class="reset-filter-btn"
+              variant="outlined"
+              @click="resetFilters"
+            >
+              <v-icon left class="mr-2">mdi-filter-remove-outline</v-icon>
+              Reset Filters
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <!-- Loading state -->
         <div v-if="isLoadingMatches" class="d-flex justify-center align-center" style="height: 200px">
           <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
@@ -172,8 +214,14 @@ interface Tournament {
   tournament_format: string
 }
 
+interface Team {
+  id: string
+  name: string
+}
+
 const matches = ref<Match[]>([])
 const tournaments = ref<Tournament[]>([])
+const teams = ref<Team[]>([])
 const isLoadingMatches = ref(false)
 const matchesError = ref<string | null>(null)
 const currentLimit = ref(10)
@@ -182,6 +230,18 @@ const isLoadingMore = ref(false)
 const showMatchModal = ref(false)
 const selectedMatch = ref<Match | null>(null)
 const selectedFormat = ref<string | null>(null)
+const selectedStage = ref<string | null>(null)
+const selectedIsFinished = ref<string | null>(null)
+const selectedTeam = ref<string | null>(null)
+
+const stages = ref<string[]>(['Group Stage', 'Quarterfinals', 'Semifinals', 'Finals'])
+const isFinishedOptions = ref<string[]>(['All', 'True', 'False'])
+const teamOptions = computed(() => {
+  // Ensure unique team names and sort them
+  return [...new Set(
+    matches.value.flatMap(match => [match.team1_name, match.team2_name])
+  )].sort((a, b) => a.localeCompare(b));
+});
 
 const fetchMatches = async () => {
   try {
@@ -202,16 +262,6 @@ const fetchMatches = async () => {
   }
 }
 
-const getTournamentBackground = (format: string): string => {
-  const formatMap: Record<string, string> = {
-    "round robin": roundRobinBg,
-    "one off match": oneOffMatchBg,
-    "single elimination": singleEliminationBg,
-  };
-
-  return formatMap[format] || "@/assets/top-image.png";
-}
-
 const fetchTournaments = async () => {
   try {
     const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=10`)
@@ -222,6 +272,19 @@ const fetchTournaments = async () => {
     tournaments.value = Array.isArray(data) ? data : (data.results || [])
   } catch (e) {
     console.error('Error fetching tournaments:', e)
+  }
+}
+
+const fetchTeams = async () => {
+  try {
+    const response = await fetch(`${API_URL}/teams/?offset=0&limit=100`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    teams.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (e) {
+    console.error('Error fetching teams:', e)
   }
 }
 
@@ -252,16 +315,44 @@ const filterByFormat = (format: string) => {
   selectedFormat.value = format
 }
 
+const resetFilters = () => {
+  selectedFormat.value = null
+  selectedStage.value = null
+  selectedIsFinished.value = null
+  selectedTeam.value = null
+}
+
 const filteredMatches = computed(() => {
-  if (!selectedFormat.value) {
-    return matches.value
-  }
-  return matches.value.filter(match => getTournamentFormat(match.tournament_id) === selectedFormat.value)
-})
+  return matches.value.filter(match => {
+    // Filter by tournament format
+    const matchesFormat = !selectedFormat.value ||
+      getTournamentFormat(match.tournament_id) === selectedFormat.value;
+
+    // Filter by stage
+    const matchesStage = !selectedStage.value ||
+      selectedStage.value === 'All' ||
+      match.stage.toLowerCase() === selectedStage.value.toLowerCase();
+
+    // Filter by is_finished status
+    const matchesIsFinished = !selectedIsFinished.value ||
+      (selectedIsFinished.value === 'True' && match.is_finished) ||
+      (selectedIsFinished.value === 'False' && !match.is_finished) ||
+      selectedIsFinished.value === 'All';
+
+    // Filter by team (improved to handle case sensitivity and trim)
+    const matchesTeam = !selectedTeam.value ||
+      match.team1_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase() ||
+      match.team2_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase();
+
+    // Combine all filter criteria
+    return matchesFormat && matchesStage && matchesIsFinished && matchesTeam;
+  });
+});
 
 onMounted(() => {
   fetchMatches()
   fetchTournaments()
+  fetchTeams()
 })
 
 onUnmounted(() => {
@@ -589,4 +680,21 @@ onUnmounted(() => {
   font-family: Orbitron, sans-serif;
 }
 
+.reset-filter-btn {
+  background: rgba(17, 78, 112, 0.56);
+  color: #ffffff !important;
+  border-color: #42DDF2FF !important;
+  border-width: 2px !important;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+  padding: 5px 40px !important;
+  font-size: 1.1rem !important;
+}
+
+.reset-filter-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
+  border-color: #42DDF2FF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
+}
 </style>
