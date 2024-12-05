@@ -26,6 +26,7 @@ def get_teams(
     db: Session,
     pagination: PaginationParams,
     search: str | None = None,
+    is_available: Literal["true", "false"] | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
 
@@ -36,10 +37,10 @@ def get_teams(
     if search:
         query = query.filter(Team.name.ilike(f"%{search}%"))
 
-    # if sort_by == "asc":
-    #     query = query.order_by(team_win_ratio.asc())
-    # elif sort_by == "desc":
-    #     query = query.order_by(team_win_ratio.desc())
+    if is_available == "true":
+        query = query.filter(Team.tournament_id.is_(None))
+    elif is_available == "false":
+        query = query.filter(Team.tournament_id.isnot(None))
 
     db_results = query.all()
     sorted_teams = sorted(
@@ -139,17 +140,23 @@ def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
     )
 
     if opponent_stats:
-        stats["most_often_played_opponent"] = max(
+        most_often_played_opponent_id = max(
             opponent_stats, key=lambda k: opponent_stats[k]["games"]
         )
-        stats["best_opponent"] = max(
+        best_opponent_id = max(
             opponent_stats,
             key=lambda k: opponent_stats[k]["wins"] / opponent_stats[k]["games"],
         )
-        stats["worst_opponent"] = min(
+        worst_opponent_id = min(
             opponent_stats,
             key=lambda k: opponent_stats[k]["losses"] / opponent_stats[k]["games"],
         )
+
+        stats["most_often_played_opponent"] = opponent_stats[
+            most_often_played_opponent_id
+        ]["opponent_name"]
+        stats["best_opponent"] = opponent_stats[best_opponent_id]["opponent_name"]
+        stats["worst_opponent"] = opponent_stats[worst_opponent_id]["opponent_name"]
 
     stats["match_win_loss_ratio"]["wins"] = stats["matches_won"]
     stats["match_win_loss_ratio"]["losses"] = (

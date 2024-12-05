@@ -44,152 +44,235 @@
         </div>
 
         <!-- Tournament Content Grid -->
-        <v-row class="mt-6">
-          <!-- Left Column: Prizes and Teams -->
-          <v-col cols="12" md="4">
-            <!-- Prizes Section -->
-            <div class="prizes-card">
-              <h3 class="section-title">
-                <v-icon icon="mdi-cat" class="mr-2"></v-icon>
-                Prizes
-                <v-icon
-                  v-if="canEdit"
-                  icon="mdi-pencil"
-                  class="edit-icon ml-2"
-                  @click="openPrizeEdit"
-                ></v-icon>
-              </h3>
-              <div class="prizes-list">
-                <div v-for="prize in tournament.prizes" :key="prize.id" class="prize-item">
-                  <div class="prize-trophy" :class="{ 'gold': prize.place === 1, 'silver': prize.place === 2 }">
-                    <v-icon :icon="prize.place === 1 ? 'mdi-trophy' : 'mdi-trophy-variant'" size="32"></v-icon>
+        <div class="tournament-content-wrapper">
+          <v-row class="mt-6">
+            <!-- Left Column: Prizes and Teams -->
+            <v-col cols="12" md="4">
+              <!-- Prizes Section -->
+              <div class="prizes-card">
+                <h3 class="section-title">
+                  <v-icon icon="mdi-cat" class="mr-2"></v-icon>
+                  Prizes
+                  <v-icon
+                    v-if="canEdit"
+                    icon="mdi-pencil"
+                    class="edit-icon ml-2"
+                    @click="openPrizeEdit"
+                  ></v-icon>
+                </h3>
+                <div class="prizes-list">
+                  <div v-for="prize in tournament.prizes" :key="prize.id" class="prize-item">
+                    <div class="prize-trophy" :class="{ 'gold': prize.place === 1, 'silver': prize.place === 2 }">
+                      <v-icon :icon="prize.place === 1 ? 'mdi-trophy' : 'mdi-trophy-variant'" size="32"></v-icon>
+                    </div>
+                    <div class="prize-details">
+                      <span class="prize-place">{{ formatPlace(prize.place) }} place</span>
+                      <span class="prize-amount">{{ prize.prize_cut }} kitty kibbles</span>
+                    </div>
+                    <v-tooltip location="top">
+                      <template v-slot:activator="{ props }">
+                        <router-link
+                          v-if="prize.team_id"
+                          :to="`/teams/${prize.team_id}`"
+                          class="winner-team"
+                          v-bind="props"
+                        >
+                          <v-avatar size="50">
+                            <v-img
+                              v-if="prize.team_logo"
+                              :src="prize.team_logo"
+                              alt="Winner team logo"
+                            ></v-img>
+                            <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                          </v-avatar>
+                        </router-link>
+                      </template>
+                      {{ prize.team_name }}
+                    </v-tooltip>
                   </div>
-                  <div class="prize-details">
-                    <span class="prize-place">{{ formatPlace(prize.place) }} place</span>
-                    <span class="prize-amount">{{ prize.prize_cut }} kitty kibbles</span>
-                  </div>
-                  <v-tooltip location="top">
-                    <template v-slot:activator="{ props }">
-                      <router-link
-                        v-if="prize.team_id"
-                        :to="`/teams/${prize.team_id}`"
-                        class="winner-team"
-                        v-bind="props"
-                      >
-                        <v-avatar size="50">
-                          <v-img
-                            v-if="prize.team_logo"
-                            :src="prize.team_logo"
-                            alt="Winner team logo"
-                          ></v-img>
-                          <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                        </v-avatar>
-                      </router-link>
-                    </template>
-                    {{ prize.team_name }}
-                  </v-tooltip>
                 </div>
               </div>
-            </div>
 
-            <!-- Teams List Section -->
-            <div class="teams-card">
-              <h3 class="section-title">
-                <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
-                Participating Teams
-              </h3>
-              <div class="teams-list">
-                <router-link
-                  v-for="team in tournament.teams"
-                  :key="team.id"
-                  :to="`/teams/${team.id}`"
-                  class="team-item"
-                >
-                  <v-avatar size="40" class="team-avatar">
-                    <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
-                    <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
-                  </v-avatar>
-                  <span class="team-name">{{ team.name }}</span>
-                </router-link>
-              </div>
-            </div>
-          </v-col>
-
-          <!-- Right Column: Brackets -->
-            <v-col cols="12" md="8">
-              <div class="brackets-card">
+              <!-- Teams List Section -->
+              <div class="teams-card">
                 <h3 class="section-title">
-                  <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
-                  Tournament Brackets
+                  <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
+                  Participating Teams
                 </h3>
-                <div class="brackets-content">
-                  <div class="stage-header">
-                    <h4 class="stage-name">
+                <div class="teams-list">
+                  <router-link
+                    v-for="team in tournament.teams"
+                    :key="team.id"
+                    :to="`/teams/${team.id}`"
+                    class="team-item"
+                  >
+                    <v-avatar size="40" class="team-avatar">
+                      <v-img v-if="team.logo" :src="team.logo" alt="Team logo"></v-img>
+                      <v-icon v-else icon="mdi-shield" color="#42DDF2FF"></v-icon>
+                    </v-avatar>
+                    <span class="team-name">{{ team.name }}</span>
+                  </router-link>
+                </div>
+              </div>
+            </v-col>
+
+            <!-- Right Column: Brackets -->
+              <v-col cols="12" md="8">
+                <div class="brackets-card">
+                  <div v-if="tournament.current_stage !== 'finished'" class="stage-header">
+                    <h3 class="section-title">
+                      <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
                       {{ formatStage(tournament.current_stage) }}
-                    </h4>
+                    </h3>
                   </div>
+                  <div class="brackets-content">
 
-                  <div class="matches-grid">
-                    <div v-for="match in tournament.matches_of_current_stage"
-                         :key="match.id"
-                         class="match-card"
-                         :class="{ 'match-finished': match.is_finished }">
+                    <!-- Current Stage Matches -->
+                    <div v-if="tournament.matches_of_current_stage?.length" class="stage-section current-stage">
+                      <h5 class="stage-subtitle">Current Stage Matches</h5>
+                      <div class="matches-grid">
+                        <div v-for="match in tournament.matches_of_current_stage"
+                             :key="match.id"
+                             class="match-card"
+                             :class="{ 'match-finished': match.is_finished }"
+                             @click="openMatchDialog(match)">
+                          <div class="match-content">
+                            <div class="match-layout">
+                              <div class="team-left">
+                                <v-tooltip location="top">
+                                  <template v-slot:activator="{ props }">
+                                    <v-avatar class="team-avatar" size="60" v-bind="props">
+                                      <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                    </v-avatar>
+                                  </template>
+                                  {{ match.team1_name }}
+                                </v-tooltip>
+                                <span class="team-score">{{match.team1_score}}</span>
+                              </div>
 
-                      <div class="match-content">
-                        <div class="match-layout">
-                          <div class="team-left">
-                            <v-tooltip location="top">
-                              <template v-slot:activator="{ props }">
-                                <router-link :to="`/teams/${match.team1_id}`" class="team-avatar-link">
-                                  <v-avatar class="team-avatar" size="60" v-bind="props">
-                                    <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
-                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                                  </v-avatar>
-                                </router-link>
-                              </template>
-                              {{ match.team1_name }}
-                            </v-tooltip>
-                            <span class="team-score">{{match.team1_score}}</span>
-                          </div>
+                              <div class="score-divider">:</div>
 
-                          <div class="score-divider">:</div>
+                              <div class="team-right">
+                                <span class="team-score">{{match.team2_score}}</span>
+                                <v-tooltip location="top">
+                                  <template v-slot:activator="{ props }">
+                                    <v-avatar class="team-avatar" size="60" v-bind="props">
+                                      <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                      <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                    </v-avatar>
+                                  </template>
+                                  {{ match.team2_name }}
+                                </v-tooltip>
+                              </div>
+                            </div>
 
-                          <div class="team-right">
-                            <span class="team-score">{{match.team2_score}}</span>
-                            <v-tooltip location="top">
-                              <template v-slot:activator="{ props }">
-                                <router-link :to="`/teams/${match.team2_id}`" class="team-avatar-link">
-                                  <v-avatar class="team-avatar" size="60" v-bind="props">
-                                    <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
-                                    <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                                  </v-avatar>
-                                </router-link>
-                              </template>
-                              {{ match.team2_name }}
-                            </v-tooltip>
-                          </div>
-                        </div>
+                            <v-divider class="match-divider"></v-divider>
 
-                        <v-divider class="match-divider"></v-divider>
+                            <div class="match-footer">
+                              <div class="match-time">
+                                <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                                <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                              </div>
 
-                        <div class="match-footer">
-                          <div class="match-time">
-                            <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-                            <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
-                          </div>
-
-                          <div v-if="match.is_finished" class="match-winner">
-                            <v-icon icon="mdi-crown" class="winner-icon" color="#FED854FF"></v-icon>
-                            <span class="winner-text">{{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}</span>
+                              <div class="match-winner">
+                              <v-icon
+                                :icon="match.winner_id ? 'mdi-crown' : 'mdi-crown-outline'"
+                                class="winner-icon"
+                                :color="match.winner_id ? '#FED854FF' : '#808080'"
+                              ></v-icon>
+                              <span v-if="match.winner_id" class="winner-text">
+                                {{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}
+                              </span>
+                              <span v-else class="winner-text pending">
+                                pending...
+                              </span>
+                            </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    <!-- Past Matches -->
+                    <div v-if="pastMatches.length" class="past-matches-section">
+                      <h5 class="section-title">
+                        <v-icon icon="mdi-history" class="mr-2"></v-icon>
+                        Previous Matches
+                      </h5>
+
+                      <!-- Group matches by stage -->
+                      <div v-for="stage in getUniqueStages(pastMatches)"
+                           :key="stage"
+                           class="stage-section">
+                        <h6 class="stage-subtitle">{{ formatStage(stage) }}</h6>
+                        <div class="matches-grid">
+                          <div v-for="match in filterMatchesByStage(pastMatches, stage)"
+                               :key="match.id"
+                               class="match-card past-match"
+                               @click="openMatchDialog(match)">
+                            <div class="match-content">
+                              <!-- Використовуємо той самий template що й для поточних матчів -->
+                              <div class="match-layout">
+                                <div class="team-left">
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props }">
+                                      <v-avatar class="team-avatar" size="60" v-bind="props">
+                                        <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                      </v-avatar>
+                                    </template>
+                                    {{ match.team1_name }}
+                                  </v-tooltip>
+                                  <span class="team-score">{{match.team1_score}}</span>
+                                </div>
+
+                                <div class="score-divider">:</div>
+
+                                <div class="team-right">
+                                  <span class="team-score">{{match.team2_score}}</span>
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props }">
+                                      <v-avatar class="team-avatar" size="60" v-bind="props">
+                                        <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                      </v-avatar>
+                                    </template>
+                                    {{ match.team2_name }}
+                                  </v-tooltip>
+                                </div>
+                              </div>
+
+                              <v-divider class="match-divider"></v-divider>
+
+                              <div class="match-footer">
+                                <div class="match-time">
+                                  <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                                  <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                                </div>
+
+                                <div class="match-winner" v-if="match.winner_id">
+                                  <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
+                                  <span class="winner-text">
+                                    {{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Loading States -->
+                    <div v-if="isPastMatchesLoading" class="loading-state">
+                      <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </v-col>
-        </v-row>
+              </v-col>
+          </v-row>
+        </div>
       </v-container>
 
       <!-- Loading State -->
@@ -283,6 +366,209 @@
           <v-btn color="error" @click="showPrizeEdit = false">Cancel</v-btn>
           <v-btn color="primary" @click="updatePrizePool">Save</v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Match Modal -->
+    <v-dialog v-model="showMatchModal" max-width="800px">
+      <v-card class="custom-dialog-card">
+        <v-card-title class="headline text-center">
+          {{ selectedMatch?.team1_name }} vs {{ selectedMatch?.team2_name }}
+        </v-card-title>
+        <v-card-text>
+          <div class="match-details-centered">
+            <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
+            <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
+            <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not Finished' }}</div>
+
+            <div class="match-layout">
+              <div class="team-info-left">
+                <div class="avatar-container">
+                  <div class="edit-container" v-if="canEdit" @click="openTeamEdit">
+                    <v-icon
+                      icon="mdi-pencil"
+                      class="edit-icon"
+                    ></v-icon>
+                    <span class="edit-text">Edit Teams</span>
+                  </div>
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                      <router-link :to="`/teams/${selectedMatch?.team1_id}`" class="team-avatar-link">
+                        <v-avatar class="team-avatar" size="150" v-bind="props">
+                          <v-img v-if="selectedMatch?.team1_logo" :src="selectedMatch.team1_logo" :alt="selectedMatch.team1_name"></v-img>
+                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                        </v-avatar>
+                      </router-link>
+                    </template>
+                    {{ selectedMatch?.team1_name }}
+                  </v-tooltip>
+                </div>
+                <span
+                  class="team-score"
+                  :class="{ 'clickable': canEdit }"
+                  @click="canEdit && handleScoreIncrement('team1')"
+                >
+                  {{ selectedMatch?.team1_score }}
+                </span>
+              </div>
+
+              <div class="score-divider">:</div>
+
+              <div class="team-info-right">
+                <span
+                  class="team-score"
+                  :class="{ 'clickable': canEdit }"
+                  @click="canEdit && handleScoreIncrement('team2')"
+                >
+                  {{ selectedMatch?.team2_score }}
+                </span>
+                <div class="avatar-container">
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                      <router-link :to="`/teams/${selectedMatch?.team2_id}`" class="team-avatar-link">
+                        <v-avatar class="team-avatar" size="150" v-bind="props">
+                          <v-img v-if="selectedMatch?.team2_logo" :src="selectedMatch.team2_logo" :alt="selectedMatch.team2_name"></v-img>
+                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                        </v-avatar>
+                      </router-link>
+                    </template>
+                    {{ selectedMatch?.team2_name }}
+                  </v-tooltip>
+                </div>
+              </div>
+            </div>
+
+            <div class="match-time">
+              <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+              <span class="time-text">
+                {{ selectedMatch ? format(new Date(selectedMatch.start_time), 'HH:mm, dd MMM yyyy') : '' }}
+              </span>
+              <v-icon
+                v-if="canEdit"
+                icon="mdi-pencil"
+                class="edit-icon ml-2"
+                @click="openTimeEdit"
+              ></v-icon>
+            </div>
+
+            <div v-if="selectedMatch?.winner_id" class="winner">
+              <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
+              <span class="winner-name">
+                {{ selectedMatch.winner_id === selectedMatch.team1_id ? selectedMatch.team1_name : selectedMatch.team2_name }}
+              </span>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="showMatchModal = false">
+            <v-icon left class="mr-2">mdi-close</v-icon>
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Time Edit Dialog -->
+    <v-dialog v-model="showTimeEdit" max-width="500px">
+      <v-card class="edit-dialog">
+        <v-card-title>Edit Match Time</v-card-title>
+        <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ editError }}
+          </v-alert>
+          <v-text-field
+            v-model="editedStartTime"
+            label="Match Time"
+            type="datetime-local"
+            variant="outlined"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showTimeEdit = false">Cancel</v-btn>
+          <v-btn color="primary" @click="updateTime">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Team Edit Dialog -->
+    <v-dialog v-model="showTeamEdit" max-width="500px">
+      <v-card class="dialog-card">
+        <div class="dialog-content">
+          <v-card-title class="dialog-title">Edit Teams</v-card-title>
+          <v-card-text>
+            <v-alert
+              v-if="editError"
+              type="error"
+              variant="tonal"
+              class="mb-4"
+            >
+              {{ editError }}
+            </v-alert>
+
+            <v-form ref="teamForm">
+              <div class="team-slot">
+                <div class="d-flex align-center">
+                  <v-autocomplete
+                    v-model="newTeam1"
+                    :items="availableTeams"
+                    item-title="name"
+                    item-value="id"
+                    label="Team 1"
+                    variant="outlined"
+                    :loading="loadingTeams"
+                    clearable
+                    class="flex-grow-1 custom-autocomplete"
+                    :rules="[]"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item
+                        v-bind="props"
+                        :title="item.raw.name"
+                        class="team-list-item"
+                      ></v-list-item>
+                    </template>
+                  </v-autocomplete>
+                </div>
+              </div>
+
+              <div class="team-slot">
+                <div class="d-flex align-center">
+                  <v-autocomplete
+                    v-model="newTeam2"
+                    :items="availableTeams"
+                    item-title="name"
+                    item-value="id"
+                    label="Team 2"
+                    variant="outlined"
+                    :loading="loadingTeams"
+                    clearable
+                    class="flex-grow-1 custom-autocomplete"
+                    :rules="[]"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item
+                        v-bind="props"
+                        :title="item.raw.name"
+                        class="team-list-item"
+                      ></v-list-item>
+                    </template>
+                  </v-autocomplete>
+                </div>
+              </div>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
+            <v-btn color="primary" @click="updateTeams">Save</v-btn>
+          </v-card-actions>
+        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -381,6 +667,37 @@ const titleError = ref('')
 const endDateError = ref('')
 const prizeError = ref('')
 
+// Match pop up
+const showMatchModal = ref(false)
+const selectedMatch = ref<Match | null>(null)
+const showTimeEdit = ref(false)
+const showTeamEdit = ref(false)
+const editedStartTime = ref('')
+const editedTeam1Name = ref('')
+const editedTeam2Name = ref('')
+const editError = ref('')
+
+const newTeam1 = ref('')
+const newTeam2 = ref('')
+const availableTeams = ref([])
+const loadingTeams = ref(false)
+const teamForm = ref(null)
+
+// All matches
+const allTournamentMatches = ref<Match[]>([])
+const isLoadingMatches = ref(false)
+const matchesError = ref<string | null>(null)
+
+
+const pastMatches = ref<Match[]>([])
+const isPastMatchesLoading = ref(false)
+const pastMatchesError = ref<string | null>(null)
+
+const rules = {
+  required: (v: string) => !!v || 'This field is required',
+  min: (v: string) => v.length >= 3 || 'Must be at least 3 characters'
+}
+
 const canEdit = computed(() => {
   if (!isInitialized.value || !tournament.value || !authStore.isAuthenticated) return false
   return authStore.userRole === 'admin' || tournament.value.director_id === authStore.userId
@@ -414,6 +731,85 @@ const formatPlace = (place: number): string => {
   return place === 1 ? '1st' : place === 2 ? '2nd' : `${place}th`
 }
 
+const fetchAllTournamentMatches = async () => {
+  if (!tournament.value?.title) {
+    console.log('No tournament title available:', tournament.value);
+    return;
+  }
+
+  try {
+    isLoadingMatches.value = true;
+    matchesError.value = null;
+
+    // Добавяме headers и използваме правилния URL
+    const url = `${API_URL}/matches/?tournament_title=${encodeURIComponent(tournament.value.title)}`;
+    console.log('Attempting to fetch matches from URL:', url);
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        // Ако има нужда от авторизация, добавяме и Authorization header
+        ...(authStore.token ? { 'Authorization': `Bearer ${authStore.token}` } : {})
+      }
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      console.log('Response not OK. Full response:', response);
+      const errorText = await response.text();
+      console.log('Error response text:', errorText);
+      throw new Error('Failed to fetch tournament matches');
+    }
+
+    const data = await response.json();
+    console.log('Received matches data:', data);
+    allTournamentMatches.value = data;
+
+  } catch (e) {
+    console.error('Detailed error in fetchAllTournamentMatches:', e);
+    console.error('Error stack:', e.stack);
+    matchesError.value = 'Failed to load tournament matches';
+  } finally {
+    isLoadingMatches.value = false;
+  }
+}
+
+const fetchPastMatches = async () => {
+  if (!tournament.value?.title) return
+
+  try {
+    isPastMatchesLoading.value = true
+    pastMatchesError.value = null
+
+    const url = `${API_URL}/matches/?tournament_title=${encodeURIComponent(tournament.value.title)}&is_finished=true`
+    console.log('Fetching past matches from:', url)
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...(authStore.token ? { 'Authorization': `Bearer ${authStore.token}` } : {})
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch past matches')
+    }
+
+    const data = await response.json()
+    pastMatches.value = data
+    console.log('Past matches loaded:', pastMatches.value)
+  } catch (e) {
+    console.error('Error fetching past matches:', e)
+    pastMatchesError.value = 'Failed to load past matches'
+  } finally {
+    isPastMatchesLoading.value = false
+  }
+}
+
 const fetchTournament = async () => {
   try {
     isLoading.value = true
@@ -427,6 +823,21 @@ const fetchTournament = async () => {
     error.value = 'Failed to load tournament details'
   } finally {
     isLoading.value = false
+  }
+}
+
+const fetchAvailableTeams = async () => {
+  try {
+    loadingTeams.value = true
+    const response = await fetch(`${API_URL}/teams/?is_available=true`)
+    if (!response.ok) throw new Error('Failed to load teams')
+    const data = await response.json()
+    availableTeams.value = data
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+    editError.value = 'Failed to load teams'
+  } finally {
+    loadingTeams.value = false
   }
 }
 
@@ -448,6 +859,187 @@ const openPrizeEdit = () => {
   editedPrizePool.value = tournament.value.prizes[0]?.prize_cut || 0
   showPrizeEdit.value = true
 }
+
+
+const openMatchDialog = async (match: Match) => {
+  selectedMatch.value = match
+  showMatchModal.value = true
+}
+
+const handleScoreIncrement = async (team: 'team1' | 'team2') => {
+  if (!selectedMatch.value) return
+  try {
+    const response = await fetch(
+      `${API_URL}/matches/${selectedMatch.value.id}/team-scores?team_to_upvote_score=${team}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (!response.ok) {
+      const error = await extractErrorMessage(response)
+      console.error('Score update error:', error)
+      return
+    }
+
+    // Взимаме обновения мач за да проверим дали е завършил
+    const updatedMatchResponse = await fetch(`${API_URL}/matches/${selectedMatch.value.id}`)
+    const updatedMatch = await updatedMatchResponse.json()
+
+    // Проверяваме дали мачът е завършил след това увеличение на точките
+    if (updatedMatch.is_finished) {
+      // Проверяваме дали е последният незавършен мач в текущия етап
+      const unfinishedMatches = tournament.value?.matches_of_current_stage.filter(
+        match => !match.is_finished && match.id !== selectedMatch.value?.id
+      )
+
+      if (unfinishedMatches?.length === 0) {
+        // Ако няма други незавършени мачове, презареждаме страницата
+        window.location.reload()
+        return
+      }
+    }
+
+    // Ако не е последният мач, просто обновяваме данните
+    await fetchTournament()
+    const updatedTournamentMatch = tournament.value?.matches_of_current_stage.find(
+      m => m.id === selectedMatch.value?.id
+    )
+    if (updatedTournamentMatch) {
+      selectedMatch.value = updatedTournamentMatch
+    }
+
+  } catch (e) {
+    console.error('Error updating score:', e)
+  }
+}
+
+const openTimeEdit = () => {
+  if (!selectedMatch.value) return
+  editedStartTime.value = selectedMatch.value.start_time
+  showTimeEdit.value = true
+}
+
+const getUniqueStages = (matches: Match[]) => {
+  return [...new Set(matches.map(match => match.stage))].sort((a, b) => {
+    const stageOrder = {
+      'group_stage': 1,
+      'quarter_finals': 2,
+      'semi_finals': 3,
+      'final': 4
+    }
+    return (stageOrder[a as keyof typeof stageOrder] || 99) - (stageOrder[b as keyof typeof stageOrder] || 99)
+  })
+}
+
+const filterMatchesByStage = (matches: Match[], stage: string) => {
+  return matches.filter(match => match.stage === stage)
+}
+
+const openTeamEdit = async () => {
+  await fetchAvailableTeams()
+
+  if (selectedMatch.value) {
+    const team1 = availableTeams.value.find(t => t.name === selectedMatch.value.team1_name)
+    const team2 = availableTeams.value.find(t => t.name === selectedMatch.value.team2_name)
+
+    newTeam1.value = team1?.id || ''
+    newTeam2.value = team2?.id || ''
+  }
+
+  showTeamEdit.value = true
+}
+
+
+const updateTime = async () => {
+  try {
+    editError.value = ''
+    if (!selectedMatch.value) return
+
+    const response = await fetch(
+      `${API_URL}/matches/${selectedMatch.value.id}?start_time=${encodeURIComponent(editedStartTime.value)}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      editError.value = await extractErrorMessage(response)
+      return
+    }
+
+    await fetchTournament()
+    const updatedMatch = tournament.value?.matches_of_current_stage.find(
+      m => m.id === selectedMatch.value?.id
+    )
+    if (updatedMatch) {
+      selectedMatch.value = updatedMatch
+    }
+    showTimeEdit.value = false
+  } catch (e) {
+    editError.value = 'Failed to update match time'
+  }
+}
+
+const updateTeams = async () => {
+  if (!selectedMatch.value) return
+
+  try {
+    editError.value = ''
+    let params = new URLSearchParams()
+
+    if (newTeam1.value) {
+      const team1 = availableTeams.value.find(t => t.id === newTeam1.value)
+      if (team1) {
+        params.append('team1_name', team1.name)
+      }
+    }
+
+    if (newTeam2.value) {
+      const team2 = availableTeams.value.find(t => t.id === newTeam2.value)
+      if (team2) {
+        params.append('team2_name', team2.name)
+      }
+    }
+
+    if (params.toString()) {
+      const response = await fetch(
+        `${API_URL}/matches/${selectedMatch.value.id}?${params.toString()}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`
+          }
+        }
+      )
+
+      if (!response.ok) {
+        const error = await extractErrorMessage(response)
+        throw new Error(error)
+      }
+
+      await fetchTournament()
+      const updatedMatch = tournament.value?.matches_of_current_stage.find(
+        m => m.id === selectedMatch.value?.id
+      )
+      if (updatedMatch) {
+        selectedMatch.value = updatedMatch
+      }
+
+      showTeamEdit.value = false
+    }
+  } catch (e) {
+    console.error('Error updating teams:', e)
+    editError.value = e.message || 'Failed to update teams'
+  }
+}
+
 
 const extractErrorMessage = async (response: Response) => {
   try {
@@ -560,10 +1152,24 @@ const updatePrizePool = async () => {
 
 
 onMounted(async () => {
-  await authStore.initializeFromToken()
-  isInitialized.value = true
-  await fetchTournament()
-})
+  console.log('Component mounted');
+  await authStore.initializeFromToken();
+  console.log('Auth initialized');
+  isInitialized.value = true;
+
+  await fetchTournament();
+  console.log('Tournament fetched:', tournament.value);
+  console.log('Current stage:', tournament.value?.current_stage);
+
+  await fetchPastMatches();
+
+  if (tournament.value?.current_stage === 'finished') {
+    console.log('Tournament is finished, fetching all matches...');
+    await fetchAllTournamentMatches();
+  } else {
+    console.log('Tournament is not finished, current stage:', tournament.value?.current_stage);
+  }
+});
 
 
 </script>
@@ -604,19 +1210,22 @@ onMounted(async () => {
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 200px;
+  padding-top: 100px;
   min-height: 100vh;
   width: 100vw !important;
 }
 
 .tournament-header-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.7);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
   padding: 24px;
   margin-bottom: 24px;
+  width: 80%;
+  max-width: 1000px;
+  justify-self: center;
 }
 
 .tournament-title-section {
@@ -632,6 +1241,7 @@ onMounted(async () => {
   margin: 0;
   display: flex;
   align-items: center;
+  font-weight: 700;
 }
 
 .format-tag {
@@ -658,8 +1268,28 @@ onMounted(async () => {
   align-items: center;
 }
 
+.tournament-content-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.tournament-header-card {
+  background: rgba(45, 55, 75, 0.4);
+  border-radius: 20px;
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
 .teams-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -668,7 +1298,7 @@ onMounted(async () => {
 }
 
 .prizes-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -678,9 +1308,11 @@ onMounted(async () => {
 }
 
 .section-title {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 24px;
   color: #42DDF2FF;
   font-size: 1.4rem;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
 }
@@ -785,7 +1417,6 @@ onMounted(async () => {
   border: 2px solid #42DDF2FF;
   transition: transform 0.2s;
   background: transparent !important;
-  transition: transform 0.2s;
 }
 
 .winner-team:hover {
@@ -794,12 +1425,12 @@ onMounted(async () => {
 }
 
 .brackets-card {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(10px);
-  padding: 24px;
+  padding: 24px 10px;
   height: 100%;
   min-height: 600px;
 }
@@ -809,9 +1440,9 @@ onMounted(async () => {
   padding: 24px;
   height: auto;
   min-height: 500px;
-  background: rgba(45, 55, 75, 0.4);
+  background: rgba(45, 55, 75, 0);
   border-radius: 12px;
-  margin-top: 16px;
+  margin-top: 0px;
 }
 
 .stage-header {
@@ -825,31 +1456,12 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.stage-section {
-  margin-bottom: 32px;
-}
-
-.stage-subtitle {
-  color: #FED854FF;
-  font-size: 1.2rem;
-  margin-bottom: 16px;
-  padding-left: 16px;
-  border-left: 3px solid #FED854FF;
-}
-
-.matches-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 16px;
-}
-
 .match-card {
   height: 250px;
   /* remove position: fixed */
   border-radius: 15px;
   overflow: hidden;
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0);
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -860,7 +1472,19 @@ onMounted(async () => {
   transform: translateY(-2px);
   border-color: #42DDF2FF;
   box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
+  cursor: pointer;
 }
+
+.match-card.match-finished {
+  border: 2px solid #FED854FF !important;  /* Добавяме !important */
+  box-shadow: 0 0 15px rgba(254, 216, 84, 0.2);
+}
+
+.match-card.match-finished:hover {
+  border-color: #FED854FF !important;
+  box-shadow: 0 0 20px rgba(254, 216, 84, 0.3);
+}
+
 
 .match-content {
   position: relative;
@@ -921,8 +1545,21 @@ onMounted(async () => {
 
 .match-time {
   display: flex;
+  justify-content: center;
   align-items: center;
-  color: rgba(255, 255, 255, 0.7);
+  width: 100%;
+}
+
+.match-details-centered .team-avatar:hover {
+  transform: none;
+  cursor: pointer;
+}
+
+.match-details-centered .team-avatar {
+  border: 3px solid rgba(66, 221, 242, 0);
+  background: rgba(8, 87, 144, 0.2);
+  transition: none;
+  cursor: default;
 }
 
 .neon-text {
@@ -943,6 +1580,11 @@ onMounted(async () => {
 
 .winner-text {
   font-size: 0.9rem;
+}
+
+.winner-text.pending {
+  color: #808080;
+  font-style: italic;
 }
 
 .team-avatar-link {
@@ -973,18 +1615,6 @@ onMounted(async () => {
   padding: 4px 0;
 }
 
-.match-status {
-  text-align: center;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(254, 216, 84, 0.3);
-  color: #FED854FF;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .stage-name {
   color: #42DDF2FF;
   font-size: 1.6rem;
@@ -994,26 +1624,151 @@ onMounted(async () => {
 
 .prize-item {
   padding: 12px;
-  margin-bottom: 8px; /* по-малко отстояние между призите */
+  margin-bottom: 8px;
 }
 
-.placeholder-text {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-}
-
-/* Ако трябва да се намали spacing-а между компонентите */
 .section-title {
-  margin-bottom: 16px;  /* по-малък margin */
+  margin-bottom: 16px;
 }
 
-.placeholder-text {
-  color: rgba(255, 255, 255, 0.6);
+.custom-dialog-card {
+  width: 600px;
+  margin: 0 auto;
+  border-radius: 50px;
+  background: rgba(45, 55, 75, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  padding: 10px;
+}
+
+.custom-dialog-card .v-btn {
+  background: rgba(17, 78, 112, 0.56) !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  border-radius: 50px;
+  min-width: 120px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.custom-dialog-card .v-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.match-details-centered {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tournament-title {
+  color: #42DDF2FF;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-top: -30px;
+  align-self: center;
+}
+
+.tournament-stage {
+  color: #FED854FF;
   font-size: 1.2rem;
+}
+
+.is-finished {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.custom-dialog-card .match-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Важно за вертикалното подравняване */
+  gap: 32px;
+  margin: 24px 0;
+  min-height: 150px; /* Осигуряваме достатъчно пространство */
+}
+
+.custom-dialog-card .team-info-left, .team-info-right {
+  display: flex;
+  align-items: center; /* Променяме от column на center */
+  gap: 16px;
+  height: 150px; /* Фиксирана височина */
+}
+
+.custom-dialog-card .score-container {
   display: flex;
   align-items: center;
+  gap: 8px;
+  height: 48px;
+}
+
+.custom-dialog-card .score-divider {
+  margin: 0 20px;
+  font-size: 2.5rem;
+  color: #FED854FF;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+  align-self: center;
+  padding-bottom: 10px;
+}
+
+.edit-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 25px;
+  border-radius: 50px;
+  transition: all 0.2s;
+}
+
+.edit-container:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
+.edit-text {
+  font-size: 0.8rem;
+  color: #42DDF2FF;
+  opacity: 0.8;
+}
+
+.edit-container:hover .edit-text {
+  opacity: 1;
+}
+
+.winner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.winner-name {
+  color: #FED854FF;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-score.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.team-score.clickable:hover {
+  color: #42DDF2FF;
+  text-shadow: 0 0 15px rgba(66, 221, 242, 0.5);
+  transform: scale(1.1);
 }
 
 .loading-container, .error-container {
@@ -1093,7 +1848,58 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.team-avatar:hover {
-  transform: scale(1.2);
+
+.dialog-card {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-title {
+  color: #42ddf2;
+  font-weight: bold;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.matches-history {
+  padding: 20px;
+}
+
+.stage-section {
+  margin-bottom: 40px;
+}
+
+.stage-subtitle {
+  color: #FED854FF;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid #FED854FF;
+}
+
+.loading-matches, .matches-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #42DDF2FF;
+}
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .matches-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

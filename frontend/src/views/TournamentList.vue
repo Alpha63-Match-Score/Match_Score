@@ -356,7 +356,7 @@ onUnmounted(() => {
   justify-content: center;
   margin-bottom: 16px;
   width: 100%;
-  max-width: 500px; /* или каквато ширина предпочитате */
+  max-width: 500px;
 }
 
 :deep(.v-field) {
@@ -425,8 +425,8 @@ onUnmounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 20%,
-    rgba(23, 28, 38, 1) 40%
+    rgba(23, 28, 38, 0.8) 25%,
+    rgba(23, 28, 38, 1) 50%
   );
   z-index: 2;
 }
@@ -440,7 +440,13 @@ onUnmounted(() => {
 }
 
 .tournament-column {
-  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.tournament-column:nth-child(even) {
+  justify-content: flex-start;
 }
 
 .tournament-card {
@@ -453,6 +459,7 @@ onUnmounted(() => {
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
+  width: 500px;
 }
 
 .tournament-card:hover {
@@ -469,13 +476,30 @@ onUnmounted(() => {
   background-image: var(--tournament-bg, url('@/assets/top-image.png'));
   background-position: center;
   background-size: cover;
-  opacity: 0.05;
+  opacity: 0.3;
   z-index: 1;
+}
+
+.tournament-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(45, 55, 75, 0) 0%,
+    rgba(45, 55, 75, 0.4) 10%,
+    rgba(45, 55, 75, 0.9) 35%,
+    rgba(45, 55, 75, 1) 50%
+  );
+  z-index: 2;
 }
 
 .tournament-content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   padding: 24px;
   height: 100%;
   display: flex;
@@ -497,7 +521,7 @@ onUnmounted(() => {
   margin: 0;
   font-weight: 600;
   font-family: Orbitron, sans-serif;
-  max-width: 320px;
+  max-width: 250px;
 }
 
 .format-tag {
@@ -593,16 +617,7 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
 
 .reset-filter-wrapper {
   position: absolute;
