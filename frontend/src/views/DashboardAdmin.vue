@@ -1162,6 +1162,9 @@ const onLogoChange = (event: Event | File[] | File) => {
 
 const clearAvatar = () => {
   playerAvatar.value = null;
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value);
+  }
   previewAvatar.value = null;
 };
 
@@ -1189,8 +1192,8 @@ const submitAddPlayer = async () => {
       }
     }
     const formData = new FormData();
-    if (addPlayerAvatar.value) {
-      formData.append("avatar", addPlayerAvatar.value);
+    if (playerAvatar.value) {
+      formData.append("avatar", playerAvatar.value);
     } else {
       formData.append("avatar", "");
     }
@@ -1240,6 +1243,11 @@ const submitAddPlayer = async () => {
 
 
 const openAddPlayerDialog = async () => {
+  playerAvatar.value = null;
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value);
+  }
+  previewAvatar.value = null;
   playerUsername.value = ''
   playerError.value = ''
   playerFirstName.value = ''
@@ -1258,7 +1266,7 @@ const openAddPlayerDialog = async () => {
 const closeAddPlayerDialog = () => {
   showAddPlayerDialog.value = false;
   addPlayerAvatar.value = null;
-  addPlayerPreviewAvatar.value = null;
+  previewAvatar.value = null;
   addPlayerUsername.value = '';
   addPlayerFirstName.value = '';
   addPlayerLastName.value = '';
