@@ -131,14 +131,16 @@
                   <v-btn
                     class="approve-btn"
                     @click="approveRequest(request.id)"
-                    :disabled="request.status !== 'pending'"
+                    :loading="isApprovingRequest[request.id]"
+                    :disabled="request.status !== 'pending' || isApprovingRequest[request.id] || isRejectingRequest[request.id]"
                   >
                     Approve
                   </v-btn>
                   <v-btn
                     class="reject-btn"
                     @click="rejectRequest(request.id)"
-                    :disabled="request.status !== 'pending'"
+                    :loading="isRejectingRequest[request.id]"
+                    :disabled="request.status !== 'pending' || isApprovingRequest[request.id] || isRejectingRequest[request.id]"
                   >
                     Reject
                   </v-btn>
@@ -702,6 +704,8 @@ const successMessage = ref('')
 const currentStep = ref(1)
 const form = ref(null)
 const teamForm = ref(null)
+const isApprovingRequest = ref<{ [key: string]: boolean }>({});
+const isRejectingRequest = ref<{ [key: string]: boolean }>({});
 
 // Add Tournament consts
 const tournamentTitle = ref('')
@@ -1350,6 +1354,7 @@ const fetchRequests = async () => {
 
 const approveRequest = async (requestId: string) => {
   try {
+    isApprovingRequest.value[requestId] = true;
     isSubmitting.value = true;
 
     const response = await fetch(`${API_URL}/requests/${requestId}?status=accepted`, {
@@ -1363,6 +1368,7 @@ const approveRequest = async (requestId: string) => {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to approve request');
     }
+    isApprovingRequest.value[requestId] = false;
 
     successMessage.value = 'Request approved successfully.';
     showSuccessAlert.value = true;
@@ -1372,11 +1378,13 @@ const approveRequest = async (requestId: string) => {
     actionsError.value = 'Failed to approve request. Please try again.';
   } finally {
     isSubmitting.value = false;
+    isApprovingRequest.value[requestId] = false;
   }
 };
 
 const rejectRequest = async (requestId: string) => {
   try {
+    isRejectingRequest.value[requestId] = true;
     isSubmitting.value = true;
 
 
@@ -1393,6 +1401,8 @@ const rejectRequest = async (requestId: string) => {
       throw new Error(errorData.detail?.[0]?.msg || 'Failed to reject request');
     }
 
+    isRejectingRequest.value[requestId] = false;
+
     successMessage.value = 'Request rejected successfully.';
     showSuccessAlert.value = true;
     fetchRequests();
@@ -1401,6 +1411,7 @@ const rejectRequest = async (requestId: string) => {
     actionsError.value = e.message || 'Failed to reject request. Please try again.';
   } finally {
     isSubmitting.value = false;
+    isRejectingRequest.value[requestId] = false;
   }
 };
 
@@ -1491,7 +1502,13 @@ const openUpdatePlayerDialog = async () => {
   selectedTeam.value = ''
   showUpdatePlayerDialog.value = true
 
-  await fetchTeamsForPlayers()
+  if (teams.value.length === 0) {
+    await fetchTeamsForPlayers();
+  }
+
+  if (selectedPlayer.value && selectedPlayer.value.team_id) {
+    selectedTeam.value = selectedPlayer.value.team_id;
+  }
 }
 
 const checkPlayer = async () => {
@@ -1530,11 +1547,11 @@ const checkPlayer = async () => {
 
       // Load teams if not loaded yet
       if (teams.value.length === 0) {
-        await checkPlayer ()
+        await fetchTeamsForPlayers()
       }
 
       // Set player's team if they have one
-      if (selectedPlayer.value.team_name) {
+      if (selectedPlayer.value.team_id) {
         const playerTeam = teams.value.find(t => t.name === selectedPlayer.value?.team_name)
         if (playerTeam) {
           selectedTeam.value = playerTeam.id
