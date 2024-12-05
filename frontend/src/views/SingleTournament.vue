@@ -884,15 +884,34 @@ const handleScoreIncrement = async (team: 'team1' | 'team2') => {
       console.error('Score update error:', error)
       return
     }
-    // Re-fetch match details
+
+    // Взимаме обновения мач за да проверим дали е завършил
+    const updatedMatchResponse = await fetch(`${API_URL}/matches/${selectedMatch.value.id}`)
+    const updatedMatch = await updatedMatchResponse.json()
+
+    // Проверяваме дали мачът е завършил след това увеличение на точките
+    if (updatedMatch.is_finished) {
+      // Проверяваме дали е последният незавършен мач в текущия етап
+      const unfinishedMatches = tournament.value?.matches_of_current_stage.filter(
+        match => !match.is_finished && match.id !== selectedMatch.value?.id
+      )
+
+      if (unfinishedMatches?.length === 0) {
+        // Ако няма други незавършени мачове, презареждаме страницата
+        window.location.reload()
+        return
+      }
+    }
+
+    // Ако не е последният мач, просто обновяваме данните
     await fetchTournament()
-    // Update selected match
-    const updatedMatch = tournament.value?.matches_of_current_stage.find(
+    const updatedTournamentMatch = tournament.value?.matches_of_current_stage.find(
       m => m.id === selectedMatch.value?.id
     )
-    if (updatedMatch) {
-      selectedMatch.value = updatedMatch
+    if (updatedTournamentMatch) {
+      selectedMatch.value = updatedTournamentMatch
     }
+
   } catch (e) {
     console.error('Error updating score:', e)
   }
