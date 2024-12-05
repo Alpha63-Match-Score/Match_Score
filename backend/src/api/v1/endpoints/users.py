@@ -10,7 +10,6 @@ from src.schemas.user import (
     Token,
     UserCreate,
     UserRegisterResponse,
-    UserRole,
     UserUpdate,
 )
 
