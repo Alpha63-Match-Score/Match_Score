@@ -23,9 +23,10 @@ def get_teams(
     pagination: PaginationParams = Depends(get_pagination),
     search: str | None = None,
     is_available: Literal["true", "false"] | None = None,
+    has_space: Literal["true", "false"] | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ):
-    return team_crud.get_teams(db, pagination, search, is_available, sort_by)
+    return team_crud.get_teams(db, pagination, search, is_available, has_space, sort_by)
 
 
 @router.get("/{team_id}", response_model=TeamDetailedResponse)

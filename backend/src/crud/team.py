@@ -1,5 +1,6 @@
 from typing import Literal
 from uuid import UUID
+from sqlalchemy import func
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -7,7 +8,7 @@ from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
     convert_db_to_team_list_response,
 )
-from src.models import Match, Team, Tournament
+from src.models import Match, Team, Tournament, Player
 from src.models.enums import Stage
 from src.schemas.team import (
     TeamCreate,
@@ -27,6 +28,7 @@ def get_teams(
     pagination: PaginationParams,
     search: str | None = None,
     is_available: Literal["true", "false"] | None = None,
+    has_space: Literal["true", "false"] | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
 
@@ -43,6 +45,27 @@ def get_teams(
         query = query.filter(Team.tournament_id.isnot(None))
 
     db_results = query.all()
+
+    if has_space:
+        player_counts = (
+            db.query(Player.team_id, func.count(Player.id).label('count'))
+            .group_by(Player.team_id)
+            .all()
+        )
+
+        team_player_counts = {team_id: count for team_id, count in player_counts}
+
+        filtered_teams = []
+        for team in db_results:
+            player_count = team_player_counts.get(team.id, 0)
+
+            if has_space == "true" and player_count < 10:
+                filtered_teams.append(team)
+            elif has_space == "false" and player_count >= 10:
+                filtered_teams.append(team)
+
+        db_results = filtered_teams
+
     sorted_teams = sorted(
         db_results,
         key=lambda team: (
