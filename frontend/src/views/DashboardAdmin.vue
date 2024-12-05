@@ -899,13 +899,13 @@ const handleNext = async () => {
   const selectedDate = new Date(tournamentStartDate.value)
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
-  tomorrow.setHours(0, 0, 0, 0)
+  tomorrow.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds())
   const now = new Date()
 
   if (selectedDate < now) {
     dateError.value = 'Tournament start date cannot be in the past'
     hasErrors = true
-  } if (selectedDate < tomorrow) {
+  } if (selectedDate <= tomorrow) {
     dateError.value = 'Start date must be at least 1 day in the future'
     hasErrors = true
   }
@@ -997,6 +997,8 @@ const resetForm = () => {
   isCustomTeam.value = Array(8).fill(false)
   customTeamNames.value = Array(8).fill('')
   tournamentError.value = ''
+  titleError.value = ''
+  dateError.value = ''
 }
 
 const submitTournament = async () => {
@@ -1249,7 +1251,7 @@ const openAddPlayerDialog = async () => {
 
   // Load teams for the dropdown
   if (teams.value.length === 0) {
-    await fetchTeams()
+    await fetchTeamsForPlayers()
   }
 }
 
@@ -1277,11 +1279,26 @@ const closeAddPlayerDialog = () => {
 const fetchTeams = async () => {
   try {
     loadingTeams.value = true;
-    const response = await fetch(`${API_URL}/teams`);
+    const response = await fetch(`${API_URL}/teams?is_available=true`);
+
     if (!response.ok) throw new Error('Failed to fetch teams');
     const data = await response.json();
     teams.value = data;
     console.log('Loaded teams:', teams.value);
+  } catch (e) {
+    console.error('Error fetching teams:', e);
+  } finally {
+    loadingTeams.value = false;
+  }
+};
+
+const fetchTeamsForPlayers = async () => {
+  try {
+    loadingTeams.value = true;
+    const response = await fetch(`${API_URL}/teams?has_space=true`);
+    if (!response.ok) throw new Error('Failed to fetch teams');
+    const data = await response.json();
+    teams.value = data;
   } catch (e) {
     console.error('Error fetching teams:', e);
   } finally {
@@ -1463,7 +1480,7 @@ const openUpdatePlayerDialog = async () => {
   selectedTeam.value = ''
   showUpdatePlayerDialog.value = true
 
-  await fetchTeams()
+  await fetchTeamsForPlayers()
 }
 
 const checkPlayer = async () => {
@@ -1502,7 +1519,7 @@ const checkPlayer = async () => {
 
       // Load teams if not loaded yet
       if (teams.value.length === 0) {
-        await fetchTeams()
+        await checkPlayer ()
       }
 
       // Set player's team if they have one
