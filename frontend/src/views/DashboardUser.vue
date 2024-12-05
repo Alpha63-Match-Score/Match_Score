@@ -24,6 +24,7 @@
                 class="action-btn"
                 prepend-icon="mdi-shield-account"
                 @click="openDirectorRequest"
+                :disabled="hasPendingRequest"
               >
                 Request Director Role
               </v-btn>
@@ -31,6 +32,7 @@
                 class="action-btn"
                 prepend-icon="mdi-account-plus"
                 @click="openPlayerLinkDialog"
+                :disabled="hasPendingRequest"
               >
                 Link Player Profile
               </v-btn>
@@ -152,7 +154,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { format } from 'date-fns'
 import { API_URL } from '@/config'
@@ -203,6 +205,13 @@ const formatDate = (date: string): string => {
 const getRequestTypeIcon = (type: string): string => {
   return type === 'promote user to director' ? 'mdi-shield-account' : 'mdi-account-plus'
 }
+
+const hasPendingRequest = computed(() => {
+  return requests.value.some(request =>
+    (request.request_type === 'link player profile' || request.request_type === 'promote user to director')
+    && request.status === 'pending'
+  );
+});
 
 const fetchRequests = async () => {
   try {
@@ -271,6 +280,12 @@ const openDirectorRequest = async () => {
 };
 
 const openPlayerLinkDialog = () => {
+  if (hasPendingRequest.value) {
+    actionsError.value = 'You already have a pending request.';
+    return;
+  }
+
+  playerLinkError.value = '';
   playerUsername.value = '';
   showPlayerLinkDialog.value = true;
 };
@@ -286,7 +301,7 @@ const submitPlayerLink = async () => {
     playerLinkError.value = null;
 
     const existingRequest = requests.value.some(
-      (request) => request.request_type === 'link player profile' && request.username === playerUsername.value && request.status === 'pending'
+      (request) => request.request_type === 'link player profile' && request.status === 'pending'
     );
 
     if (existingRequest) {
@@ -301,8 +316,16 @@ const submitPlayerLink = async () => {
       },
     });
 
-    if (response.status === 404) {
-      playerLinkError.value = `Player with username "${playerUsername.value}" was not found.`;
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      if (response.status === 404) {
+        playerLinkError.value = `Player with username "${playerUsername.value}" was not found.`;
+      } else if (response.status === 400 && errorData.detail?.includes('already linked')) {
+        playerLinkError.value = `Player "${playerUsername.value}" is already linked to another user.`;
+      } else {
+        throw new Error('Failed to submit request');
+      }
       return;
     }
 
