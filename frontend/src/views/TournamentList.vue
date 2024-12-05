@@ -268,7 +268,7 @@ const handleFormatClick = async (format: string) => {
 
 const resetFilters = async () => {
   selectedPeriod.value = 'all';
-  selectedStatus.value = 'active';
+  selectedStatus.value = 'all';
   await handleFiltersChange();
 };
 

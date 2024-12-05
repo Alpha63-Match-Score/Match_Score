@@ -519,7 +519,7 @@
                   :loading="isSubmitting"
                   :disabled="!hasChanges"
                 >
-                  Update Player
+                  {{ hasChanges ? 'Update Player' : 'No Changes' }}
                 </v-btn>
               </v-card-actions>
             </div>
@@ -690,6 +690,7 @@ interface Player {
   country: string
   user_email: string | null
   avatar: string | null
+  team_id: string | null
 }
 
 const requests = ref<Request[]>([])
@@ -1164,6 +1165,9 @@ const onLogoChange = (event: Event | File[] | File) => {
 
 const clearAvatar = () => {
   playerAvatar.value = null;
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value);
+  }
   previewAvatar.value = null;
 };
 
@@ -1185,12 +1189,14 @@ const submitAddPlayer = async () => {
     });
 
     if (selectedTeam.value) {
-      params.append("team_name", selectedTeam.value);
+      const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
+      if (teamName) {
+        params.append("team_name", teamName)
+      }
     }
-
     const formData = new FormData();
-    if (addPlayerAvatar.value) {
-      formData.append("avatar", addPlayerAvatar.value);
+    if (playerAvatar.value) {
+      formData.append("avatar", playerAvatar.value);
     } else {
       formData.append("avatar", "");
     }
@@ -1240,6 +1246,11 @@ const submitAddPlayer = async () => {
 
 
 const openAddPlayerDialog = async () => {
+  playerAvatar.value = null;
+  if (previewAvatar.value) {
+    URL.revokeObjectURL(previewAvatar.value);
+  }
+  previewAvatar.value = null;
   playerUsername.value = ''
   playerError.value = ''
   playerFirstName.value = ''
@@ -1258,7 +1269,7 @@ const openAddPlayerDialog = async () => {
 const closeAddPlayerDialog = () => {
   showAddPlayerDialog.value = false;
   addPlayerAvatar.value = null;
-  addPlayerPreviewAvatar.value = null;
+  previewAvatar.value = null;
   addPlayerUsername.value = '';
   addPlayerFirstName.value = '';
   addPlayerLastName.value = '';
@@ -1617,7 +1628,10 @@ const submitUpdatePlayer = async () => {
       params.append('country', playerCountry.value)
     }
     if (selectedTeam.value !== selectedPlayer.value.team_id) {
-      params.append('team_id', selectedTeam.value || '')
+      const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
+      if (teamName) {
+        params.append("team_name", teamName)
+      }
     }
 
     if (params.toString()) {
@@ -1670,9 +1684,15 @@ const hasChanges = computed(() => {
     playerCountry.value !== selectedPlayer.value.country ||
     selectedTeam.value !== selectedPlayer.value.team_id;
 
+  // Check for avatar changes
   const hasAvatarChanges = playerAvatar.value !== null;
 
-  return hasPlayerDataChanges || hasAvatarChanges;
+  // Check if team was removed (selectedTeam is null but player had a team)
+  const hasTeamRemovalChange =
+    selectedTeam.value === null &&
+    selectedPlayer.value.team_id !== null;
+
+  return hasPlayerDataChanges || hasAvatarChanges || hasTeamRemovalChange;
 });
 
 
