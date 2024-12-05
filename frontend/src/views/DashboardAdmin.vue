@@ -1183,9 +1183,11 @@ const submitAddPlayer = async () => {
     });
 
     if (selectedTeam.value) {
-      params.append("team_name", selectedTeam.value);
+      const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
+      if (teamName) {
+        params.append("team_name", teamName)
+      }
     }
-
     const formData = new FormData();
     if (addPlayerAvatar.value) {
       formData.append("avatar", addPlayerAvatar.value);
