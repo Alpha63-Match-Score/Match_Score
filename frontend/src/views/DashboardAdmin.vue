@@ -519,7 +519,7 @@
                   :loading="isSubmitting"
                   :disabled="!hasChanges"
                 >
-                  Update Player
+                  {{ hasChanges ? 'Update Player' : 'No Changes' }}
                 </v-btn>
               </v-card-actions>
             </div>
@@ -690,6 +690,7 @@ interface Player {
   country: string
   user_email: string | null
   avatar: string | null
+  team_id: string | null
 }
 
 const requests = ref<Request[]>([])
@@ -1610,7 +1611,10 @@ const submitUpdatePlayer = async () => {
       params.append('country', playerCountry.value)
     }
     if (selectedTeam.value !== selectedPlayer.value.team_id) {
-      params.append('team_id', selectedTeam.value || '')
+      const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
+      if (teamName) {
+        params.append("team_name", teamName)
+      }
     }
 
     if (params.toString()) {
@@ -1663,9 +1667,15 @@ const hasChanges = computed(() => {
     playerCountry.value !== selectedPlayer.value.country ||
     selectedTeam.value !== selectedPlayer.value.team_id;
 
+  // Check for avatar changes
   const hasAvatarChanges = playerAvatar.value !== null;
 
-  return hasPlayerDataChanges || hasAvatarChanges;
+  // Check if team was removed (selectedTeam is null but player had a team)
+  const hasTeamRemovalChange =
+    selectedTeam.value === null &&
+    selectedPlayer.value.team_id !== null;
+
+  return hasPlayerDataChanges || hasAvatarChanges || hasTeamRemovalChange;
 });
 
 
