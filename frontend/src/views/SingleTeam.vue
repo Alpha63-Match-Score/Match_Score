@@ -12,9 +12,20 @@
               <v-card-title class="team-header-title">{{ team.name }}</v-card-title>
               <v-card-text>
                 <div class="player-icons">
-                  <v-avatar v-for="i in 10" :key="i" size="70" class="player-avatar">
-                    <v-img v-if="team.players[i-1]" :src="team.players[i-1].avatar" :alt="team.players[i-1].username"></v-img>
-                  </v-avatar>
+                  <v-tooltip v-for="i in 10" :key="i" bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-avatar
+                        size="70"
+                        class="player-avatar"
+                        v-bind="attrs"
+                        v-on="on"
+                        @click="showPlayerInfo(team.players[i-1])"
+                      >
+                        <v-img v-if="team.players[i-1]" :src="team.players[i-1].avatar" :alt="team.players[i-1].username"></v-img>
+                      </v-avatar>
+                    </template>
+                    <span>{{ team.players[i-1]?.username }}</span>
+                  </v-tooltip>
                 </div>
               </v-card-text>
             </v-card>
@@ -158,9 +169,33 @@
               </v-card-text>
             </v-card>
           </v-col>
-        </v-row>
+       </v-row>
       </div>
     </v-container>
+
+    <!-- Player Info Dialog -->
+    <v-dialog v-model="playerDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="dialog-title">{{ selectedPlayer?.username }}</v-card-title>
+        <v-card-text class="dialog-content">
+          <v-avatar size="100" class="player-avatar">
+            <v-img :src="selectedPlayer?.avatar" :alt="selectedPlayer?.username"></v-img>
+          </v-avatar>
+          <div class="player-info">
+            <p><strong>First Name:</strong> {{ selectedPlayer?.first_name }}</p>
+            <p><strong>Last Name:</strong> {{ selectedPlayer?.last_name }}</p>
+            <p><strong>Username:</strong> {{ selectedPlayer?.username }}</p>
+            <p><strong>Game Win Ratio:</strong> {{ selectedPlayer?.game_win_ratio }}</p>
+            <p><strong>Country:</strong> {{ selectedPlayer?.country }}</p>
+            <p><strong>Email:</strong> {{ selectedPlayer?.user_email }}</p>
+            <p><strong>Team Name:</strong> {{ selectedPlayer?.team_name }}</p>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="playerDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 
   <v-container v-else>
@@ -184,6 +219,10 @@ interface Player {
   first_name: string
   last_name: string
   avatar: string | null
+  game_win_ratio: string
+  country: string
+  user_email: string | null
+  team_name: string
 }
 
 interface Match {
@@ -232,6 +271,8 @@ const route = useRoute()
 const team = ref<Team | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const playerDialog = ref(false)
+const selectedPlayer = ref<Player | null>(null)
 
 const fetchTeamDetails = async () => {
   try {
@@ -249,6 +290,23 @@ const fetchTeamDetails = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const fetchPlayer = async (playerId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/players/${playerId}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    selectedPlayer.value = await response.json()
+  } catch (e) {
+    console.error('Error fetching player:', e)
+  }
+}
+
+const showPlayerInfo = (player: Player) => {
+  fetchPlayer(player.id)
+  playerDialog.value = true
 }
 
 onMounted(fetchTeamDetails)
@@ -331,6 +389,12 @@ onMounted(fetchTeamDetails)
 .player-avatar {
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.player-avatar:hover {
+  transform: scale(1.1);
 }
 
 .stat-title {
@@ -344,5 +408,50 @@ onMounted(fetchTeamDetails)
 
 .stat-value {
   font-weight: normal;
+}
+
+.dialog-title {
+  text-align: center;
+  color: #42DDF2FF;
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family: Orbitron, sans-serif;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+.dialog-content .player-avatar {
+  margin-bottom: 16px;
+}
+
+.dialog-content .player-info {
+  text-align: left;
+}
+
+.v-dialog .v-card {
+  width: 400px;
+  margin: 0 auto;
+  border-radius: 50px;
+  background: rgba(45, 55, 75, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+}
+
+.v-dialog .v-card-actions .v-btn {
+  color: #42DDF2FF !important;
+  border-color: #42DDF2FF !important;
+  border-radius: 50px;
+}
+
+.v-dialog .v-card-actions .v-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
 }
 </style>
