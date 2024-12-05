@@ -459,7 +459,7 @@
                       v-model="selectedTeam"
                       :items="teams"
                       item-title="name"
-                      item-value="id"
+                      item-value="name"
                       label="Team"
                       variant="outlined"
                       :loading="loadingTeams"
@@ -476,16 +476,6 @@
                           class="team-list-item"
                         >
                         </v-list-item>
-                      </template>
-                      <template v-slot:append>
-                        <v-btn
-                          v-if="selectedTeam"
-                          icon="mdi-close"
-                          variant="text"
-                          size="small"
-                          @click.stop="removeFromTeam"
-                          color="#42DDF2FF"
-                        ></v-btn>
                       </template>
                     </v-autocomplete>
                   </template>
@@ -982,6 +972,12 @@ const handleCancelTeam = () => {
 const handleCancel = () => {
   showAddTournamentDialog.value = false
   resetForm()
+}
+
+const hasTeamChanges = () => {
+  const currentTeamId = selectedPlayer.value?.team_id || null;
+  const newTeamId = selectedTeam.value || null;
+  return currentTeamId !== newTeamId;
 }
 
 const validateTeamName = () => {
@@ -1539,6 +1535,7 @@ const checkPlayer = async () => {
       playerLastName.value = selectedPlayer.value.last_name || ''
       playerCountry.value = selectedPlayer.value.country || ''
       playerUsername.value = selectedPlayer.value.username || ''
+      selectedTeam.value = selectedPlayer.value.team_name || ''
 
       if (selectedPlayer.value.avatar) {
         originalAvatarUrl.value = selectedPlayer.value.avatar
@@ -1548,14 +1545,6 @@ const checkPlayer = async () => {
       // Load teams if not loaded yet
       if (teams.value.length === 0) {
         await fetchTeamsForPlayers()
-      }
-
-      // Set player's team if they have one
-      if (selectedPlayer.value.team_id) {
-        const playerTeam = teams.value.find(t => t.name === selectedPlayer.value?.team_name)
-        if (playerTeam) {
-          selectedTeam.value = playerTeam.id
-        }
       }
     }
 
@@ -1611,7 +1600,9 @@ const handleUsernameChange = (newUsername: string) => {
 
 const initializeTeam = () => {
   if (selectedPlayer.value?.team_id) {
-    selectedTeam.value = selectedPlayer.value.team_id
+    selectedTeam.value = selectedPlayer.value.team_id;
+  } else {
+    selectedTeam.value = '';
   }
 }
 
@@ -1644,11 +1635,17 @@ const submitUpdatePlayer = async () => {
     if (playerCountry.value !== selectedPlayer.value.country) {
       params.append('country', playerCountry.value)
     }
-    if (selectedTeam.value !== selectedPlayer.value.team_id) {
-      const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
-      if (teamName) {
-        params.append("team_name", teamName)
+    if ((selectedPlayer.value.team_id && selectedTeam.value === '') ||
+    (selectedTeam.value && selectedTeam.value !== selectedPlayer.value.team_id)) {
+      if (selectedTeam.value === '') {
+        params.append('team_name', '');
+      } else {
+        const team = teams.value.find(t => t.id === selectedTeam.value);
+        if (team) {
+          params.append('team_name', team.name);
+        }
       }
+
     }
 
     if (params.toString()) {
@@ -1714,8 +1711,8 @@ const hasChanges = computed(() => {
 
 
 const removeFromTeam = () => {
-  selectedTeam.value = null
-}
+  selectedTeam.value = '';
+};
 
 const closeUpdatePlayerDialog = () => {
   showUpdatePlayerDialog.value = false
@@ -2232,8 +2229,6 @@ onMounted(() => {
 
 .team-list-item {
   padding: 8px 16px;
-  display: flex;
-  align-items: center;
   transition: background-color 0.2s;
   border-radius: 4px;
   margin: 2px 0;
@@ -2445,6 +2440,20 @@ onMounted(() => {
 
 :deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
   background: rgba(66, 221, 242, 0.5);
+}
+:deep(.v-select__selection) {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+:deep(.v-select .v-field__input) {
+  min-height: 56px !important;
+  opacity: 1 !important;
+  color: white !important;
+}
+
+:deep(.v-select .v-field) {
+  background: transparent !important;
 }
 
 </style>
