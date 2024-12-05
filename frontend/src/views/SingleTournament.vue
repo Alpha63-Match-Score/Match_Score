@@ -119,64 +119,63 @@
             <!-- Right Column: Brackets -->
               <v-col cols="12" md="8">
                 <div class="brackets-card">
-                  <h3 class="section-title">
-                    <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
-                    Matches
-                  </h3>
+                  <div v-if="tournament.current_stage !== 'finished'" class="stage-header">
+                    <h3 class="section-title">
+                      <v-icon icon="mdi-tournament" class="mr-2"></v-icon>
+                      {{ formatStage(tournament.current_stage) }}
+                    </h3>
+                  </div>
                   <div class="brackets-content">
-                    <div class="stage-header">
-                      <h4 class="stage-name">
-                        {{ formatStage(tournament.current_stage) }}
-                      </h4>
-                    </div>
 
-                    <div class="matches-grid">
-                      <div v-for="match in tournament.matches_of_current_stage"
-                           :key="match.id"
-                           class="match-card"
-                           :class="{ 'match-finished': match.is_finished }"
-                           @click="openMatchDialog(match)">
-
-                        <div class="match-content">
-                          <div class="match-layout">
-                            <div class="team-left">
-                              <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
+                    <!-- Current Stage Matches -->
+                    <div v-if="tournament.matches_of_current_stage?.length" class="stage-section current-stage">
+                      <h5 class="stage-subtitle">Current Stage Matches</h5>
+                      <div class="matches-grid">
+                        <div v-for="match in tournament.matches_of_current_stage"
+                             :key="match.id"
+                             class="match-card"
+                             :class="{ 'match-finished': match.is_finished }"
+                             @click="openMatchDialog(match)">
+                          <div class="match-content">
+                            <div class="match-layout">
+                              <div class="team-left">
+                                <v-tooltip location="top">
+                                  <template v-slot:activator="{ props }">
                                     <v-avatar class="team-avatar" size="60" v-bind="props">
                                       <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
                                       <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
                                     </v-avatar>
-                                </template>
-                                {{ match.team1_name }}
-                              </v-tooltip>
-                              <span class="team-score">{{match.team1_score}}</span>
-                            </div>
+                                  </template>
+                                  {{ match.team1_name }}
+                                </v-tooltip>
+                                <span class="team-score">{{match.team1_score}}</span>
+                              </div>
 
-                            <div class="score-divider">:</div>
+                              <div class="score-divider">:</div>
 
-                            <div class="team-right">
-                              <span class="team-score">{{match.team2_score}}</span>
-                              <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
+                              <div class="team-right">
+                                <span class="team-score">{{match.team2_score}}</span>
+                                <v-tooltip location="top">
+                                  <template v-slot:activator="{ props }">
                                     <v-avatar class="team-avatar" size="60" v-bind="props">
                                       <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
                                       <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
                                     </v-avatar>
-                                </template>
-                                {{ match.team2_name }}
-                              </v-tooltip>
-                            </div>
-                          </div>
-
-                          <v-divider class="match-divider"></v-divider>
-
-                          <div class="match-footer">
-                            <div class="match-time">
-                              <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-                              <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                                  </template>
+                                  {{ match.team2_name }}
+                                </v-tooltip>
+                              </div>
                             </div>
 
-                            <div class="match-winner">
+                            <v-divider class="match-divider"></v-divider>
+
+                            <div class="match-footer">
+                              <div class="match-time">
+                                <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                                <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                              </div>
+
+                              <div class="match-winner">
                               <v-icon
                                 :icon="match.winner_id ? 'mdi-crown' : 'mdi-crown-outline'"
                                 class="winner-icon"
@@ -189,9 +188,85 @@
                                 pending...
                               </span>
                             </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Past Matches -->
+                    <div v-if="pastMatches.length" class="past-matches-section">
+                      <h5 class="section-title">
+                        <v-icon icon="mdi-history" class="mr-2"></v-icon>
+                        Previous Matches
+                      </h5>
+
+                      <!-- Group matches by stage -->
+                      <div v-for="stage in getUniqueStages(pastMatches)"
+                           :key="stage"
+                           class="stage-section">
+                        <h6 class="stage-subtitle">{{ formatStage(stage) }}</h6>
+                        <div class="matches-grid">
+                          <div v-for="match in filterMatchesByStage(pastMatches, stage)"
+                               :key="match.id"
+                               class="match-card past-match"
+                               @click="openMatchDialog(match)">
+                            <div class="match-content">
+                              <!-- Використовуємо той самий template що й для поточних матчів -->
+                              <div class="match-layout">
+                                <div class="team-left">
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props }">
+                                      <v-avatar class="team-avatar" size="60" v-bind="props">
+                                        <v-img v-if="match.team1_logo" :src="match.team1_logo" :alt="match.team1_name"></v-img>
+                                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                      </v-avatar>
+                                    </template>
+                                    {{ match.team1_name }}
+                                  </v-tooltip>
+                                  <span class="team-score">{{match.team1_score}}</span>
+                                </div>
+
+                                <div class="score-divider">:</div>
+
+                                <div class="team-right">
+                                  <span class="team-score">{{match.team2_score}}</span>
+                                  <v-tooltip location="top">
+                                    <template v-slot:activator="{ props }">
+                                      <v-avatar class="team-avatar" size="60" v-bind="props">
+                                        <v-img v-if="match.team2_logo" :src="match.team2_logo" :alt="match.team2_name"></v-img>
+                                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                                      </v-avatar>
+                                    </template>
+                                    {{ match.team2_name }}
+                                  </v-tooltip>
+                                </div>
+                              </div>
+
+                              <v-divider class="match-divider"></v-divider>
+
+                              <div class="match-footer">
+                                <div class="match-time">
+                                  <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
+                                  <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                                </div>
+
+                                <div class="match-winner" v-if="match.winner_id">
+                                  <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
+                                  <span class="winner-text">
+                                    {{ match.winner_id === match.team1_id ? match.team1_name : match.team2_name }}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Loading States -->
+                    <div v-if="isPastMatchesLoading" class="loading-state">
+                      <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
                     </div>
                   </div>
                 </div>
@@ -608,6 +683,16 @@ const availableTeams = ref([])
 const loadingTeams = ref(false)
 const teamForm = ref(null)
 
+// All matches
+const allTournamentMatches = ref<Match[]>([])
+const isLoadingMatches = ref(false)
+const matchesError = ref<string | null>(null)
+
+
+const pastMatches = ref<Match[]>([])
+const isPastMatchesLoading = ref(false)
+const pastMatchesError = ref<string | null>(null)
+
 const rules = {
   required: (v: string) => !!v || 'This field is required',
   min: (v: string) => v.length >= 3 || 'Must be at least 3 characters'
@@ -644,6 +729,85 @@ const formatStage = (stage: string): string => {
 
 const formatPlace = (place: number): string => {
   return place === 1 ? '1st' : place === 2 ? '2nd' : `${place}th`
+}
+
+const fetchAllTournamentMatches = async () => {
+  if (!tournament.value?.title) {
+    console.log('No tournament title available:', tournament.value);
+    return;
+  }
+
+  try {
+    isLoadingMatches.value = true;
+    matchesError.value = null;
+
+    // Добавяме headers и използваме правилния URL
+    const url = `${API_URL}/matches/?tournament_title=${encodeURIComponent(tournament.value.title)}`;
+    console.log('Attempting to fetch matches from URL:', url);
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        // Ако има нужда от авторизация, добавяме и Authorization header
+        ...(authStore.token ? { 'Authorization': `Bearer ${authStore.token}` } : {})
+      }
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      console.log('Response not OK. Full response:', response);
+      const errorText = await response.text();
+      console.log('Error response text:', errorText);
+      throw new Error('Failed to fetch tournament matches');
+    }
+
+    const data = await response.json();
+    console.log('Received matches data:', data);
+    allTournamentMatches.value = data;
+
+  } catch (e) {
+    console.error('Detailed error in fetchAllTournamentMatches:', e);
+    console.error('Error stack:', e.stack);
+    matchesError.value = 'Failed to load tournament matches';
+  } finally {
+    isLoadingMatches.value = false;
+  }
+}
+
+const fetchPastMatches = async () => {
+  if (!tournament.value?.title) return
+
+  try {
+    isPastMatchesLoading.value = true
+    pastMatchesError.value = null
+
+    const url = `${API_URL}/matches/?tournament_title=${encodeURIComponent(tournament.value.title)}&is_finished=true`
+    console.log('Fetching past matches from:', url)
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...(authStore.token ? { 'Authorization': `Bearer ${authStore.token}` } : {})
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch past matches')
+    }
+
+    const data = await response.json()
+    pastMatches.value = data
+    console.log('Past matches loaded:', pastMatches.value)
+  } catch (e) {
+    console.error('Error fetching past matches:', e)
+    pastMatchesError.value = 'Failed to load past matches'
+  } finally {
+    isPastMatchesLoading.value = false
+  }
 }
 
 const fetchTournament = async () => {
@@ -740,11 +904,25 @@ const openTimeEdit = () => {
   showTimeEdit.value = true
 }
 
+const getUniqueStages = (matches: Match[]) => {
+  return [...new Set(matches.map(match => match.stage))].sort((a, b) => {
+    const stageOrder = {
+      'group_stage': 1,
+      'quarter_finals': 2,
+      'semi_finals': 3,
+      'final': 4
+    }
+    return (stageOrder[a as keyof typeof stageOrder] || 99) - (stageOrder[b as keyof typeof stageOrder] || 99)
+  })
+}
+
+const filterMatchesByStage = (matches: Match[], stage: string) => {
+  return matches.filter(match => match.stage === stage)
+}
+
 const openTeamEdit = async () => {
-  // Зареждаме отборите преди да отворим диалога
   await fetchAvailableTeams()
 
-  // Попълваме текущите отбори
   if (selectedMatch.value) {
     const team1 = availableTeams.value.find(t => t.name === selectedMatch.value.team1_name)
     const team2 = availableTeams.value.find(t => t.name === selectedMatch.value.team2_name)
@@ -955,10 +1133,24 @@ const updatePrizePool = async () => {
 
 
 onMounted(async () => {
-  await authStore.initializeFromToken()
-  isInitialized.value = true
-  await fetchTournament()
-})
+  console.log('Component mounted');
+  await authStore.initializeFromToken();
+  console.log('Auth initialized');
+  isInitialized.value = true;
+
+  await fetchTournament();
+  console.log('Tournament fetched:', tournament.value);
+  console.log('Current stage:', tournament.value?.current_stage);
+
+  await fetchPastMatches();
+
+  if (tournament.value?.current_stage === 'finished') {
+    console.log('Tournament is finished, fetching all matches...');
+    await fetchAllTournamentMatches();
+  } else {
+    console.log('Tournament is not finished, current stage:', tournament.value?.current_stage);
+  }
+});
 
 
 </script>
@@ -1097,9 +1289,11 @@ onMounted(async () => {
 }
 
 .section-title {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 24px;
   color: #42DDF2FF;
   font-size: 1.4rem;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
 }
@@ -1229,7 +1423,7 @@ onMounted(async () => {
   min-height: 500px;
   background: rgba(45, 55, 75, 0);
   border-radius: 12px;
-  margin-top: -80px;
+  margin-top: 0px;
 }
 
 .stage-header {
@@ -1241,13 +1435,6 @@ onMounted(async () => {
   color: #42DDF2FF;
   font-size: 1.6rem;
   font-weight: 500;
-}
-
-.matches-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 16px;
 }
 
 .match-card {
@@ -1270,15 +1457,16 @@ onMounted(async () => {
 }
 
 .match-card.match-finished {
-  border: 2px solid #FED854FF;
+  border: 2px solid #FED854FF !important;  /* Добавяме !important */
   box-shadow: 0 0 15px rgba(254, 216, 84, 0.2);
 }
 
-/* Можем също да добавим hover ефект специално за finished matches */
 .match-card.match-finished:hover {
-  border-color: #FED854FF;
+  border-color: #FED854FF !important;
   box-shadow: 0 0 20px rgba(254, 216, 84, 0.3);
 }
+
+
 .match-content {
   position: relative;
   z-index: 2;
@@ -1659,4 +1847,40 @@ onMounted(async () => {
   text-align: center;
 }
 
+.matches-history {
+  padding: 20px;
+}
+
+.stage-section {
+  margin-bottom: 40px;
+}
+
+.stage-subtitle {
+  color: #FED854FF;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid #FED854FF;
+}
+
+.loading-matches, .matches-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #42DDF2FF;
+}
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .matches-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

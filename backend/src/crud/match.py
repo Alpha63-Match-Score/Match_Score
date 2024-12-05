@@ -35,8 +35,8 @@ def get_all_matches(
 
     filters = []
     if tournament_title:
-        v.tournament_exists(db, tournament_title=tournament_title)
-        filters.append(Match.tournament.title == tournament_title)
+        db_tournament = v.tournament_exists(db, tournament_title=tournament_title)
+        filters.append(Match.tournament_id == db_tournament.id)
     if stage is not None:
         filters.append(Match.stage == stage)
     if is_finished is not None:
