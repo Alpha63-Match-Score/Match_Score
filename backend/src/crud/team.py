@@ -67,7 +67,7 @@ def create_team(
     v.team_name_unique(db, team_name=team.name)
 
     logo_url = None
-    if not isinstance(logo, str):
+    if logo is not None:
         logo_url = s3_service.upload_file(logo, "teams")
 
     db_team = Team(
@@ -194,7 +194,7 @@ def update_team(
         v.team_name_unique(db, team_name=team.name)
         db_team.name = team.name
 
-    if not isinstance(logo, str):
+    if logo is not None:
         if db_team.logo:
             s3_service.delete_file(str(db_team.logo))
 

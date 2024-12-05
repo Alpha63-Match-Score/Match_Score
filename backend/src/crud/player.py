@@ -34,7 +34,7 @@ def create_player(
         v.team_player_limit_reached(db_team)
 
     avatar_url = None
-    if not isinstance(avatar, str):
+    if avatar is not None:
         avatar_url = s3_service.upload_file(avatar, "players")
 
     db_player = Player(
@@ -143,7 +143,7 @@ def update_player(
         v.team_player_limit_reached(team)
         db_player.team_id = team.id
 
-    if not isinstance(avatar, str):
+    if avatar is not None:
         if db_player.avatar:
             s3_service.delete_file(str(db_player.avatar))
 

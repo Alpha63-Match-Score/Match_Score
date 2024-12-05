@@ -36,7 +36,7 @@ def get_team(team_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", response_model=TeamListResponse, status_code=201)
 def create_team(
     team: TeamCreate = Depends(),
-    logo: UploadFile | str = File(None),
+    logo: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
@@ -47,7 +47,7 @@ def create_team(
 def update_team(
     team_id: UUID,
     team: TeamUpdate = Depends(),
-    logo: UploadFile | str = File(None),
+    logo: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
