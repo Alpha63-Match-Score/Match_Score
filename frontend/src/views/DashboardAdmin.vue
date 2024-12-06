@@ -1459,6 +1459,7 @@ const approveRequest = async (requestId: string) => {
     isApprovingRequest.value[requestId] = true;
     isSubmitting.value = true;
 
+    // 1. First approve the selected request
     const response = await fetch(`${API_URL}/requests/${requestId}?status=accepted`, {
       method: 'PUT',
       headers: {
@@ -1470,11 +1471,35 @@ const approveRequest = async (requestId: string) => {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to approve request');
     }
-    isApprovingRequest.value[requestId] = false;
+
+    // 2. Get the approved request details
+    const approvedRequest = requests.value.find(r => r.id === requestId);
+
+    // 3. If it's a player link request, reject all other pending requests for the same player
+    if (approvedRequest && approvedRequest.username) {
+      const otherPendingRequests = requests.value.filter(r =>
+        r.id !== requestId &&
+        r.status === 'pending' &&
+        r.username === approvedRequest.username
+      );
+
+      // Reject all other pending requests for this player
+      for (const request of otherPendingRequests) {
+        await fetch(`${API_URL}/requests/${request.id}?status=rejected`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+          },
+        });
+      }
+    }
 
     successMessage.value = 'Request approved successfully.';
     showSuccessAlert.value = true;
-    fetchRequests();
+
+    // 4. Refresh the requests list
+    await fetchRequests();
+
   } catch (e) {
     console.error('Error approving request:', e);
     actionsError.value = 'Failed to approve request. Please try again.';
