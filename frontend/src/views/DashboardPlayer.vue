@@ -127,6 +127,8 @@
                   v-model="editValue"
                   label="Username"
                   variant="outlined"
+                  :rules="rules.username"
+                  :error-messages="usernameError"
                 ></v-text-field>
 
                 <!-- Name Edit -->
@@ -135,11 +137,15 @@
                     v-model="editFirstName"
                     label="First Name"
                     variant="outlined"
+                    :rules="rules.firstName"
+                    :error-messages="firstNameError"
                   ></v-text-field>
                   <v-text-field
                     v-model="editLastName"
                     label="Last Name"
                     variant="outlined"
+                    :rules="rules.lastName"
+                    :error-messages="lastNameError"
                   ></v-text-field>
                 </div>
 
@@ -149,6 +155,8 @@
                   v-model="editValue"
                   label="Country"
                   variant="outlined"
+                  :rules="rules.country"
+                  :error-messages="countryError"
                 ></v-text-field>
 
                 <!-- Team Edit -->
@@ -156,17 +164,22 @@
                   <v-select
                     v-model="editValue"
                     :items="teams"
-                    :loading="isLoadingTeams"
                     item-title="name"
                     item-value="name"
                     label="Select Team"
                     variant="outlined"
-                    :error-messages="teamsError"
-                    :disabled="isLoadingTeams"
+                    :loading="isLoadingTeams"
                     clearable
+                    :menu-props="{ contentClass: 'teams-menu' }"
+                    :return-object="false"
                   >
-                    <template v-slot:prepend>
-                      <v-icon icon="mdi-account-group" color="#42DDF2FF"></v-icon>
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item
+                        v-bind="props"
+                        :title="item.raw.name"
+                        class="team-list-item"
+                      >
+                      </v-list-item>
                     </template>
                   </v-select>
                   <div v-if="teamsError" class="text-caption error-text mt-2">
@@ -176,8 +189,20 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="error" @click="closeEditDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveEdit" :loading="isSaving">Save</v-btn>
+                <v-btn
+                  class="cancel-btn"
+                  @click="closeEditDialog"
+                >
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="saveEdit"
+                  :loading="isSaving"
+                  :disabled="!hasValidChanges"
+                >
+                  Save
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -294,14 +319,16 @@
                         <v-spacer></v-spacer>
                         <v-btn
                           class="cancel-btn"
-                          @click="showPlayerLinkDialog = false"
+                          variant="text"
+                          @click="closeEditDialog"
                         >
                           Cancel
                         </v-btn>
                         <v-btn
                           class="submit-btn"
-                          @click="submitPlayerLink"
+                          @click="saveEdit"
                           :loading="isSubmitting"
+                          :disabled="!hasValidChanges"
                         >
                           Submit
                         </v-btn>
@@ -430,11 +457,49 @@ const editDialogTitle = computed(() => {
   return titles[editField.value] || 'Edit Profile'
 })
 
+// Add error refs
+const usernameError = ref('')
+const firstNameError = ref('')
+const lastNameError = ref('')
+const countryError = ref('')
+
+// Add clear errors function
+const clearErrors = () => {
+  usernameError.value = ''
+  firstNameError.value = ''
+  lastNameError.value = ''
+  countryError.value = ''
+}
+
 // Methods
 
 
 const rules = {
-  required: (v: string) => !!v || 'This field is required'
+  required: (v: string) => !!v || 'This field is required',
+  username: [
+    (value) => !!value || 'Username is required',
+    (value) => value.length >= 5 || 'Username must be at least 5 characters',
+    (value) => value.length <= 15 || 'Username must not exceed 15 characters',
+    (value) => /^[a-zA-Z0-9_-]+$/.test(value) || 'Username can only contain letters, numbers, underscores, or dashes',
+  ],
+  firstName: [
+    (value) => !!value || 'First name is required',
+    (value) => value.length >= 2 || 'First name must be at least 2 characters',
+    (value) => value.length <= 25 || 'First name must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid first name format',
+  ],
+  lastName: [
+    (value) => !!value || 'Last name is required',
+    (value) => value.length >= 2 || 'Last name must be at least 2 characters',
+    (value) => value.length <= 25 || 'Last name must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid last name format',
+  ],
+  country: [
+    (value) => !!value || 'Country is required',
+    (value) => value.length >= 2 || 'Country must be at least 2 characters',
+    (value) => value.length <= 25 || 'Country must not exceed 25 characters',
+    (value) => /^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/.test(value) || 'Invalid country format',
+  ],
 }
 
 // Methods
@@ -454,6 +519,34 @@ const getRequestTypeIcon = (type: string): string => {
   return type === 'promote user to director' ? 'mdi-shield-account' : 'mdi-account-plus'
 }
 
+const hasValidChanges = computed(() => {
+  if (!player.value || usernameError.value || firstNameError.value || lastNameError.value || countryError.value) {
+    return false;
+  }
+
+  if (editField.value === 'username') {
+    return editValue.value !== player.value.username &&
+           rules.username.every(rule => rule(editValue.value) === true);
+  }
+
+  if (editField.value === 'name') {
+    return (editFirstName.value !== player.value.first_name || editLastName.value !== player.value.last_name) &&
+           rules.firstName.every(rule => rule(editFirstName.value) === true) &&
+           rules.lastName.every(rule => rule(editLastName.value) === true);
+  }
+
+  if (editField.value === 'country') {
+    return editValue.value !== player.value.country &&
+           rules.country.every(rule => rule(editValue.value) === true);
+  }
+
+  if (editField.value === 'team') {
+    return editValue.value !== player.value.team_name;
+  }
+
+  return false;
+});
+
 const fetchTeams = async () => {
   try {
     isLoadingTeams.value = true
@@ -471,7 +564,9 @@ const fetchTeams = async () => {
     }
 
     const data = await response.json()
-    teams.value = data
+    teams.value = data.map(team => ({
+      name: team.name,
+    }))
   } catch (e) {
     console.error('Error fetching teams:', e)
     teamsError.value = e.message || 'Failed to load teams'
@@ -583,12 +678,11 @@ const openEdit = async (field: string) => {
   if (field === 'name') {
     editFirstName.value = player.value?.first_name || ''
     editLastName.value = player.value?.last_name || ''
+  } else if (field === 'team') {
+    editValue.value = player.value?.team_name || ''
+    await fetchTeams()
   } else {
     editValue.value = player.value?.[field as keyof Player]?.toString() || ''
-  }
-
-  if (field === 'team') {
-    await fetchTeams()
   }
 
   showEditDialog.value = true
@@ -601,6 +695,7 @@ const closeEditDialog = () => {
   editFirstName.value = ''
   editLastName.value = ''
   editError.value = ''
+  clearErrors()
 }
 
 const extractErrorMessage = async (response: Response) => {
@@ -628,11 +723,32 @@ const extractErrorMessage = async (response: Response) => {
 
 
 const saveEdit = async () => {
+  clearErrors()
   if (!player.value) return
 
   try {
     isSaving.value = true
     editError.value = ''
+    if (editField.value === 'username') {
+      if (!rules.username.every(rule => rule(editValue.value) === true)) {
+        usernameError.value = 'Invalid username format'
+        return
+      }
+    } else if (editField.value === 'name') {
+      if (!rules.firstName.every(rule => rule(editFirstName.value) === true)) {
+        firstNameError.value = 'Invalid first name format'
+        return
+      }
+      if (!rules.lastName.every(rule => rule(editLastName.value) === true)) {
+        lastNameError.value = 'Invalid last name format'
+        return
+      }
+    } else if (editField.value === 'country') {
+      if (!rules.country.every(rule => rule(editValue.value) === true)) {
+        countryError.value = 'Invalid country format'
+        return
+      }
+    }
 
     let params = new URLSearchParams()
 
@@ -1014,14 +1130,52 @@ onMounted(() => {
   margin-top: 24px;
 }
 
+.dialog-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -32px;
+}
+
 .cancel-btn {
+  background: transparent !important;
   color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  border-radius: 50px !important;
+  padding: 0 24px !important;
+  height: 40px !important;
+  text-transform: none !important;
+}
+
+.cancel-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
 }
 
 .submit-btn {
   background: #42DDF2FF !important;
   color: #171c26 !important;
-  margin-left: 16px;
+  border-radius: 50px !important;
+  padding: 0 24px !important;
+  height: 40px !important;
+  text-transform: none !important;
+}
+
+.submit-btn:hover {
+  background: #FED854FF !important;
+  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(66, 221, 242, 0.5) !important;
+}
+
+:deep(.v-btn) {
+  text-transform: none !important;
+  padding: 0 24px !important;
+  height: 40px !important;
 }
 
 .error-message {
@@ -1300,34 +1454,64 @@ onMounted(() => {
   text-transform: none !important;
 }
 
-:deep(.v-btn.v-btn--variant-flat) {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
+
+:deep(.teams-menu) {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 1px solid rgba(66, 221, 242, 0.3);
+  max-height: 300px !important;
+  overflow-y: auto;
 }
 
-:deep(.v-btn.v-btn--variant-flat:hover) {
-  background: #FED854FF !important;
-  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
+:deep(.teams-menu::-webkit-scrollbar) {
+  width: 8px;
 }
 
-:deep(.v-btn.error) {
+:deep(.teams-menu::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb) {
+  background: rgba(66, 221, 242, 0.3);
+  border-radius: 4px;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
+  background: rgba(66, 221, 242, 0.5);
+}
+
+:deep(.v-select__selection) {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+:deep(.v-select .v-field__input) {
+  min-height: 56px !important;
+  opacity: 1 !important;
+  color: white !important;
+}
+
+:deep(.v-select .v-field) {
   background: transparent !important;
-  color: #42DDF2FF !important;
-  border: 1px solid #42DDF2FF;
 }
 
-:deep(.v-btn.error:hover) {
-  background: rgba(66, 221, 242, 0.1) !important;
+/* Update error message styling */
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  display: block !important;
 }
 
-:deep(.v-btn.primary) {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
 }
 
-:deep(.v-btn.primary:hover) {
-  background: #FED854FF !important;
-  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
+:deep(.v-field--variant-outlined.v-field--error) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline) {
+  color: #fed854 !important;
 }
 
 </style>
