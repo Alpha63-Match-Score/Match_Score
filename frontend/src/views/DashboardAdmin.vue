@@ -583,6 +583,77 @@
           </v-card>
         </v-dialog>
 
+
+        <!-- Add Team Dialog -->
+        <v-dialog v-model="showAddTeamDialog" max-width="450">
+          <v-card class="dialog-card">
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Add New Team</span>
+              </v-card-title>
+
+              <v-card-text>
+                <div class="file-upload-section">
+                  <v-avatar size="120" class="preview-avatar">
+                    <v-img
+                      v-if="previewLogo"
+                      :src="previewLogo"
+                      alt="Team logo"
+                    ></v-img>
+                    <v-icon
+                      v-else
+                      icon="mdi-shield"
+                      color="#42DDF2FF"
+                      size="48"
+                    ></v-icon>
+                  </v-avatar>
+
+                  <v-file-input
+                    v-model="teamLogo"
+                    label="Team Logo (Optional)"
+                    variant="outlined"
+                    accept="image/*"
+                    :show-size="true"
+                    prepend-icon="mdi-camera"
+                    class="upload-input"
+                    @change="onLogoChange"
+                    @click:clear="clearLogo"
+                    hide-details
+                  ></v-file-input>
+                </div>
+
+                <v-text-field
+                  v-model="teamName"
+                  label="Team Name"
+                  variant="outlined"
+                  :rules="rules.team"
+                  :error-messages="teamError"
+                  @input="validateTeamName"
+                ></v-text-field>
+              </v-card-text>
+
+              <v-card-actions class="dialog-actions">
+                <v-spacer></v-spacer>
+                <v-btn
+                  class="cancel-btn"
+                  variant="text"
+                  @click="handleCancelTeam"
+                >
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitAddTeam"
+                  :loading="isSubmitting"
+                  :disabled="!teamName.trim()"
+                >
+                  Create Team
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
         <!-- Success Snackbar -->
         <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
           {{ successMessage }}
@@ -1216,10 +1287,6 @@ const submitAddPlayer = async () => {
 
 
 const openAddPlayerDialog = async () => {
-  if (hasPendingRequest.value) {
-    actionsError.value = 'You already have a pending request.';
-    return;
-  }
   playerAvatar.value = null;
   if (previewAvatar.value) {
     URL.revokeObjectURL(previewAvatar.value);
