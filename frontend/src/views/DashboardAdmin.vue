@@ -122,7 +122,13 @@
                       size="small"
                       class="detail-icon"
                     ></v-icon>
-                    Player: {{ request.username }}
+                    Player:
+                    <span
+                      class="clickable-player"
+                      @click="handlePlayerClick(request.username)"
+                    >
+                      {{ request.username }}
+                    </span>
                   </div>
                 </div>
 
@@ -294,6 +300,42 @@
                 </v-btn>
               </v-card-actions>
             </div>
+          </v-card>
+        </v-dialog>
+
+        <!-- Player Modal -->
+        <v-dialog v-model="showPlayerModal" max-width="400">
+          <v-card class="dialog-card">
+            <v-card-title>
+              <span class="headline">{{ selectedModalPlayer?.username }}</span>
+            </v-card-title>
+            <v-card-text>
+              <v-avatar size="150" class="player-avatar">
+                <v-img
+                  v-if="selectedModalPlayer?.avatar"
+                  :src="selectedModalPlayer.avatar"
+                  :alt="selectedModalPlayer.username"
+                ></v-img>
+                <v-icon
+                  v-else
+                  icon="mdi-account"
+                  color="#42DDF2FF"
+                  size="100"
+                ></v-icon>
+              </v-avatar>
+              <div class="player-info">
+                <p><strong>Username:</strong> {{ selectedModalPlayer?.username }}</p>
+                <p><strong>First Name:</strong> {{ selectedModalPlayer?.first_name }}</p>
+                <p><strong>Last Name:</strong> {{ selectedModalPlayer?.last_name }}</p>
+                <p><strong>Game Win Ratio:</strong> {{ selectedModalPlayer?.game_win_ratio }}</p>
+                <p><strong>Country:</strong> {{ selectedModalPlayer?.country }}</p>
+                <p><strong>Email:</strong> {{ selectedModalPlayer?.user_email }}</p>
+                <p><strong>Team Name:</strong> {{ selectedModalPlayer?.team_name }}</p>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
+            </v-card-actions>
           </v-card>
         </v-dialog>
 
@@ -814,6 +856,10 @@ const addPlayerCountryError = ref('')
 const isFormValid = ref(false);
 const addPlayerForm = ref(null)
 
+const showPlayerModal = ref(false)
+const selectedModalPlayer = ref(null)
+const isLoadingPlayer = ref(false)
+
 // Add Tournament
 
 const getMaxTeams = computed(() => {
@@ -1314,6 +1360,25 @@ const fetchTeams = async () => {
     loadingTeams.value = false;
   }
 };
+
+const handlePlayerClick = async (username: string) => {
+  try {
+    isLoadingPlayer.value = true
+    const response = await fetch(`${API_URL}/players?search=${encodeURIComponent(username)}`)
+    if (!response.ok) {
+      throw new Error('Failed to fetch player')
+    }
+    const players = await response.json()
+    if (players.length > 0) {
+      selectedModalPlayer.value = players[0]
+      showPlayerModal.value = true
+    }
+  } catch (e) {
+    console.error('Error fetching player:', e)
+  } finally {
+    isLoadingPlayer.value = false
+  }
+}
 
 const fetchTeamsForPlayers = async () => {
   try {
