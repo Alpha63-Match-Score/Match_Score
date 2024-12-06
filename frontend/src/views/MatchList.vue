@@ -15,9 +15,8 @@
               item-title="text"
               item-value="value"
               label="Stage"
-              variant="outlined"
               density="comfortable"
-              bg-color="rgba(45, 55, 75, 0.8)"
+              bg-color="rgba(45, 55, 75, 0.4)"
               color="#ffffff"
               clearable
             ></v-select>
@@ -29,9 +28,8 @@
               item-title="text"
               item-value="value"
               label="Status"
-              variant="outlined"
               density="comfortable"
-              bg-color="rgba(45, 55, 75, 0.8)"
+              bg-color="rgba(45, 55, 75, 0.4)"
               color="#ffffff"
               clearable
             ></v-select>
@@ -43,9 +41,8 @@
               item-title="text"
               item-value="value"
               label="Team"
-              variant="outlined"
               density="comfortable"
-              bg-color="rgba(45, 55, 75, 0.8)"
+              bg-color="rgba(45, 55, 75, 0.4)"
               color="#ffffff"
               clearable
             ></v-select>
@@ -53,7 +50,7 @@
         </v-row>
 
         <!-- Show All Matches Button -->
-        <v-row class="filter-row" justify="center" style="margin-top: 3px;">
+        <v-row class="filter-row" justify="center" style="margin-top: 8px;">
           <v-col cols="auto">
             <v-btn
               class="reset-filter-btn"
@@ -739,7 +736,7 @@ onUnmounted(() => {
 }
 
 .reset-filter-btn {
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   color: rgba(255, 255, 255, 0.7) !important;
   border-color: #D0D0D0 !important;
   border-width: 2px !important;
