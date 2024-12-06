@@ -103,17 +103,10 @@
                 ></div>
                 <div class="tournament-content">
                   <div class="tournament-header">
-                    <v-tooltip :text="tournament.title" location="top">
-                      <template v-slot:activator="{ props }">
-                        <h3
-                          class="tournament-title"
-                          ref="titleElement"
-                          v-bind="props"
-                        >
-                          {{ tournament.title }}
-                        </h3>
-                      </template>
-                    </v-tooltip>
+                      <h3 class="tournament-title">
+                        {{ tournament.title }}
+                      </h3>
+
                     <div class="format-tag">
                       {{ formatText(tournament.tournament_format.toUpperCase()) }}
                     </div>
@@ -1859,7 +1852,8 @@ onMounted(() => {
 
 .tournament-card {
   position: relative;
-  height: 300px;
+  min-height: 300px;
+  height: auto;
   border-radius: 20px;
   overflow: hidden;
   background: rgba(45, 55, 75, 0.8);
@@ -1894,32 +1888,29 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 16px;
 }
 
 .tournament-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  height: 100px;
-  width: 100%;
-  overflow: hidden;
+  gap: 16px;
+  min-height: 100px;
 }
 
 .tournament-title {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
   margin: 0;
-  max-width: calc(100% - 120px);
   font-weight: 600;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  position: relative;
-  cursor: default;
-  flex: 1;
-
+  word-break: break-word;
+  max-width: calc(100% - 120px);
+  line-height: 1.3;
 }
 
 .title-tooltip {
@@ -1983,10 +1974,11 @@ onMounted(() => {
 }
 
 .tournament-info {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-top: auto;
 }
 
 .info-section {
@@ -2138,7 +2130,7 @@ onMounted(() => {
 }
 
 .tournaments-section {
-  width: 65%;
+  width: 85%;
   max-width: 1400px;
   margin: 8px auto 0;
 }
