@@ -1181,32 +1181,40 @@ const submitAddPlayer = async () => {
   try {
     isSubmitting.value = true;
 
-    const params = new URLSearchParams({
+    const playerData = {
       username: addPlayerUsername.value,
       first_name: addPlayerFirstName.value,
       last_name: addPlayerLastName.value,
       country: addPlayerCountry.value,
-    });
+    };
 
     if (selectedTeam.value) {
       const teamName = teams.value.find(t => t.id === selectedTeam.value)?.name
       if (teamName) {
-        params.append("team_name", teamName)
+        playerData.team_name = teamName;
       }
     }
-    const formData = new FormData();
+
+    const params = new URLSearchParams(playerData);
+    let url = `${API_URL}/players/?${params.toString()}`;
+    let headers = {
+      'Authorization': `Bearer ${authStore.token}`
+    };
+    let body;
+
     if (playerAvatar.value) {
-      formData.append("avatar", playerAvatar.value);
+      const formData = new FormData();
+      formData.append('avatar', playerAvatar.value);
+      body = formData;
     } else {
-      formData.append("avatar", "");
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({ avatar: null });
     }
 
-    const response = await fetch(`${API_URL}/players/?${params.toString()}`, {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-      body: formData,
+      headers: headers,
+      body: body,
     });
 
     if (!response.ok) {
@@ -1436,24 +1444,29 @@ const submitAddTeam = async () => {
       return;
     }
 
-    const formData = new FormData();
-
-    if (teamLogo.value) {
-      formData.append('logo', teamLogo.value);
-    } else {
-      formData.append('logo', '');
-    }
-
     const params = new URLSearchParams({
       name: teamName.value.trim()
     });
 
+    let headers = {
+      'Authorization': `Bearer ${authStore.token}`
+    };
+
+    let body;
+
+    if (teamLogo.value) {
+      const formData = new FormData();
+      formData.append('logo', teamLogo.value);
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({ logo: null });
+    }
+
     const response = await fetch(`${API_URL}/teams/?${params.toString()}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`
-      },
-      body: formData
+      headers: headers,
+      body: body
     });
 
     if (!response.ok) {

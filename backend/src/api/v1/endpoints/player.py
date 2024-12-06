@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post("/", response_model=PlayerListResponse, status_code=201)
 def create_player(
     player: PlayerCreate = Depends(),
-    avatar: UploadFile | str = File(None),
+    avatar: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
@@ -56,7 +56,7 @@ def get_player(player_id: UUID, db: Session = Depends(get_db)):
 def update_player(
     player_id: UUID,
     player: PlayerUpdate = Depends(),
-    avatar: UploadFile | str = File(None),
+    avatar: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):

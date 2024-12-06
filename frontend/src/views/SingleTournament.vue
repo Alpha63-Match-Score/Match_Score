@@ -377,6 +377,17 @@
         </v-card-title>
         <v-card-text>
           <div class="match-details-centered">
+            <!-- Add error alert -->
+            <v-alert
+              v-if="scoreUpdateError"
+              type="error"
+              variant="tonal"
+              class="mb-4 error-alert"
+              closable
+              @click:close="scoreUpdateError = ''"
+            >
+              {{ scoreUpdateError }}
+            </v-alert>
             <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
             <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
             <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not Finished' }}</div>
@@ -666,6 +677,7 @@ const editedPrizePool = ref(0)
 const titleError = ref('')
 const endDateError = ref('')
 const prizeError = ref('')
+const scoreUpdateError = ref('')
 
 // Match pop up
 const showMatchModal = ref(false)
@@ -869,6 +881,7 @@ const openMatchDialog = async (match: Match) => {
 const handleScoreIncrement = async (team: 'team1' | 'team2') => {
   if (!selectedMatch.value) return
   try {
+    scoreUpdateError.value = ''
     const response = await fetch(
       `${API_URL}/matches/${selectedMatch.value.id}/team-scores?team_to_upvote_score=${team}`,
       {
@@ -882,16 +895,14 @@ const handleScoreIncrement = async (team: 'team1' | 'team2') => {
     if (!response.ok) {
       const error = await extractErrorMessage(response)
       console.error('Score update error:', error)
+      scoreUpdateError.value = error
       return
     }
 
-    // Взимаме обновения мач за да проверим дали е завършил
     const updatedMatchResponse = await fetch(`${API_URL}/matches/${selectedMatch.value.id}`)
     const updatedMatch = await updatedMatchResponse.json()
 
-    // Проверяваме дали мачът е завършил след това увеличение на точките
     if (updatedMatch.is_finished) {
-      // Проверяваме дали е последният незавършен мач в текущия етап
       const unfinishedMatches = tournament.value?.matches_of_current_stage.filter(
         match => !match.is_finished && match.id !== selectedMatch.value?.id
       )
@@ -912,8 +923,9 @@ const handleScoreIncrement = async (team: 'team1' | 'team2') => {
       selectedMatch.value = updatedTournamentMatch
     }
 
-  } catch (e) {
+    } catch (e) {
     console.error('Error updating score:', e)
+    scoreUpdateError.value = 'An unexpected error occurred while updating the score'
   }
 }
 
@@ -1901,5 +1913,22 @@ onMounted(async () => {
   .matches-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.error-alert {
+  width: 100%;
+  margin: 0 auto;
+  background-color: rgba(255, 215, 0, 0.12) !important;
+  color: #ffd700 !important;
+  border-color: #ffd700 !important;
+  border-radius: 8px;
+}
+
+.error-alert :deep(.v-alert__close-button) {
+  color: #ffd700 !important;
+}
+
+.error-alert :deep(.v-alert__prepend) {
+  color: #ffd700 !important;
 }
 </style>

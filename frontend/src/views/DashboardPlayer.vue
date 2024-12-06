@@ -152,12 +152,27 @@
                 ></v-text-field>
 
                 <!-- Team Edit -->
-                <v-text-field
-                  v-if="editField === 'team'"
-                  v-model="editValue"
-                  label="Team Name"
-                  variant="outlined"
-                ></v-text-field>
+                <div v-if="editField === 'team'">
+                  <v-select
+                    v-model="editValue"
+                    :items="teams"
+                    :loading="isLoadingTeams"
+                    item-title="name"
+                    item-value="name"
+                    label="Select Team"
+                    variant="outlined"
+                    :error-messages="teamsError"
+                    :disabled="isLoadingTeams"
+                    clearable
+                  >
+                    <template v-slot:prepend>
+                      <v-icon icon="mdi-account-group" color="#42DDF2FF"></v-icon>
+                    </template>
+                  </v-select>
+                  <div v-if="teamsError" class="text-caption error-text mt-2">
+                    {{ teamsError }}
+                  </div>
+                </div>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -353,7 +368,11 @@ interface Player {
   current_tournament_title: string | null
 }
 
-// Data
+interface Team {
+  id: string
+  name: string
+}
+
 interface Request {
   id: string
   email: string
@@ -366,10 +385,11 @@ interface Request {
 }
 
 // State
-
+const teams = ref<Team[]>([])
+const isLoadingTeams = ref(false)
+const teamsError = ref('')
 const requests = ref<Request[]>([])
 const requestHistoryError = ref<string | null>(null) // Scoped error for Request History
-const actionsError = ref<string | null>(null) // Scoped error for Available Actions
 const playerLinkError = ref<string | null>(null) // Scoped error for Player Link Dialog
 const showPlayerLinkDialog = ref(false)
 const playerUsername = ref('')
@@ -434,6 +454,32 @@ const getRequestTypeIcon = (type: string): string => {
   return type === 'promote user to director' ? 'mdi-shield-account' : 'mdi-account-plus'
 }
 
+const fetchTeams = async () => {
+  try {
+    isLoadingTeams.value = true
+    teamsError.value = ''
+
+    const response = await fetch(`${API_URL}/teams`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorMessage = await extractErrorMessage(response)
+      throw new Error(errorMessage)
+    }
+
+    const data = await response.json()
+    teams.value = data
+  } catch (e) {
+    console.error('Error fetching teams:', e)
+    teamsError.value = e.message || 'Failed to load teams'
+  } finally {
+    isLoadingTeams.value = false
+  }
+}
+
 const fetchRequests = async () => {
   try {
     isLoading.value = true;
@@ -464,45 +510,6 @@ const fetchRequests = async () => {
   } finally {
     isLoading.value = false;
   }
-};
-
-const openDirectorRequest = async () => {
-  try {
-    isSubmitting.value = true;
-    actionsError.value = null;
-
-    const existingRequest = requests.value.some(
-      (request) => request.request_type === 'promote user to director' && request.status === 'pending'
-    );
-
-    if (existingRequest) {
-      actionsError.value = 'You already have a pending request.';
-      return;
-    }
-
-    const response = await fetch(`${API_URL}/requests/directors/${authStore.userEmail}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`,
-      },
-    });
-
-    if (!response.ok) throw new Error('Failed to submit request');
-
-    successMessage.value = 'Director role request submitted successfully. An admin will review your request shortly.';
-    showSuccessAlert.value = true;
-    fetchRequests();
-  } catch (e) {
-    console.error('Error submitting director request:', e);
-    actionsError.value = 'Failed to submit request. Please try again.';
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const openPlayerLinkDialog = () => {
-  playerUsername.value = '';
-  showPlayerLinkDialog.value = true;
 };
 
 const submitPlayerLink = async () => {
@@ -569,7 +576,7 @@ const fetchPlayer = async () => {
   }
 }
 
-const openEdit = (field: string) => {
+const openEdit = async (field: string) => {
   editField.value = field
   editError.value = ''
 
@@ -578,6 +585,10 @@ const openEdit = (field: string) => {
     editLastName.value = player.value?.last_name || ''
   } else {
     editValue.value = player.value?.[field as keyof Player]?.toString() || ''
+  }
+
+  if (field === 'team') {
+    await fetchTeams()
   }
 
   showEditDialog.value = true
@@ -615,6 +626,7 @@ const extractErrorMessage = async (response: Response) => {
   }
 }
 
+
 const saveEdit = async () => {
   if (!player.value) return
 
@@ -622,32 +634,35 @@ const saveEdit = async () => {
     isSaving.value = true
     editError.value = ''
 
-    let updateData: Record<string, any> = {}
+    let params = new URLSearchParams()
 
-    if (editField.value === 'name') {
-      updateData = {
-        first_name: editFirstName.value,
-        last_name: editLastName.value
-      }
+if (editField.value === 'name') {
+      params.append('first_name', editFirstName.value)
+      params.append('last_name', editLastName.value)
+    } else if (editField.value === 'team') {
+      params.append('team_name', editValue.value)
     } else {
-      updateData[editField.value] = editValue.value
+      params.append(editField.value, editValue.value)
     }
 
-    console.log('Sending update data:', updateData) // Log the data we're sending
+    console.log('Sending params:', params.toString())
 
-    const response = await fetch(`${API_URL}/players/${player.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updateData)
-    })
+    const response = await fetch(
+      `${API_URL}/players/${player.value.id}?${params.toString()}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        }
+        // Премахнахме body: JSON.stringify({ 'avatar': '' })
+      }
+    )
 
-    console.log('Response status:', response.status) // Log the HTTP status
+    console.log('Response status:', response.status)
 
     const responseData = await response.json()
-    console.log('Response data:', responseData) // Log the full response
+    console.log('Response data:', responseData)
 
     if (!response.ok) {
       editError.value = responseData.detail || responseData.message || 'Failed to update profile'
@@ -660,7 +675,7 @@ const saveEdit = async () => {
     showSuccessAlert.value = true
 
   } catch (e) {
-    console.error('Full error object:', e) // Log the full error object
+    console.error('Full error object:', e)
     if (!editError.value) {
       editError.value = 'Failed to update profile. Please try again.'
     }
