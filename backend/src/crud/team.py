@@ -53,7 +53,7 @@ def get_teams(
             .all()
         )
 
-        team_player_counts = {team_id: count for team_id, count in player_counts}
+        team_player_counts = dict(player_counts)
 
         filtered_teams = []
         for team in db_results:
