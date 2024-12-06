@@ -83,31 +83,51 @@
         </v-row>
 
         <!-- Player Modal -->
-          <v-dialog v-model="showPlayerModal" max-width="600px">
-            <v-card>
-              <v-card-title>
-                <span class="headline">{{ selectedPlayer?.username }}</span>
-              </v-card-title>
-              <v-card-text>
-                <v-avatar size="150" class="player-avatar">
-                  <v-img v-if="selectedPlayer?.avatar" :src="selectedPlayer.avatar" alt="Player avatar"></v-img>
-                  <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
-                </v-avatar>
-                <div class="player-info">
-                  <p><strong>Username:</strong> {{ selectedPlayer?.username }}</p>
-                  <p><strong>First Name:</strong> {{ selectedPlayer?.first_name }}</p>
-                  <p><strong>Last Name:</strong> {{ selectedPlayer?.last_name }}</p>
-                  <p><strong>Game Win Ratio:</strong> {{ selectedPlayer?.game_win_ratio }}</p>
-                  <p><strong>Country:</strong> {{ selectedPlayer?.country }}</p>
-                  <p><strong>Email:</strong> {{ selectedPlayer?.user_email }}</p>
-                  <p><strong>Team Name:</strong> {{ selectedPlayer?.team_name }}</p>
+        <v-dialog v-model="showPlayerModal" max-width="600px" class="player-dialog">
+          <v-card>
+            <v-card-title class="dialog-title">
+              {{ selectedPlayer?.username }}
+            </v-card-title>
+            <v-card-text class="dialog-content">
+              <v-avatar size="150" class="mb-6">
+                <v-img v-if="selectedPlayer?.avatar" :src="selectedPlayer.avatar" alt="Player avatar"></v-img>
+                <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="100"></v-icon>
+              </v-avatar>
+
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-label">Nickname</div>
+                  <div class="stat-value">{{ selectedPlayer?.username }}</div>
                 </div>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+
+                <div class="stat-item">
+                  <div class="stat-label">Full Name</div>
+                  <div class="stat-value">{{ selectedPlayer?.first_name }} {{ selectedPlayer?.last_name }}</div>
+                </div>
+
+                <div class="stat-item">
+                  <div class="stat-label">Country</div>
+                  <div class="stat-value">{{ selectedPlayer?.country }}</div>
+                </div>
+
+                <div class="stat-item">
+                  <div class="stat-label">Win Ratio</div>
+                  <div class="stat-value" style="color: #FED854FF;">{{ selectedPlayer?.game_win_ratio }}</div>
+                </div>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                block
+                class="close-btn"
+                @click="showPlayerModal = false"
+                max-width="30px"
+              >
+                Close
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
         <!-- Load More Button -->
         <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
@@ -333,55 +353,8 @@ onUnmounted(() => {
   background: rgba(8, 87, 144, 0.1);
 }
 
-.player-info {
-  margin-top: 16px;
-}
-
 .player-info p {
   margin: 4px 0;
-}
-
-.v-dialog .v-card {
-  width: 400px; /* Adjust the value to make the box smaller */
-  margin: 0 auto; /* Center the box horizontally */
-  border-radius: 50px;
-  background: rgba(45, 55, 75, 0.8);
-  backdrop-filter: blur(10px);
-  border: 2px solid #42DDF2FF;
-  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
-}
-
-
-.v-dialog .v-card-title {
-  text-align: center;
-  color: #42DDF2FF;
-  font-size: 1.5rem;
-  font-weight: bold;
-  font-family: Orbitron, sans-serif;
-}
-
-.v-dialog .v-card-text {
-  display: flex;
-  flex-direction: column; /* This will push the avatar to the right */
-  align-items: center; /* This will vertically center the content */
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  font-family: Arial, sans-serif;
-}
-
-.v-dialog .player-avatar {
-  display: flex;
-  margin-bottom: 16px; /* Add some space between the avatar and the player info */
-}
-
-.v-dialog .v-card-actions .v-btn {
-  color: #42DDF2FF !important;
-  border-color: #42DDF2FF !important;
-  border-radius: 50px;
-}
-
-.v-dialog .v-card-actions .v-btn:hover {
-  background: rgba(66, 221, 242, 0.1);
 }
 
 .players-avatars {
@@ -484,4 +457,92 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+.player-dialog :deep(.v-card) {
+  width: 400px;
+  margin: 0 auto;
+  border-radius: 50px !important;
+  background: rgba(45, 55, 75, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border: 2px solid #42DDF2FF !important;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+}
+
+.dialog-title {
+  color: #42DDF2FF !important;
+  font-size: 1.5rem !important;
+  text-align: center;
+  padding: 20px !important;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  gap: 2px;
+}
+
+.stats-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stat-item {
+  background: rgba(30, 40, 55, 0.5);
+  border: 1px solid rgba(66, 221, 242, 0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+}
+
+.stat-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  justify-self: start;
+}
+
+.stat-value {
+  color: white;
+  font-size: 1.1rem;
+  justify-self: end;
+}
+
+.close-btn {
+  background: transparent !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  border-radius: 50px !important;
+  margin: 20px !important;
+  padding: 10px 40px !important;
+  font-size: 1.1rem !important;
+}
+
+.close-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
+}
+
+:deep(.v-btn) {
+  text-transform: none !important;
+  border-radius: 50px !important;
+}
+
+:deep(.v-card-actions .v-btn) {
+  background: rgba(17, 78, 112, 0.56) !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  min-width: 120px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+:deep(.v-card-actions .v-btn:hover) {
+  background: rgba(66, 221, 242, 0.1) !important;
+  transform: translateY(-2px);
+}
 </style>

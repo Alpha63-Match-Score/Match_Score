@@ -1,14 +1,14 @@
 from typing import Literal
 from uuid import UUID
-from sqlalchemy import func
 
 from fastapi import HTTPException, UploadFile
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from src.crud.convert_db_to_response import (
     convert_db_to_team_detailed_response,
     convert_db_to_team_list_response,
 )
-from src.models import Match, Team, Tournament, Player
+from src.models import Match, Player, Team, Tournament
 from src.models.enums import Stage
 from src.schemas.team import (
     TeamCreate,
@@ -48,12 +48,12 @@ def get_teams(
 
     if has_space:
         player_counts = (
-            db.query(Player.team_id, func.count(Player.id).label('count'))
+            db.query(Player.team_id, func.count(Player.id).label("count"))
             .group_by(Player.team_id)
             .all()
         )
 
-        team_player_counts = {team_id: count for team_id, count in player_counts}
+        team_player_counts = dict(player_counts)
 
         filtered_teams = []
         for team in db_results:
