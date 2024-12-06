@@ -208,8 +208,8 @@ const getRequestTypeIcon = (type: string): string => {
 
 const hasPendingRequest = computed(() => {
   return requests.value.some(request =>
+    request.status === 'pending' &&
     (request.request_type === 'link player profile' || request.request_type === 'promote user to director')
-    && request.status === 'pending'
   );
 });
 
@@ -246,18 +246,15 @@ const fetchRequests = async () => {
 };
 
 const openDirectorRequest = async () => {
+
+  if (hasPendingRequest.value) {
+    actionsError.value = 'You already have a pending request.';
+    return;
+  }
+
   try {
     isSubmitting.value = true;
     actionsError.value = null;
-
-    const existingRequest = requests.value.some(
-      (request) => request.request_type === 'promote user to director' && request.status === 'pending'
-    );
-
-    if (existingRequest) {
-      actionsError.value = 'You already have a pending request.';
-      return;
-    }
 
     const response = await fetch(`${API_URL}/requests/directors/${authStore.userEmail}`, {
       method: 'POST',
@@ -291,6 +288,11 @@ const openPlayerLinkDialog = () => {
 };
 
 const submitPlayerLink = async () => {
+  if (hasPendingRequest.value) {
+    actionsError.value = 'You already have a pending request.';
+    return;
+  }
+
   if (!playerUsername.value) {
     playerLinkError.value = 'Player username is required.';
     return;
