@@ -303,113 +303,6 @@
           </v-card>
         </v-dialog>
 
-        <!-- Player Modal -->
-        <v-dialog v-model="showPlayerModal" max-width="400">
-          <v-card class="dialog-card">
-            <v-card-title>
-              <span class="headline">{{ selectedModalPlayer?.username }}</span>
-            </v-card-title>
-            <v-card-text>
-              <v-avatar size="150" class="player-avatar">
-                <v-img
-                  v-if="selectedModalPlayer?.avatar"
-                  :src="selectedModalPlayer.avatar"
-                  :alt="selectedModalPlayer.username"
-                ></v-img>
-                <v-icon
-                  v-else
-                  icon="mdi-account"
-                  color="#42DDF2FF"
-                  size="100"
-                ></v-icon>
-              </v-avatar>
-              <div class="player-info">
-                <p><strong>Username:</strong> {{ selectedModalPlayer?.username }}</p>
-                <p><strong>First Name:</strong> {{ selectedModalPlayer?.first_name }}</p>
-                <p><strong>Last Name:</strong> {{ selectedModalPlayer?.last_name }}</p>
-                <p><strong>Game Win Ratio:</strong> {{ selectedModalPlayer?.game_win_ratio }}</p>
-                <p><strong>Country:</strong> {{ selectedModalPlayer?.country }}</p>
-                <p><strong>Email:</strong> {{ selectedModalPlayer?.user_email }}</p>
-                <p><strong>Team Name:</strong> {{ selectedModalPlayer?.team_name }}</p>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" text @click="showPlayerModal = false">Close</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Add Team Dialog -->
-        <v-dialog v-model="showAddTeamDialog" max-width="450">
-          <v-card class="dialog-card">
-            <div class="dialog-content">
-              <v-card-title class="dialog-title">
-                <span>Add New Team</span>
-              </v-card-title>
-
-              <v-card-text>
-                <div class="file-upload-section">
-                  <v-avatar size="120" class="preview-avatar">
-                    <v-img
-                      v-if="previewLogo"
-                      :src="previewLogo"
-                      alt="Team logo"
-                    ></v-img>
-                    <v-icon
-                      v-else
-                      icon="mdi-shield"
-                      color="#42DDF2FF"
-                      size="48"
-                    ></v-icon>
-                  </v-avatar>
-
-                  <v-file-input
-                    v-model="teamLogo"
-                    label="Team Logo"
-                    variant="outlined"
-                    accept="image/*"
-                    :show-size="true"
-                    prepend-icon="mdi-camera"
-                    class="upload-input"
-                    @change="onLogoChange"
-                    @click:clear="clearLogo"
-                    hide-details
-                  ></v-file-input>
-                </div>
-
-                <v-text-field
-                  v-model="teamName"
-                  label="Team Name"
-                  variant="outlined"
-                  :rules="rules.team"
-                  :error-messages="teamError"
-                  @update:model-value="teamError = ''"
-                  @keyup.enter="submitAddTeam"
-                ></v-text-field>
-              </v-card-text>
-
-              <v-card-actions class="dialog-actions">
-                <v-spacer></v-spacer>
-                <v-btn
-                  class="cancel-btn"
-                  variant="text"
-                  @click="handleCancelTeam"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  class="submit-btn"
-                  @click="submitAddTeam"
-                  :loading="isSubmitting"
-                  :disabled="!teamName"
-                >
-                  Create Team
-                </v-btn>
-              </v-card-actions>
-            </div>
-          </v-card>
-        </v-dialog>
-
         <!-- Update Player Dialog -->
         <v-dialog v-model="showUpdatePlayerDialog" max-width="450">
           <v-card class="dialog-card">
@@ -476,25 +369,36 @@
                       v-model="playerUsername"
                       label="Username"
                       variant="outlined"
-                      class="mt-4"
+                      :rules="rules.username"
+                      :error-messages="usernameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerFirstName"
                       label="First Name"
                       variant="outlined"
+                      :rules="rules.firstName"
+                      :error-messages="firstNameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerLastName"
                       label="Last Name"
                       variant="outlined"
+                      :rules="rules.lastName"
+                      :error-messages="lastNameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerCountry"
                       label="Country"
                       variant="outlined"
+                      :rules="rules.country"
+                      :error-messages="countryError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-autocomplete
@@ -860,7 +764,19 @@ const showPlayerModal = ref(false)
 const selectedModalPlayer = ref(null)
 const isLoadingPlayer = ref(false)
 
+const usernameError = ref('')
+const firstNameError = ref('')
+const lastNameError = ref('')
+const countryError = ref('')
+
 // Add Tournament
+
+const clearErrors = () => {
+  usernameError.value = ''
+  firstNameError.value = ''
+  lastNameError.value = ''
+  countryError.value = ''
+}
 
 const getMaxTeams = computed(() => {
   const formatTeamCounts = {
@@ -1604,12 +1520,14 @@ const checkPlayer = async () => {
     const response = await fetch(`${API_URL}/players?search=${encodeURIComponent(playerUsername.value)}`)
     const players = await response.json()
 
-    if (!players || players.length === 0) {
-      playerError.value = 'Player not found'
+    const exactMatch = players.find(p => p.username.toLowerCase() === playerUsername.value.toLowerCase())
+
+    if (!exactMatch) {
+      playerError.value = 'Player not found.'
       return
     }
 
-    selectedPlayer.value = players[0]
+    selectedPlayer.value = exactMatch
 
     // Pre-fill form if player exists and is not linked
     if (!selectedPlayer.value.user_email) {
@@ -1699,8 +1617,26 @@ const submitUpdatePlayer = async () => {
   }
 
   try {
+    clearErrors()
     isSubmitting.value = true
     playerError.value = ''
+
+    if (playerUsername.value && !rules.username.every(rule => rule(playerUsername.value) === true)) {
+      usernameError.value = 'Invalid username format'
+      return
+    }
+    if (playerFirstName.value && !rules.firstName.every(rule => rule(playerFirstName.value) === true)) {
+      firstNameError.value = 'Invalid first name format'
+      return
+    }
+    if (playerLastName.value && !rules.lastName.every(rule => rule(playerLastName.value) === true)) {
+      lastNameError.value = 'Invalid last name format'
+      return
+    }
+    if (playerCountry.value && !rules.country.every(rule => rule(playerCountry.value) === true)) {
+      countryError.value = 'Invalid country format'
+      return
+    }
 
     let url = `${API_URL}/players/${selectedPlayer.value.id}`
     const params = new URLSearchParams()
@@ -1718,16 +1654,15 @@ const submitUpdatePlayer = async () => {
       params.append('country', playerCountry.value)
     }
     if ((selectedPlayer.value.team_id && selectedTeam.value === '') ||
-    (selectedTeam.value && selectedTeam.value !== selectedPlayer.value.team_id)) {
+        (selectedTeam.value && selectedTeam.value !== selectedPlayer.value.team_id)) {
       if (selectedTeam.value === '') {
-        params.append('team_name', '');
+        params.append('team_name', '')
       } else {
-        const team = teams.value.find(t => t.id === selectedTeam.value);
+        const team = teams.value.find(t => t.id === selectedTeam.value)
         if (team) {
-          params.append('team_name', team.name);
+          params.append('team_name', team.name)
         }
       }
-
     }
 
     if (params.toString()) {
@@ -1751,6 +1686,20 @@ const submitUpdatePlayer = async () => {
 
     if (!response.ok) {
       const data = await response.json()
+      if (data.detail && typeof data.detail === 'string') {
+        if (data.detail.includes('username')) {
+          usernameError.value = data.detail
+        } else if (data.detail.includes('first_name')) {
+          firstNameError.value = data.detail
+        } else if (data.detail.includes('last_name')) {
+          lastNameError.value = data.detail
+        } else if (data.detail.includes('country')) {
+          countryError.value = data.detail
+        } else {
+          throw new Error(data.detail)
+        }
+        return
+      }
       throw new Error(data.detail || 'Failed to update player')
     }
 
@@ -2564,4 +2513,5 @@ onMounted(() => {
 .clickable-player:hover {
   transform: scale(1.1);
 }
+
 </style>
