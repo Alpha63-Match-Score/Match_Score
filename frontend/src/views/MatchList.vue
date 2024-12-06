@@ -35,8 +35,8 @@
         </v-row>
 
         <!-- Reset Filters Button -->
-        <v-row class="filter-row">
-          <v-col cols="12" md="4" offset-md="4">
+        <v-row class="filter-row" justify="center">
+          <v-col cols="auto">
             <v-btn
               class="reset-filter-btn"
               variant="outlined"
@@ -680,20 +680,67 @@ onUnmounted(() => {
   font-family: Orbitron, sans-serif;
 }
 
+.reset-filter-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 70px;
+}
+
+.filter-button-space {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
+  position: relative;
+  z-index: 4;
+}
+
+.reset-filter-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 70px;
+}
+
+.filter-button-space {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
+  position: relative;
+  z-index: 4;
+}
+
 .reset-filter-btn {
-  background: rgba(17, 78, 112, 0.56);
-  color: #ffffff !important;
-  border-color: #42DDF2FF !important;
+  background: rgba(45, 55, 75, 0.8);
+  color: #D0D0D0 !important;
+  border-color: #D0D0D0 !important;
   border-width: 2px !important;
-  border-radius: 50px;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  padding: 5px 40px !important;
-  font-size: 1.1rem !important;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+.reset-filter-btn .mdi-filter-remove-outline {
+  margin-right: 8px;
+  color: #D0D0D0;
 }
 
 .reset-filter-btn:hover {
   background: rgba(66, 221, 242, 0.1);
-  border-color: #42DDF2FF !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
 }
