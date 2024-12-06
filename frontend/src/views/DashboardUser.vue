@@ -6,6 +6,48 @@
 
     <div class="content-wrapper">
       <v-container>
+        <!-- Player Link Dialog -->
+        <v-dialog v-model="showPlayerLinkDialog" max-width="500">
+          <v-card class="dialog-card">
+            <div class="dialog-background"></div>
+            <div class="dialog-content">
+              <v-card-title class="dialog-title">
+                <span>Link Player Profile</span>
+              </v-card-title>
+              <v-card-text>
+                <v-text-field
+                  v-model="playerUsername"
+                  label="Player Username"
+                  variant="outlined"
+                  :rules="[rules.required]"
+                  class="player-username-input"
+                ></v-text-field>
+
+                <!-- Display Error for Player Link -->
+                <div v-if="playerLinkError" class="error-message">
+                  {{ playerLinkError }}
+                </div>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  class="cancel-btn"
+                  @click="showPlayerLinkDialog = false"
+                >
+                  Cancel
+                </v-btn>
+                <v-btn
+                  class="submit-btn"
+                  @click="submitPlayerLink"
+                  :loading="isSubmitting"
+                >
+                  Submit
+                </v-btn>
+              </v-card-actions>
+            </div>
+          </v-card>
+        </v-dialog>
+
         <!-- User Welcome Section -->
         <div class="welcome-card">
           <div class="welcome-background"></div>
@@ -76,58 +118,6 @@
                     {{ formatStatus(request.status) }}
                   </div>
                 </div>
-
-                <!-- Player Link Dialog -->
-                <v-dialog v-model="showPlayerLinkDialog" max-width="500">
-                  <v-card class="dialog-card">
-                    <div class="dialog-background"></div>
-                    <div class="dialog-content">
-                      <v-card-title class="dialog-title">
-                        <span>Link Player Profile</span>
-                      </v-card-title>
-                      <v-card-text>
-                        <v-text-field
-                          v-model="playerUsername"
-                          label="Player Username"
-                          variant="outlined"
-                          :rules="[rules.required]"
-                          class="player-username-input"
-                        ></v-text-field>
-
-                        <!-- Display Error for Player Link -->
-                        <div v-if="playerLinkError" class="error-message">
-                          {{ playerLinkError }}
-                        </div>
-                      </v-card-text>
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                          class="cancel-btn"
-                          @click="showPlayerLinkDialog = false"
-                        >
-                          Cancel
-                        </v-btn>
-                        <v-btn
-                          class="submit-btn"
-                          @click="submitPlayerLink"
-                          :loading="isSubmitting"
-                        >
-                          Submit
-                        </v-btn>
-                      </v-card-actions>
-                    </div>
-                  </v-card>
-                </v-dialog>
-
-                <!-- Success Alert -->
-                    <v-snackbar
-                      v-model="showSuccessAlert"
-                      color="success"
-                      timeout="3000"
-                    >
-                      {{ successMessage }}
-                    </v-snackbar>
-
                 <div class="request-details">
                   <div class="detail-item">
                     <v-icon icon="mdi-calendar" size="small" class="detail-icon"></v-icon>
@@ -139,6 +129,14 @@
                   </div>
                 </div>
               </div>
+              <!-- Success Alert -->
+              <v-snackbar
+                      v-model="showSuccessAlert"
+                      color="success"
+                      timeout="3000"
+                    >
+                      {{ successMessage }}
+                    </v-snackbar>
             </div>
 
             <!-- Empty state -->
@@ -154,7 +152,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch} from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { format } from 'date-fns'
 import { API_URL } from '@/config'
@@ -277,6 +275,7 @@ const openDirectorRequest = async () => {
 };
 
 const openPlayerLinkDialog = () => {
+
   if (hasPendingRequest.value) {
     actionsError.value = 'You already have a pending request.';
     return;
@@ -288,10 +287,6 @@ const openPlayerLinkDialog = () => {
 };
 
 const submitPlayerLink = async () => {
-  if (hasPendingRequest.value) {
-    actionsError.value = 'You already have a pending request.';
-    return;
-  }
 
   if (!playerUsername.value) {
     playerLinkError.value = 'Player username is required.';
@@ -301,15 +296,6 @@ const submitPlayerLink = async () => {
   try {
     isSubmitting.value = true;
     playerLinkError.value = null;
-
-    const existingRequest = requests.value.some(
-      (request) => request.request_type === 'link player profile' && request.status === 'pending'
-    );
-
-    if (existingRequest) {
-      playerLinkError.value = 'You already have a pending request.';
-      return;
-    }
 
     const response = await fetch(`${API_URL}/requests/players/${playerUsername.value}`, {
       method: 'POST',
@@ -635,4 +621,22 @@ onMounted(() => {
   color: #fed854;
   padding: 16px;
 }
+
+:deep(.v-overlay) {
+  z-index: 9999 !important;
+}
+
+:deep(.v-dialog) {
+  position: relative;
+  z-index: 10000 !important;
+}
+
+.dialog-card {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10001 !important;
+}
+
 </style>
