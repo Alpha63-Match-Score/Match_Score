@@ -1246,6 +1246,10 @@ const submitAddPlayer = async () => {
 
 
 const openAddPlayerDialog = async () => {
+  if (hasPendingRequest.value) {
+    actionsError.value = 'You already have a pending request.';
+    return;
+  }
   playerAvatar.value = null;
   if (previewAvatar.value) {
     URL.revokeObjectURL(previewAvatar.value);
@@ -1708,6 +1712,24 @@ const hasChanges = computed(() => {
 
   return hasPlayerDataChanges || hasAvatarChanges || hasTeamRemovalChange;
 });
+
+const fetchPlayerByEmail = async (email) => {
+  try {
+    isLoadingPlayer.value = true;
+    playerError.value = null;
+    const response = await fetch(`${API_URL}/players?email=${email}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    selectedPlayer.value = await response.json();
+    showPlayerModal.value = true;
+  } catch (e) {
+    console.error('Error fetching player:', e);
+    playerError.value = 'Failed to load player details. Please try again later.';
+  } finally {
+    isLoadingPlayer.value = false;
+  }
+};
 
 
 const removeFromTeam = () => {
@@ -2455,5 +2477,13 @@ onMounted(() => {
 :deep(.v-select .v-field) {
   background: transparent !important;
 }
+.clickable-player {
+  cursor: pointer;
+  color: #42DDF2FF;
+  transition: transform 0.2s;
+}
 
+.clickable-player:hover {
+  transform: scale(1.1);
+}
 </style>
