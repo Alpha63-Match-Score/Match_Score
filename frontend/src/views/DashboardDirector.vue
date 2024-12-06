@@ -103,19 +103,17 @@
                 ></div>
                 <div class="tournament-content">
                   <div class="tournament-header">
-                    <v-tooltip
-                      :text="tournament.title"
-                      location="top"
-                    >
+                    <v-tooltip :text="tournament.title" location="top">
                       <template v-slot:activator="{ props }">
-                        <h3 class="tournament-title" ref="titleElement" v-bind="props">
+                        <h3
+                          class="tournament-title"
+                          ref="titleElement"
+                          v-bind="props"
+                        >
                           {{ tournament.title }}
                         </h3>
                       </template>
                     </v-tooltip>
-                    <h3 v-else class="tournament-title" ref="titleElement">
-                      {{ tournament.title }}
-                    </h3>
                     <div class="format-tag">
                       {{ formatText(tournament.tournament_format.toUpperCase()) }}
                     </div>
@@ -148,7 +146,6 @@
             </v-col>
           </v-row>
         </div>
-
         <!-- Create Tournament Dialog -->
         <v-dialog v-model="showAddTournamentDialog" max-width="500">
           <v-card class="dialog-card">
@@ -171,7 +168,6 @@
 
                 <!-- Step 1: Tournament Details -->
                 <v-form v-if="currentStep === 1" ref="form">
-                  <!-- Title Field -->
                   <v-text-field
                     v-model="tournamentTitle"
                     label="Tournament Title"
@@ -180,7 +176,6 @@
                     :error-messages="titleError"
                   ></v-text-field>
 
-                  <!-- Format Selection -->
                   <v-select
                     v-model="tournamentFormat"
                     :items="formattedFormatOptions"
@@ -190,7 +185,6 @@
                     class="format-select"
                   ></v-select>
 
-                  <!-- Date Selection -->
                   <v-text-field
                     v-model="tournamentStartDate"
                     label="Start Date"
@@ -200,7 +194,6 @@
                     :error-messages="dateError"
                   ></v-text-field>
 
-                  <!-- Prize Pool -->
                   <v-text-field
                     v-model="tournamentPrizePool"
                     label="Prize Pool (Kitty Kibbles)"
@@ -214,7 +207,6 @@
                 <v-form v-else ref="teamForm">
                   <div class="team-slot" v-for="index in getMaxTeams" :key="index">
                     <div class="d-flex align-center">
-                      <!-- Normal autocomplete for existing teams -->
                       <v-autocomplete
                         v-if="!isCustomTeam[index - 1]"
                         v-model="selectedTeams[index - 1]"
@@ -237,7 +229,6 @@
                         </template>
                       </v-autocomplete>
 
-                      <!-- Custom team input -->
                       <v-text-field
                         v-else
                         v-model="customTeamNames[index - 1]"
@@ -247,7 +238,6 @@
                         :rules="getTeamRules(index - 1)"
                       ></v-text-field>
 
-                      <!-- Toggle button -->
                       <v-btn
                         icon
                         class="custom-toggle-btn ml-2"
@@ -713,6 +703,9 @@ const isCustomTeam = ref(Array(8).fill(false))
 const customTeamNames = ref(Array(8).fill(''))
 const titleError = ref('')
 const dateError = ref('')
+const currentStep = ref(1)
+const form = ref(null)
+const teamForm = ref(null)
 
 
 const formattedFormatOptions = [
@@ -787,6 +780,7 @@ const teamError = ref('')
 const previewLogo = ref<string | null>(null)
 const teamLogo = ref<File | null>(null)
 const titleElement = ref(null)
+const showTooltip = ref(false)
 const isTitleTruncated = ref(false)
 
 const canSubmitAddPlayer = computed(() => {
@@ -862,12 +856,12 @@ const canSubmit = computed(() => {
   return validTeamsCount >= requiredTeams[tournamentFormat.value]
 })
 
-const checkTitleTruncation = async () => {
-  await nextTick()
+const checkTitleTruncation = () => {
   if (titleElement.value) {
     const element = titleElement.value
-    isTitleTruncated.value = element.scrollWidth > element.clientWidth
+    return element.scrollWidth > element.offsetWidth
   }
+  return false
 }
 
 onMounted(() => {
@@ -2759,6 +2753,12 @@ onMounted(() => {
 
 :deep(.v-file-input .v-field__append-inner) {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.title-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: calc(100% - 120px);
 }
 
 
