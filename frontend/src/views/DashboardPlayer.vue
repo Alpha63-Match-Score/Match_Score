@@ -361,7 +361,7 @@
 
             <!-- Empty state -->
             <div v-else class="error-message">
-              No requests found. Start by submitting a new request!
+              No requests found. You have not submitted any requests.
             </div>
           </div>
         </div>
