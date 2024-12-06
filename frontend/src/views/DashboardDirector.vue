@@ -411,25 +411,36 @@
                       v-model="playerUsername"
                       label="Username"
                       variant="outlined"
-                      class="mt-4"
+                      :rules="rules.username"
+                      :error-messages="usernameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerFirstName"
                       label="First Name"
                       variant="outlined"
+                      :rules="rules.firstName"
+                      :error-messages="firstNameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerLastName"
                       label="Last Name"
                       variant="outlined"
+                      :rules="rules.lastName"
+                      :error-messages="lastNameError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-text-field
                       v-model="playerCountry"
                       label="Country"
                       variant="outlined"
+                      :rules="rules.country"
+                      :error-messages="countryError"
+                      @input="clearErrors"
                     ></v-text-field>
 
                     <v-autocomplete
@@ -699,6 +710,18 @@ const dateError = ref('')
 const currentStep = ref(1)
 const form = ref(null)
 const teamForm = ref(null)
+
+const usernameError = ref('')
+const firstNameError = ref('')
+const lastNameError = ref('')
+const countryError = ref('')
+
+const clearErrors = () => {
+  usernameError.value = ''
+  firstNameError.value = ''
+  lastNameError.value = ''
+  countryError.value = ''
+}
 
 
 const formattedFormatOptions = [
@@ -1474,6 +1497,13 @@ const openAddTeamDialog = () => {
 
 // Player methods
 const openUpdatePlayerDialog = async () => {
+  clearErrors()
+  playerError.value = ''
+  usernameError.value = ''
+  firstNameError.value = ''
+  lastNameError.value = ''
+  countryError.value = ''
+
   playerUsername.value = ''
   playerError.value = ''
   selectedPlayer.value = null
@@ -1508,12 +1538,14 @@ const checkPlayer = async () => {
     const response = await fetch(`${API_URL}/players?search=${encodeURIComponent(playerUsername.value)}`)
     const players = await response.json()
 
-    if (!players || players.length === 0) {
-      playerError.value = 'Player not found'
+    const exactMatch = players.find(p => p.username.toLowerCase() === playerUsername.value.toLowerCase())
+
+    if (!exactMatch) {
+      playerError.value = 'Player not found.'
       return
     }
 
-    selectedPlayer.value = players[0]
+    selectedPlayer.value = exactMatch
 
     // Pre-fill form if player exists and is not linked
     if (!selectedPlayer.value.user_email) {
@@ -1603,8 +1635,26 @@ const submitUpdatePlayer = async () => {
   }
 
   try {
+    clearErrors()
     isSubmitting.value = true
     playerError.value = ''
+
+    if (playerUsername.value && !rules.username.every(rule => rule(playerUsername.value) === true)) {
+      usernameError.value = 'Invalid username format'
+      return
+    }
+    if (playerFirstName.value && !rules.firstName.every(rule => rule(playerFirstName.value) === true)) {
+      firstNameError.value = 'Invalid first name format'
+      return
+    }
+    if (playerLastName.value && !rules.lastName.every(rule => rule(playerLastName.value) === true)) {
+      lastNameError.value = 'Invalid last name format'
+      return
+    }
+    if (playerCountry.value && !rules.country.every(rule => rule(playerCountry.value) === true)) {
+      countryError.value = 'Invalid country format'
+      return
+    }
 
     let url = `${API_URL}/players/${selectedPlayer.value.id}`
     const params = new URLSearchParams()
@@ -1622,16 +1672,15 @@ const submitUpdatePlayer = async () => {
       params.append('country', playerCountry.value)
     }
     if ((selectedPlayer.value.team_id && selectedTeam.value === '') ||
-    (selectedTeam.value && selectedTeam.value !== selectedPlayer.value.team_id)) {
+        (selectedTeam.value && selectedTeam.value !== selectedPlayer.value.team_id)) {
       if (selectedTeam.value === '') {
-        params.append('team_name', '');
+        params.append('team_name', '')
       } else {
-        const team = teams.value.find(t => t.id === selectedTeam.value);
+        const team = teams.value.find(t => t.id === selectedTeam.value)
         if (team) {
-          params.append('team_name', team.name);
+          params.append('team_name', team.name)
         }
       }
-
     }
 
     if (params.toString()) {
@@ -1655,6 +1704,20 @@ const submitUpdatePlayer = async () => {
 
     if (!response.ok) {
       const data = await response.json()
+      if (data.detail && typeof data.detail === 'string') {
+        if (data.detail.includes('username')) {
+          usernameError.value = data.detail
+        } else if (data.detail.includes('first_name')) {
+          firstNameError.value = data.detail
+        } else if (data.detail.includes('last_name')) {
+          lastNameError.value = data.detail
+        } else if (data.detail.includes('country')) {
+          countryError.value = data.detail
+        } else {
+          throw new Error(data.detail)
+        }
+        return
+      }
       throw new Error(data.detail || 'Failed to update player')
     }
 
