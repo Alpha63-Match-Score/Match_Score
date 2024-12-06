@@ -8,42 +8,60 @@
       <v-container>
         <!-- Filter Fields -->
         <v-row class="filter-row">
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="3">
             <v-select
               v-model="selectedStage"
               :items="stages"
+              item-title="text"
+              item-value="value"
               label="Stage"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
               clearable
             ></v-select>
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="3">
             <v-select
               v-model="selectedIsFinished"
               :items="isFinishedOptions"
-              label="Is Finished"
+              item-title="text"
+              item-value="value"
+              label="Status"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
               clearable
             ></v-select>
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="3">
             <v-select
               v-model="selectedTeam"
               :items="teamOptions"
+              item-title="text"
+              item-value="value"
               label="Team"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
               clearable
             ></v-select>
           </v-col>
         </v-row>
 
-        <!-- Reset Filters Button -->
-        <v-row class="filter-row" justify="center">
+        <!-- Show All Matches Button -->
+        <v-row class="filter-row" justify="center" style="margin-top: 3px;">
           <v-col cols="auto">
             <v-btn
               class="reset-filter-btn"
               variant="outlined"
               @click="resetFilters"
             >
-              <v-icon left class="mr-2">mdi-filter-remove-outline</v-icon>
-              Reset Filters
+              <v-icon left class="mr-2">mdi-filter-off</v-icon>
+              Show All Matches
             </v-btn>
           </v-col>
         </v-row>
@@ -235,7 +253,7 @@ const selectedIsFinished = ref<string | null>(null)
 const selectedTeam = ref<string | null>(null)
 
 const stages = ref<string[]>(['Group Stage', 'Quarterfinals', 'Semifinals', 'Finals'])
-const isFinishedOptions = ref<string[]>(['All', 'True', 'False'])
+const isFinishedOptions = ref<string[]>(['All', 'Finished', 'Not Finished'])
 const teamOptions = computed(() => {
   // Ensure unique team names and sort them
   return [...new Set(
@@ -335,8 +353,8 @@ const filteredMatches = computed(() => {
 
     // Filter by is_finished status
     const matchesIsFinished = !selectedIsFinished.value ||
-      (selectedIsFinished.value === 'True' && match.is_finished) ||
-      (selectedIsFinished.value === 'False' && !match.is_finished) ||
+      (selectedIsFinished.value === 'Finished' && match.is_finished) ||
+      (selectedIsFinished.value === 'Not Finished' && !match.is_finished) ||
       selectedIsFinished.value === 'All';
 
     // Filter by team (improved to handle case sensitivity and trim)
@@ -722,20 +740,21 @@ onUnmounted(() => {
 
 .reset-filter-btn {
   background: rgba(45, 55, 75, 0.8);
-  color: #D0D0D0 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
   border-color: #D0D0D0 !important;
   border-width: 2px !important;
-  border-radius: 8px;
+  border-radius: 50px;
   transition: all 0.2s ease;
   padding: 8px 16px !important;
   font-size: 0.9rem !important;
   display: inline-flex;
   align-items: center;
+  margin-top: -50px;
 }
 
 .reset-filter-btn .mdi-filter-remove-outline {
   margin-right: 8px;
-  color: #D0D0D0;
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .reset-filter-btn:hover {
@@ -744,4 +763,15 @@ onUnmounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
 }
+
+.filter-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;/* Center the row horizontally */
+}
+
+.filter-row .v-col {
+  max-width: 300px; /* Adjust the max-width as needed */
+}
+
 </style>
