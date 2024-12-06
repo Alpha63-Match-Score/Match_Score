@@ -89,6 +89,13 @@
             {{ tournamentsError }}
           </div>
 
+          <!-- Empty state -->
+          <div v-else-if="!tournaments.length" class="empty-state">
+            <v-icon icon="mdi-tournament" size="64" color="#42DDF2FF" class="mb-4"></v-icon>
+            <div class="empty-text">No tournaments created yet</div>
+            <div class="empty-subtext">Get started by clicking the "Add Tournament" button</div>
+          </div>
+
           <!-- Tournament Cards Grid -->
           <v-row v-else class="tournaments-grid">
             <v-col v-for="tournament in tournaments"
@@ -2816,6 +2823,31 @@ onMounted(() => {
   max-width: calc(100% - 120px);
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: rgba(45, 55, 75, 0.8);
+  border-radius: 20px;
+  border: 2px solid #42DDF2FF;
+  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  backdrop-filter: blur(2px);
+}
+
+.empty-text {
+  color: #42DDF2FF;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.empty-subtext {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  text-align: center;
+}
 
 
 </style>
