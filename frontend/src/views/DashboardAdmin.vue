@@ -1486,6 +1486,13 @@ const openAddTeamDialog = () => {
 
 // Player methods
 const openUpdatePlayerDialog = async () => {
+  clearErrors()
+  playerError.value = ''
+  usernameError.value = ''
+  firstNameError.value = ''
+  lastNameError.value = ''
+  countryError.value = ''
+
   playerUsername.value = ''
   playerError.value = ''
   selectedPlayer.value = null
