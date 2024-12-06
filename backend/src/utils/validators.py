@@ -132,7 +132,7 @@ def player_already_linked(db: Session, username: str) -> None:
 def user_email_exists(db: Session, email: str) -> None:
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND, detail="Email already exists"
+            status_code=HTTP_400_BAD_REQUEST, detail="Email already exists"
         )
 
 
