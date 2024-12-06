@@ -6,6 +6,66 @@
 
     <div class="content-wrapper">
       <v-container>
+        <!-- Filter Fields -->
+        <v-row class="filter-row">
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="selectedStage"
+              :items="stages"
+              item-title="text"
+              item-value="value"
+              label="Stage"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
+              clearable
+            ></v-select>
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="selectedIsFinished"
+              :items="isFinishedOptions"
+              item-title="text"
+              item-value="value"
+              label="Status"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
+              clearable
+            ></v-select>
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="selectedTeam"
+              :items="teamOptions"
+              item-title="text"
+              item-value="value"
+              label="Team"
+              variant="outlined"
+              density="comfortable"
+              bg-color="rgba(45, 55, 75, 0.8)"
+              color="#ffffff"
+              clearable
+            ></v-select>
+          </v-col>
+        </v-row>
+
+        <!-- Show All Matches Button -->
+        <v-row class="filter-row" justify="center" style="margin-top: 3px;">
+          <v-col cols="auto">
+            <v-btn
+              class="reset-filter-btn"
+              variant="outlined"
+              @click="resetFilters"
+            >
+              <v-icon left class="mr-2">mdi-filter-off</v-icon>
+              Show All Matches
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <!-- Loading state -->
         <div v-if="isLoadingMatches" class="d-flex justify-center align-center" style="height: 200px">
           <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
@@ -172,8 +232,14 @@ interface Tournament {
   tournament_format: string
 }
 
+interface Team {
+  id: string
+  name: string
+}
+
 const matches = ref<Match[]>([])
 const tournaments = ref<Tournament[]>([])
+const teams = ref<Team[]>([])
 const isLoadingMatches = ref(false)
 const matchesError = ref<string | null>(null)
 const currentLimit = ref(10)
@@ -182,6 +248,18 @@ const isLoadingMore = ref(false)
 const showMatchModal = ref(false)
 const selectedMatch = ref<Match | null>(null)
 const selectedFormat = ref<string | null>(null)
+const selectedStage = ref<string | null>(null)
+const selectedIsFinished = ref<string | null>(null)
+const selectedTeam = ref<string | null>(null)
+
+const stages = ref<string[]>(['Group Stage', 'Quarterfinals', 'Semifinals', 'Finals'])
+const isFinishedOptions = ref<string[]>(['All', 'Finished', 'Not Finished'])
+const teamOptions = computed(() => {
+  // Ensure unique team names and sort them
+  return [...new Set(
+    matches.value.flatMap(match => [match.team1_name, match.team2_name])
+  )].sort((a, b) => a.localeCompare(b));
+});
 
 const fetchMatches = async () => {
   try {
@@ -202,16 +280,6 @@ const fetchMatches = async () => {
   }
 }
 
-const getTournamentBackground = (format: string): string => {
-  const formatMap: Record<string, string> = {
-    "round robin": roundRobinBg,
-    "one off match": oneOffMatchBg,
-    "single elimination": singleEliminationBg,
-  };
-
-  return formatMap[format] || "@/assets/top-image.png";
-}
-
 const fetchTournaments = async () => {
   try {
     const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=10`)
@@ -222,6 +290,19 @@ const fetchTournaments = async () => {
     tournaments.value = Array.isArray(data) ? data : (data.results || [])
   } catch (e) {
     console.error('Error fetching tournaments:', e)
+  }
+}
+
+const fetchTeams = async () => {
+  try {
+    const response = await fetch(`${API_URL}/teams/?offset=0&limit=100`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    teams.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (e) {
+    console.error('Error fetching teams:', e)
   }
 }
 
@@ -252,16 +333,44 @@ const filterByFormat = (format: string) => {
   selectedFormat.value = format
 }
 
+const resetFilters = () => {
+  selectedFormat.value = null
+  selectedStage.value = null
+  selectedIsFinished.value = null
+  selectedTeam.value = null
+}
+
 const filteredMatches = computed(() => {
-  if (!selectedFormat.value) {
-    return matches.value
-  }
-  return matches.value.filter(match => getTournamentFormat(match.tournament_id) === selectedFormat.value)
-})
+  return matches.value.filter(match => {
+    // Filter by tournament format
+    const matchesFormat = !selectedFormat.value ||
+      getTournamentFormat(match.tournament_id) === selectedFormat.value;
+
+    // Filter by stage
+    const matchesStage = !selectedStage.value ||
+      selectedStage.value === 'All' ||
+      match.stage.toLowerCase() === selectedStage.value.toLowerCase();
+
+    // Filter by is_finished status
+    const matchesIsFinished = !selectedIsFinished.value ||
+      (selectedIsFinished.value === 'Finished' && match.is_finished) ||
+      (selectedIsFinished.value === 'Not Finished' && !match.is_finished) ||
+      selectedIsFinished.value === 'All';
+
+    // Filter by team (improved to handle case sensitivity and trim)
+    const matchesTeam = !selectedTeam.value ||
+      match.team1_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase() ||
+      match.team2_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase();
+
+    // Combine all filter criteria
+    return matchesFormat && matchesStage && matchesIsFinished && matchesTeam;
+  });
+});
 
 onMounted(() => {
   fetchMatches()
   fetchTournaments()
+  fetchTeams()
 })
 
 onUnmounted(() => {
@@ -587,6 +696,82 @@ onUnmounted(() => {
   font-size: 1.5rem;
   font-weight: bold;
   font-family: Orbitron, sans-serif;
+}
+
+.reset-filter-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 70px;
+}
+
+.filter-button-space {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
+  position: relative;
+  z-index: 4;
+}
+
+.reset-filter-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 70px;
+}
+
+.filter-button-space {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
+  position: relative;
+  z-index: 4;
+}
+
+.reset-filter-btn {
+  background: rgba(45, 55, 75, 0.8);
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-color: #D0D0D0 !important;
+  border-width: 2px !important;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  display: inline-flex;
+  align-items: center;
+  margin-top: -50px;
+}
+
+.reset-filter-btn .mdi-filter-remove-outline {
+  margin-right: 8px;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.reset-filter-btn:hover {
+  background: rgba(66, 221, 242, 0.1);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
+}
+
+.filter-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;/* Center the row horizontally */
+}
+
+.filter-row .v-col {
+  max-width: 300px; /* Adjust the max-width as needed */
 }
 
 </style>
