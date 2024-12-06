@@ -35,7 +35,7 @@ class TeamCreate(BaseConfig):
     name: str = Field(
         min_length=5,
         max_length=25,
-        pattern="^[a-zA-Z0-9_-]+$",
+        pattern="^[a-zA-Z0-9_\s-]+$",
         examples=["example_team"],
     )
 
@@ -45,6 +45,6 @@ class TeamUpdate(BaseConfig):
         default=None,
         min_length=5,
         max_length=25,
-        pattern="^[a-zA-Z0-9_-]+$",
+        pattern="^[a-zA-Z0-9_\s-]+$",
         examples=["example_team"],
     )
