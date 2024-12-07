@@ -52,7 +52,7 @@ import type { Player } from "@/types/types";
 
 // Props & Emits
 const props = defineProps<{
-  modelValue: boolean;  // за v-model
+  modelValue: boolean;
   player: Player | null;
 }>()
 

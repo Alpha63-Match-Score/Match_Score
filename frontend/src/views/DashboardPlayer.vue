@@ -1,207 +1,31 @@
 <template>
-  <div class="home-wrapper">
-    <!-- Header with fade effect -->
-    <div class="header-image"></div>
-    <div class="header-overlay"></div>
+  <div class="dashboard-wrapper">
+    <HeaderSection />
 
     <div class="content-wrapper">
       <v-container>
-        <!-- User Welcome Section -->
-        <div class="welcome-card">
-          <div class="welcome-background"></div>
-          <div class="welcome-content">
-            <h2 class="welcome-text">Welcome, {{  player?.username  }}</h2>
-          </div>
-        </div>
+        <!-- Director Welcome Section -->
+        <DashboardWelcome :userRole="player?.username" />
 
         <v-row class="dashboard-row">
           <!-- Player Profile Column -->
           <v-col cols="12" md="6">
-              <div class="player-card">
-                <div class="player-background"></div>
-                <div class="player-content">
-                  <!-- Top Section with Avatar and Main Info -->
-                  <div class="player-main-info">
-                    <!-- Avatar Section -->
-                    <div class="avatar-section">
-                      <v-avatar size="150" class="player-avatar" @click="openAvatarUpload">
-                        <v-img v-if="player?.avatar" :src="player.avatar" alt="Player avatar"></v-img>
-                        <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="80"></v-icon>
-                      </v-avatar>
-                    </div>
+            <PlayerCard
+              :player="player"
+              @edit="openEdit"
+              @avatarClick="openAvatarUpload"
+            />
 
-                    <!-- Player Info -->
-                    <div class="info-section">
-                      <div class="info-row">
-                        <div class="username">{{ player?.username }}</div>
-                      </div>
-
-                      <div class="info-row">
-                        <div class="full-name">
-                          {{ player?.first_name }} {{ player?.last_name }}
-                          <v-icon
-                            icon="mdi-pencil"
-                            class="edit-icon"
-                            @click="openEdit('name')"
-                          ></v-icon>
-                        </div>
-                      </div>
-
-                      <div class="info-row">
-                        <div class="country">
-                          <v-icon icon="mdi-earth" class="info-icon"></v-icon>
-                          {{ player?.country }}
-                        </div>
-                        <v-icon
-                          icon="mdi-pencil"
-                          class="edit-icon"
-                          @click="openEdit('country')"
-                        ></v-icon>
-                      </div>
-
-                      <div class="info-row">
-                        <div class="team">
-                          <v-icon icon="mdi-account-group" class="info-icon"></v-icon>
-                          {{ player?.team_name }}
-                        </div>
-                        <v-icon
-                          icon="mdi-pencil"
-                          class="edit-icon"
-                          @click="openEdit('team')"
-                        ></v-icon>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Bottom Section with Stats and Tournament -->
-                  <div class="player-stats-section">
-                    <!-- Stats Section -->
-                    <div class="stats-container">
-                      <div class="stats-header">My stats</div>
-                      <div class="progress-wrapper">
-                        <v-progress-linear
-                          :model-value="parseInt(player?.game_win_ratio)"
-                          color="#42DDF2FF"
-                          height="8"
-                          rounded
-                          class="progress-bar"
-                        ></v-progress-linear>
-                        <span class="win-ratio">{{ player?.game_win_ratio }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Tournament Section -->
-                    <div v-if="player?.current_tournament_title" class="tournament-container">
-                      <div class="tournament-header">Current tournament</div>
-                      <div class="tournament-name">
-                        <v-icon icon="mdi-trophy" class="tournament-icon"></v-icon>
-                        {{ player.current_tournament_title }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            <!-- Edit Dialog -->
-            <v-dialog v-model="showEditDialog" max-width="500">
-            <v-card class="edit-dialog">
-              <v-card-title>{{ editDialogTitle }}</v-card-title>
-              <v-card-text>
-                <v-alert
-                  v-if="editError"
-                  type="error"
-                  variant="tonal"
-                  class="mb-4"
-                >
-                  {{ editError }}
-                </v-alert>
-
-                <!-- Username Edit -->
-                <v-text-field
-                  v-if="editField === 'username'"
-                  v-model="editValue"
-                  label="Username"
-                  variant="outlined"
-                  :rules="rules.username"
-                  :error-messages="usernameError"
-                ></v-text-field>
-
-                <!-- Name Edit -->
-                <div v-if="editField === 'name'" class="d-flex gap-2">
-                  <v-text-field
-                    v-model="editFirstName"
-                    label="First Name"
-                    variant="outlined"
-                    :rules="rules.firstName"
-                    :error-messages="firstNameError"
-                  ></v-text-field>
-                  <v-text-field
-                    v-model="editLastName"
-                    label="Last Name"
-                    variant="outlined"
-                    :rules="rules.lastName"
-                    :error-messages="lastNameError"
-                  ></v-text-field>
-                </div>
-
-                <!-- Country Edit -->
-                <v-text-field
-                  v-if="editField === 'country'"
-                  v-model="editValue"
-                  label="Country"
-                  variant="outlined"
-                  :rules="rules.country"
-                  :error-messages="countryError"
-                ></v-text-field>
-
-                <!-- Team Edit -->
-                <div v-if="editField === 'team'">
-                  <v-select
-                    v-model="editValue"
-                    :items="teams"
-                    item-title="name"
-                    item-value="name"
-                    label="Select Team"
-                    variant="outlined"
-                    :loading="isLoadingTeams"
-                    clearable
-                    :menu-props="{ contentClass: 'teams-menu' }"
-                    :return-object="false"
-                  >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item
-                        v-bind="props"
-                        :title="item.raw.name"
-                        class="team-list-item"
-                      >
-                      </v-list-item>
-                    </template>
-                  </v-select>
-                  <div v-if="teamsError" class="text-caption error-text mt-2">
-                    {{ teamsError }}
-                  </div>
-                </div>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  class="cancel-btn"
-                  @click="closeEditDialog"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  class="submit-btn"
-                  @click="saveEdit"
-                  :loading="isSaving"
-                  :disabled="!hasValidChanges"
-                >
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-
+            <EditDialog
+              v-model="showEditDialog"
+              :player="player"
+              :edit-field="editField"
+              :edit-value="editValue"
+              :edit-first-name="editFirstName"
+              :edit-last-name="editLastName"
+              @update:modelValue="showEditDialog = $event"
+              @profile-updated="handleProfileUpdated"
+            />
             <!-- Avatar Upload Dialog -->
             <v-dialog v-model="showAvatarDialog" max-width="500">
               <v-card class="edit-dialog">
@@ -372,6 +196,11 @@ import { ref, computed, onMounted } from 'vue'
 import { API_URL } from '@/config'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
+import HeaderSection from "@/components/HeaderSection.vue";
+import DashboardWelcome from "@/components/DashboardWelcome.vue";
+import PlayerCard from "@/components/PlayerCard.vue";
+import EditDialog from "@/components/dialogs/EditDialog.vue";
+import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
 
 const authStore = useAuthStore()
 const userEmail = ref(authStore.userEmail)
@@ -497,6 +326,10 @@ const rules = {
   ],
 }
 
+const handleProfileUpdated = () => {
+  showSuccessAlert.value = true
+  successMessage.value = 'Profile updated successfully!'
+}
 // Methods
 const formatRequestType = (type: string): string => {
   return type.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -864,48 +697,17 @@ onMounted(() => {
 
 
 <style scoped>
-.header-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background-image: url('@/assets/top-image.png');
-  background-size: cover;
-  background-position: center;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-/*:deep(.v-field__input:-webkit-autofill) {*/
-/*  -webkit-box-shadow: 0 0 0 30px rgba(45, 55, 75, 0.8) inset !important;*/
-/*  -webkit-text-fill-color: white !important;*/
-/*}*/
-
-.header-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background: linear-gradient(
-    to bottom,
-    rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 30%,
-    rgba(23, 28, 38, 1) 80%
-  );
-  z-index: 2;
+.dashboard-wrapper {
+  min-height: 100vh;
+  position: relative;
 }
 
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding-top: 50px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100vw !important;
-  margin-bottom: 100px;
+  padding-top: 100px;
+  min-height: 100vh;
+  width: 100vw;
 }
 
 .welcome-card {
@@ -1360,54 +1162,6 @@ onMounted(() => {
 }
 
 /* Edit Dialog Styling */
-.edit-dialog {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-}
-
-:deep(.v-card-title) {
-  color: #42DDF2FF !important;
-  font-size: 1.4rem;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(66, 221, 242, 0.2);
-}
-
-:deep(.v-card-text) {
-  padding: 24px;
-}
-
-:deep(.v-field) {
-  border-color: rgba(66, 221, 242, 0.3) !important;
-}
-
-:deep(.v-field:hover) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-field.v-field--focused) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-label) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:deep(.v-field__input) {
-  color: white !important;
-}
-
-:deep(.v-text-field input) {
-  color: white !important;
-}
-
-:deep(.v-field__outline) {
-  color: rgba(66, 221, 242, 0.3) !important;
-}
-
-:deep(.v-icon) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
 
 /* File Input Styling */
 :deep(.v-file-input) {

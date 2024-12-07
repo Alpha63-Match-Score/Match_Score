@@ -20,14 +20,21 @@ export interface Request {
 }
 
 export interface Player {
+  id: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  country: string;
+  user_email: string;
+  team_name: string;
+  avatar: string | null;
+  game_win_ratio: string;
+  current_tournament_title: string | null;
+}
+
+export interface Team {
   id: string
-  username: string
-  first_name: string
-  last_name: string
-  country: string
-  user_email: string | null
-  avatar: string | null
-  team_id: string | null
+  name: string
 }
 
 export interface FilterOption {
