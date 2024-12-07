@@ -137,7 +137,18 @@ const authStore = useAuthStore()
 const searchQuery = ref('')
 
 // Pages where search should be hidden
-const noSearchPages = ['/', '/login', '/register', '/dashboard', '/about']
+const noSearchPages = [
+  '/', '/login', '/register', '/dashboard', '/about', '/dashboard-player',
+  'dashboard-user', '/dashboard-admin', '/dashboard-director', '/events/:id', '/teams/:id']
+
+const matchesPathPattern = (currentPath: string, pattern: string): boolean => {
+  const regexPattern = pattern
+    .replace(':id', '[0-9a-fA-F-]+')
+    .replace(/\//g, '\\/');
+
+  const regex = new RegExp(`^${regexPattern}$`);
+  return regex.test(currentPath);
+};
 
 const dashboardPath = computed(() => {
   switch (authStore.userRole) {
@@ -156,7 +167,8 @@ const dashboardPath = computed(() => {
 
 // Computed property to determine if search should be shown
 const shouldShowSearch = computed(() => {
-  return !noSearchPages.includes(route.path)
+  const currentPath = route.path;
+  return !noSearchPages.some(pattern => matchesPathPattern(currentPath, pattern));
 })
 
 // Function to handle search based on current route
