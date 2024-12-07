@@ -681,6 +681,16 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
+.team-avatar-link {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.team-avatar-link:hover {
+  text-decoration: none;
+  background: transparent !important;
+}
+
 .custom-dialog-card .v-btn:hover {
   background: rgba(66, 221, 242, 0.1) !important;
   transform: translateY(-2px);
