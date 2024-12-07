@@ -8,6 +8,28 @@ export interface Tournament {
   number_of_teams: number
 }
 
+export interface Request {
+  id: string;
+  email: string;
+  request_type: string;
+  status: string;
+  request_date: string;
+  response_date: string | null;
+  admin_id: string | null;
+  username: string | null;
+}
+
+export interface Player {
+  id: string
+  username: string
+  first_name: string
+  last_name: string
+  country: string
+  user_email: string | null
+  avatar: string | null
+  team_id: string | null
+}
+
 export interface FilterOption {
   text: string
   value: string
@@ -18,3 +40,4 @@ export interface FilterValues {
   status: string | null
   format: string | null
 }
+

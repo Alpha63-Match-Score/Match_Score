@@ -1,87 +1,32 @@
 <template>
-  <div class="tournament-list-wrapper">
-    <!-- Header with fade effect -->
-    <div class="header-image"></div>
-    <div class="header-overlay"></div>
+  <div class="dashboard-wrapper">
+    <HeaderSection />
 
     <div class="content-wrapper">
       <v-container>
         <!-- Director Welcome Section -->
-        <div class="welcome-card">
-          <div class="welcome-content">
-            <h2 class="welcome-text">Welcome, Director</h2>
-          </div>
-        </div>
+        <DashboardWelcome :userRole="'Director'" />
 
         <!-- Action Buttons Section -->
-        <div class="actions-card">
-          <div class="actions-content">
-            <div class="actions-grid">
-              <div class="actions-row">
-                <v-btn class="action-btn" prepend-icon="mdi-tournament" @click="openAddTournamentDialog">
-                  Add Tournament
-                </v-btn>
-                <v-btn class="action-btn" prepend-icon="mdi-account-group" @click="openAddTeamDialog">
-                  Add Team
-                </v-btn>
-              </div>
-              <div class="actions-row">
-                <v-btn class="action-btn" prepend-icon="mdi-account" @click="openAddPlayerDialog">
-                  Add Player
-                </v-btn>
-                <v-btn class="action-btn" prepend-icon="mdi-account-edit" @click="openUpdatePlayerDialog">
-                  Update Player
-                </v-btn>
-              </div>
-            </div>
-
-            <!-- Display Error for Director Actions -->
-            <div v-if="actionsError" class="error-message">
-              {{ actionsError }}
-            </div>
-          </div>
-        </div>
+        <AdminActions
+          :openAddTournamentDialog="openAddTournamentDialog"
+          :openAddTeamDialog="openAddTeamDialog"
+          :openAddPlayerDialog="openAddPlayerDialog"
+          :openUpdatePlayerDialog="openUpdatePlayerDialog"
+          @open-tournament="openAddTournamentDialog"
+          @open-team="openAddTeamDialog"
+          @open-player="openAddPlayerDialog"
+          @open-update-player="openUpdatePlayerDialog"
+        />
 
         <!-- Filter section -->
-        <div class="filters-section">
-          <div class="filters-wrapper">
-            <v-select
-              v-model="selectedPeriod"
-              :items="periodOptions"
-              item-title="text"
-              item-value="value"
-              label="Period"
-              variant="outlined"
-              density="comfortable"
-              class="filter-select"
-              bg-color="rgba(45, 55, 75, 0.8)"
-              color="#ffffff"
-              menu-icon="mdi-chevron-down"
-              @update:model-value="handleFiltersChange"
-            />
-
-            <v-select
-              v-model="selectedStatus"
-              :items="statusOptions"
-              item-title="text"
-              item-value="value"
-              label="Status"
-              variant="outlined"
-              density="comfortable"
-              class="filter-select"
-              bg-color="rgba(45, 55, 75, 0.8)"
-              color="#ffffff"
-              menu-icon="mdi-chevron-down"
-              @update:model-value="handleFiltersChange"
-            />
-          </div>
-        </div>
+        <FilterBar @filter-change="handleFiltersChange"/>
 
         <!-- Tournaments Content -->
         <div class="tournaments-section">
           <!-- Loading state -->
-          <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
-            <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
+          <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
+            <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
           </div>
 
           <!-- Error state -->
@@ -97,543 +42,41 @@
           </div>
 
           <!-- Tournament Cards Grid -->
-          <v-row v-else class="tournaments-grid">
+          <v-row v-else>
             <v-col v-for="tournament in tournaments"
-                   :key="tournament.id"
-                   cols="12"
-                   md="6"
-                   class="tournament-column">
-              <div class="tournament-card">
-                <div
-                  class="tournament-background"
-                  :style="{ '--tournament-bg': `url(${getTournamentBackground(tournament.tournament_format)})` }"
-                ></div>
-                <div class="tournament-content">
-                  <div class="tournament-header">
-                      <h3 class="tournament-title">
-                        {{ tournament.title }}
-                      </h3>
-
-                    <div class="format-tag">
-                      {{ formatText(tournament.tournament_format.toUpperCase()) }}
-                    </div>
-                  </div>
-
-                  <div class="tournament-info">
-                    <div class="info-section">
-                      <v-icon icon="mdi-calendar" class="mr-2 info-icon"></v-icon>
-                      <span>{{ formatDateRange(tournament.start_date, tournament.end_date) }}</span>
-                    </div>
-
-                    <div class="info-section">
-                      <v-icon icon="mdi-flag" class="mr-2 info-icon"></v-icon>
-                      <span>Stage: {{ formatStage(tournament.current_stage) }}</span>
-                    </div>
-
-                    <div class="info-section">
-                      <v-icon icon="mdi-account-group" class="mr-2 info-icon"></v-icon>
-                      <span>{{ tournament.number_of_teams }} teams</span>
-                    </div>
-                  </div>
-
-                  <v-btn class="view-details-btn"
-                         variant="outlined"
-                         :to="'/events/' + tournament.id">
-                    View Details
-                  </v-btn>
-                </div>
-              </div>
+               :key="tournament.id"
+               cols="12"
+               md="6"
+               class="tournament-column">
+              <TournamentCard :tournament="tournament" />
             </v-col>
           </v-row>
+
+          <!-- Load More Button -->
+          <LoadMoreButton
+            v-if="!isLoadingTournaments && hasMoreTournaments"
+            :is-loading="isLoadingMore"
+            @load-more="loadMoreTournaments"
+          />
         </div>
 
-
-
-        <!-- Create Tournament Dialog -->
-        <v-dialog v-model="showAddTournamentDialog" max-width="500">
-          <v-card class="dialog-card">
-            <div class="dialog-content">
-              <v-card-title class="dialog-title">
-                <span>{{ currentStep === 1 ? 'Tournament Details' : 'Select Teams' }}</span>
-              </v-card-title>
-
-              <v-card-text>
-                <!-- Error Alert -->
-                <v-alert
-                  v-if="tournamentError"
-                  type="error"
-                  variant="tonal"
-                  closable
-                  class="mb-4"
-                >
-                  {{ tournamentError }}
-                </v-alert>
-
-                <!-- Step 1: Tournament Details -->
-                <v-form v-if="currentStep === 1" ref="form">
-                  <v-text-field
-                    v-model="tournamentTitle"
-                    label="Tournament Title"
-                    variant="outlined"
-                    :rules="[rules.required, rules.minLength]"
-                    :error-messages="titleError"
-                  ></v-text-field>
-
-                  <v-select
-                    v-model="tournamentFormat"
-                    :items="formattedFormatOptions"
-                    label="Tournament Format"
-                    variant="outlined"
-                    :rules="[rules.required]"
-                    class="format-select"
-                  ></v-select>
-
-                  <v-text-field
-                    v-model="tournamentStartDate"
-                    label="Start Date"
-                    type="datetime-local"
-                    variant="outlined"
-                    :rules="[rules.required]"
-                    :error-messages="dateError"
-                  ></v-text-field>
-
-                  <v-text-field
-                    v-model="tournamentPrizePool"
-                    label="Prize Pool (Kitty Kibbles)"
-                    variant="outlined"
-                    type="number"
-                    :rules="[rules.required, rules.minPrize]"
-                  ></v-text-field>
-                </v-form>
-
-                <!-- Step 2: Team Selection -->
-                <v-form v-else ref="teamForm">
-                  <div class="team-slot" v-for="index in getMaxTeams" :key="index">
-                    <div class="d-flex align-center">
-                      <v-autocomplete
-                        v-if="!isCustomTeam[index - 1]"
-                        v-model="selectedTeams[index - 1]"
-                        :items="getAvailableTeamsForSlot(index - 1)"
-                        item-title="name"
-                        item-value="id"
-                        :label="`Team ${index}`"
-                        variant="outlined"
-                        :loading="loadingTeams"
-                        clearable
-                        class="flex-grow-1 custom-autocomplete"
-                        :rules="getTeamRules(index - 1)"
-                      >
-                        <template v-slot:item="{ props, item }">
-                          <v-list-item
-                            v-bind="props"
-                            :title="item.raw.name"
-                            class="team-list-item"
-                          ></v-list-item>
-                        </template>
-                      </v-autocomplete>
-
-                      <v-text-field
-                        v-else
-                        v-model="customTeamNames[index - 1]"
-                        :label="`Custom Team ${index}`"
-                        variant="outlined"
-                        class="flex-grow-1"
-                        :rules="getTeamRules(index - 1)"
-                      ></v-text-field>
-
-                      <v-btn
-                        icon
-                        class="custom-toggle-btn ml-2"
-                        @click="toggleCustomTeam(index - 1)"
-                        :title="isCustomTeam[index - 1] ? 'Switch to existing teams' : 'Add custom team'"
-                        variant="outlined"
-                      >
-                        <v-icon size="20">
-                          {{ isCustomTeam[index - 1] ? 'mdi-format-list-bulleted' : 'mdi-plus' }}
-                        </v-icon>
-                      </v-btn>
-                    </div>
-                  </div>
-                </v-form>
-              </v-card-text>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn class="cancel-btn" @click="handleCancel">
-                  Cancel
-                </v-btn>
-                <v-btn
-                  v-if="currentStep === 1"
-                  class="next-btn"
-                  @click="handleNext"
-                  :disabled="!canProceedToTeams"
-                >
-                  Next
-                </v-btn>
-                <v-btn
-                  v-else
-                  class="submit-btn"
-                  @click="submitTournament"
-                  :loading="isSubmitting"
-                  :disabled="!canSubmit"
-                >
-                  Create Tournament
-                </v-btn>
-              </v-card-actions>
-            </div>
-          </v-card>
-        </v-dialog>
-
-        <!-- Add Team Dialog -->
-        <v-dialog v-model="showAddTeamDialog" max-width="450">
-          <v-card class="dialog-card">
-            <div class="dialog-content">
-              <v-card-title class="dialog-title">
-                <span>Add New Team</span>
-              </v-card-title>
-
-              <v-card-text>
-                <div class="file-upload-section">
-                  <v-avatar size="120" class="preview-avatar">
-                    <v-img
-                      v-if="previewLogo"
-                      :src="previewLogo"
-                      alt="Team logo"
-                    ></v-img>
-                    <v-icon
-                      v-else
-                      icon="mdi-shield"
-                      color="#42DDF2FF"
-                      size="48"
-                    ></v-icon>
-                  </v-avatar>
-
-                  <v-file-input
-                    v-model="teamLogo"
-                    label="Team Logo"
-                    variant="outlined"
-                    accept="image/*"
-                    :show-size="true"
-                    prepend-icon="mdi-camera"
-                    class="upload-input"
-                    @change="onLogoChange"
-                    @click:clear="clearLogo"
-                    hide-details
-                  ></v-file-input>
-                </div>
-
-                <v-text-field
-                  v-model="teamName"
-                  label="Team Name"
-                  variant="outlined"
-                  :rules="rules.team"
-                  :error-messages="teamError"
-                  @update:model-value="teamError = ''"
-                  @keyup.enter="submitAddTeam"
-                ></v-text-field>
-              </v-card-text>
-
-              <v-card-actions class="dialog-actions">
-                <v-spacer></v-spacer>
-                <v-btn
-                  class="cancel-btn"
-                  variant="text"
-                  @click="handleCancelTeam"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  class="submit-btn"
-                  @click="submitAddTeam"
-                  :loading="isSubmitting"
-                  :disabled="!teamName"
-                >
-                  Create Team
-                </v-btn>
-              </v-card-actions>
-            </div>
-          </v-card>
-        </v-dialog>
-
-        <!-- Update Player Dialog -->
-        <v-dialog v-model="showUpdatePlayerDialog" max-width="450">
-          <v-card class="dialog-card">
-            <div class="dialog-content">
-              <v-card-title class="dialog-title">
-                <span>Update Player</span>
-              </v-card-title>
-
-              <v-card-text>
-                <!-- Username Check Step -->
-                <div v-if="!selectedPlayer" class="input-wrapper">
-                  <v-text-field
-                    v-model="playerUsername"
-                    label="Player Username"
-                    variant="outlined"
-                    :rules="[rules.required]"
-                    :error-messages="playerError"
-                    @keyup.enter="checkPlayer"
-                    @input="playerError = ''"
-                  ></v-text-field>
-                </div>
-
-                <!-- Player Update Form -->
-                <div v-else>
-                  <div class="player-status mb-4 text-center">
-                    <v-chip
-                      :color="selectedPlayer.user_email ? 'error' : 'success'"
-                      class="status-chip"
-                    >
-                      {{ selectedPlayer.user_email ? 'Linked to User' : 'Available for Update' }}
-                    </v-chip>
-                  </div>
-
-                  <template v-if="!selectedPlayer.user_email">
-                    <div class="file-upload-section">
-                      <v-avatar size="120" class="preview-avatar">
-                        <v-img
-                          v-if="previewAvatar || selectedPlayer.avatar"
-                          :src="previewAvatar || selectedPlayer.avatar"
-                          alt="Player avatar"
-                        ></v-img>
-                        <v-icon
-                          v-else
-                          icon="mdi-account"
-                          color="#42DDF2FF"
-                          size="48"
-                        ></v-icon>
-                      </v-avatar>
-
-                      <v-file-input
-                        v-model="playerAvatar"
-                        label="Player Avatar (Optional)"
-                        variant="outlined"
-                        accept="image/*"
-                        prepend-icon="mdi-camera"
-                        :show-size="true"
-                        class="upload-input"
-                        @change="onAvatarChange"
-                        hide-details
-                      ></v-file-input>
-                    </div>
-
-                    <v-text-field
-                      v-model="playerUsername"
-                      label="Username"
-                      variant="outlined"
-                      :rules="rules.username"
-                      :error-messages="usernameError"
-                      @input="clearErrors"
-                    ></v-text-field>
-
-                    <v-text-field
-                      v-model="playerFirstName"
-                      label="First Name"
-                      variant="outlined"
-                      :rules="rules.firstName"
-                      :error-messages="firstNameError"
-                      @input="clearErrors"
-                    ></v-text-field>
-
-                    <v-text-field
-                      v-model="playerLastName"
-                      label="Last Name"
-                      variant="outlined"
-                      :rules="rules.lastName"
-                      :error-messages="lastNameError"
-                      @input="clearErrors"
-                    ></v-text-field>
-
-                    <v-text-field
-                      v-model="playerCountry"
-                      label="Country"
-                      variant="outlined"
-                      :rules="rules.country"
-                      :error-messages="countryError"
-                      @input="clearErrors"
-                    ></v-text-field>
-
-                    <v-autocomplete
-                      v-model="selectedTeam"
-                      :items="teams"
-                      item-title="name"
-                      item-value="name"
-                      label="Team"
-                      variant="outlined"
-                      :loading="loadingTeams"
-                      clearable
-                      :menu-props="{ contentClass: 'teams-menu' }"
-                      :return-object="false"
-                      :model-value="selectedTeam"
-                      @update:model-value="handleTeamChange"
-                    >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item
-                          v-bind="props"
-                          :title="item.raw.name"
-                          class="team-list-item"
-                        >
-                        </v-list-item>
-                      </template>
-                    </v-autocomplete>
-                  </template>
-
-                  <div v-else class="text-center mt-4">
-                    This player is linked to a user and cannot be updated.
-                  </div>
-                </div>
-              </v-card-text>
-
-              <v-card-actions class="dialog-actions">
-                <v-spacer></v-spacer>
-                <v-btn
-                  class="cancel-btn"
-                  variant="text"
-                  @click="closeUpdatePlayerDialog"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  v-if="!selectedPlayer"
-                  class="next-btn"
-                  @click="checkPlayer"
-                  :loading="isCheckingPlayer"
-                  :disabled="!playerUsername"
-                >
-                  Next
-                </v-btn>
-                <v-btn
-                  v-if="selectedPlayer && !selectedPlayer.user_email"
-                  class="submit-btn"
-                  @click="submitUpdatePlayer"
-                  :loading="isSubmitting"
-                  :disabled="!hasChanges"
-                >
-                  {{ hasChanges ? 'Update Player' : 'No Changes' }}
-                </v-btn>
-              </v-card-actions>
-            </div>
-          </v-card>
-        </v-dialog>
-
-        <!-- Add Player Dialog -->
-        <v-dialog v-model="showAddPlayerDialog" max-width="450">
-          <v-card class="dialog-card">
-            <div class="dialog-content">
-              <v-card-title class="dialog-title">
-                <span>Add New Player</span>
-              </v-card-title>
-
-              <v-card-text>
-                <div class="file-upload-section">
-                  <v-avatar size="120" class="preview-avatar">
-                    <v-img
-                      v-if="previewAvatar"
-                      :src="previewAvatar"
-                      alt="Player avatar"
-                    ></v-img>
-                    <v-icon
-                      v-else
-                      icon="mdi-account"
-                      color="#42DDF2FF"
-                      size="48"
-                    ></v-icon>
-                  </v-avatar>
-
-                  <v-file-input
-                    v-model="playerAvatar"
-                    label="Player Avatar (Optional)"
-                    variant="outlined"
-                    accept="image/*"
-                    :show-size="true"
-                    prepend-icon="mdi-camera"
-                    class="upload-input"
-                    @change="onAvatarChange"
-                    @click:clear="clearAvatar"
-                    hide-details
-                  ></v-file-input>
-                </div>
-
-                <v-form ref="addPlayerForm" v-model="isFormValid">
-                  <v-text-field
-                    v-model="addPlayerUsername"
-                    label="Username"
-                    variant="outlined"
-                    :rules="rules.username"
-                    :error-messages="addPlayerUsernameError"
-                    @input="clearAddPlayerErrors"
-                  ></v-text-field>
-
-                  <v-text-field
-                    v-model="addPlayerFirstName"
-                    label="First Name"
-                    variant="outlined"
-                    :rules="rules.firstName"
-                    :error-messages="addPlayerFirstNameError"
-                    @input="clearAddPlayerErrors"
-                  ></v-text-field>
-
-                  <v-text-field
-                    v-model="addPlayerLastName"
-                    label="Last Name"
-                    variant="outlined"
-                    :rules="rules.lastName"
-                    :error-messages="addPlayerLastNameError"
-                    @input="clearAddPlayerErrors"
-                  ></v-text-field>
-
-                  <v-text-field
-                    v-model="addPlayerCountry"
-                    label="Country"
-                    variant="outlined"
-                    :rules="rules.country"
-                    :error-messages="addPlayerCountryError"
-                    @input="clearAddPlayerErrors"
-                  ></v-text-field>
-                </v-form>
-
-                <v-autocomplete
-                  v-model="selectedTeam"
-                  :items="teams"
-                  item-title="name"
-                  item-value="id"
-                  label="Team (Optional)"
-                  variant="outlined"
-                  :loading="loadingTeams"
-                  clearable
-                  :menu-props="{ contentClass: 'teams-menu' }"
-                  >
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item
-                      v-bind="props"
-                      :title="item.title"
-                      class="team-list-item"
-                    ></v-list-item>
-                  </template>
-                ></v-autocomplete>
-              </v-card-text>
-
-              <v-card-actions class="dialog-actions">
-                <v-spacer></v-spacer>
-                <v-btn
-                  class="cancel-btn"
-                  variant="text"
-                  @click="closeAddPlayerDialog"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  class="submit-btn"
-                  @click="submitAddPlayer"
-                  :loading="isSubmitting"
-                  :disabled="!canSubmitPlayer"
-                >
-                  Create Player
-                </v-btn>
-              </v-card-actions>
-            </div>
-          </v-card>
-        </v-dialog>
+        <!-- Dialogs -->
+        <AddTournamentDialog
+          v-model="showAddTournamentDialog"
+          @tournament-added="handleTournamentAdded"
+        />
+        <AddTeamDialog
+          v-model="showAddTeamDialog"
+          @team-added="handleTeamAdded"
+        />
+        <AddPlayerDialog
+          v-model="showAddPlayerDialog"
+          @player-added="handlePlayerAdded"
+        />
+        <UpdatePlayerDialog
+          v-model="showUpdatePlayerDialog"
+          @player-updated="handlePlayerUpdated"
+        />
 
         <!-- Success Snackbar -->
         <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
@@ -646,23 +89,21 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { format } from 'date-fns'
 import { API_URL } from '@/config'
-import singleEliminationBg from '@/assets/single-elimination.png'
-import roundRobinBg from '@/assets/round-robin.png'
-import oneOffMatchBg from '@/assets/one-off-match.png'
-
-interface Tournament {
-  id: string
-  title: string
-  tournament_format: string
-  start_date: string
-  end_date: string
-  current_stage: string
-  number_of_teams: number
-}
+import DashboardWelcome from "@/components/DashboardWelcome.vue";
+import AdminActions from "@/components/AdminActions.vue";
+import FilterBar from "@/components/TournamentFilterBar.vue";
+import TournamentCard from "@/components/TournamentCard.vue";
+import AddTournamentDialog from "@/components/dialogs/AddTournamentDialog.vue";
+import AddTeamDialog from "@/components/dialogs/AddTeamDialog.vue";
+import UpdatePlayerDialog from "@/components/dialogs/UpdatePlayerDialog.vue";
+import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
+import type { Tournament, Request, Player, FilterValues } from '@/types/types'
+import LoadMoreButton from "@/components/LoadMoreButton.vue";
+import HeaderSection from "@/components/HeaderSection.vue";
 
 // Props and Emits
 const props = defineProps({
@@ -670,33 +111,11 @@ const props = defineProps({
   isSubmitting: Boolean
 })
 const emit = defineEmits(['update:showDialog', 'submit', 'cancel'])
-// Data
-interface Request {
-  id: string;
-  email: string;
-  request_type: string;
-  status: string;
-  request_date: string;
-  response_date: string | null;
-  admin_id: string | null;
-  username: string | null;
-}
 
-interface Player {
-  id: string
-  username: string
-  first_name: string
-  last_name: string
-  country: string
-  user_email: string | null
-  avatar: string | null
-  team_id: string | null
-}
 
 
 const authStore = useAuthStore()
 const tournaments = ref<Tournament[]>([])
-const isLoading = ref(true)
 const tournamentsError = ref<string | null>(null)
 const showSuccessAlert = ref(false)
 const successMessage = ref('')
@@ -720,6 +139,7 @@ const dateError = ref('')
 const currentStep = ref(1)
 const form = ref(null)
 const teamForm = ref(null)
+const currentLimit = ref(10);
 
 const usernameError = ref('')
 const firstNameError = ref('')
@@ -890,6 +310,26 @@ const checkTitleTruncation = () => {
   return false
 }
 
+const handleTeamAdded = () => {
+  showSuccessAlert.value = true
+  successMessage.value = 'Team added successfully!'
+}
+
+const handleTournamentAdded = () => {
+  showSuccessAlert.value = true
+  successMessage.value = 'Tournament created successfully!'
+}
+
+const handlePlayerAdded = (newPlayer: Player) => {
+  showSuccessAlert.value = true
+  successMessage.value = `Player ${newPlayer.username} was successfully added!`
+}
+
+const handlePlayerUpdated = (updatedPlayer: Player) => {
+  showSuccessAlert.value = true
+  successMessage.value = `Player ${updatedPlayer.username} was successfully updated!`
+}
+
 onMounted(() => {
   checkTitleTruncation()
   window.addEventListener('resize', checkTitleTruncation)
@@ -998,39 +438,88 @@ const resetForm = () => {
   dateError.value = ''
 }
 
-const handleFiltersChange = async () => {
+const isFiltered = ref(false);
+const isLoadingTournaments = ref(false);
+const hasMoreTournaments = ref(true);
+const isLoadingMore = ref(false);
+const selectedFormat = ref<string | null>(null);
+
+const handleFiltersChange = async (filters: FilterValues) => {
   try {
-    isLoading.value = true
-    let url = `${API_URL}/tournaments/?author_id=${authStore.userId}`
+    isLoadingTournaments.value = true;
+    tournamentsError.value = null;
+    currentLimit.value = 10;
 
-    if (selectedPeriod.value !== 'all') {
-      url += `&period=${selectedPeriod.value}`
+    const params = new URLSearchParams();
+    params.append('offset', '0');
+    params.append('limit', currentLimit.value.toString());
+
+    if (filters.period) {
+      params.append('period', filters.period);
     }
 
-    if (selectedStatus.value !== 'all') {
-      url += `&status=${selectedStatus.value}`
+    if (filters.status) {
+      params.append('status', filters.status);
     }
 
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`
-      }
-    })
+    if (filters.format) {
+      params.append('tournament_format', filters.format);
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/?${params}`);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch tournaments')
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json()
-    tournaments.value = data
+    const data = await response.json();
+    const results = Array.isArray(data) ? data : data.results || [];
+    tournaments.value = results;
+
+    isFiltered.value = !!(selectedPeriod.value || selectedStatus.value || selectedFormat.value);
+    hasMoreTournaments.value = results.length === currentLimit.value;
 
   } catch (e) {
-    console.error('Error fetching tournaments:', e)
-    tournamentsError.value = 'Failed to load tournaments. Please try again later.'
+    console.error('Error fetching tournaments:', e);
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
   } finally {
-    isLoading.value = false
+    isLoadingTournaments.value = false;
   }
-}
+};
+
+const fetchTournaments = async (loadMore = false) => {
+  try {
+    if (loadMore) {
+      isLoadingMore.value = true;
+    } else {
+      isLoadingTournaments.value = true;
+      isFiltered.value = false; // Reset filter state when loading initial tournaments
+    }
+    tournamentsError.value = null;
+
+    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    const results = Array.isArray(data) ? data : (data.results || []);
+
+    tournaments.value = results;
+    hasMoreTournaments.value = results.length === currentLimit.value;
+
+  } catch (e) {
+    console.error('Error fetching tournaments:', e);
+    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
+  } finally {
+    isLoadingTournaments.value = false;
+    isLoadingMore.value = false;
+  }
+};
+
+const loadMoreTournaments = async () => {
+  currentLimit.value += 10;
+  await fetchTournaments(true);
+};
 
 const clearAddPlayerErrors = () => {
   addPlayerUsernameError.value = ''
@@ -1636,6 +1125,7 @@ const initializeTeam = () => {
 
 onMounted(() => {
   initializeTeam()
+  fetchTournaments()
 })
 
 const submitUpdatePlayer = async () => {
@@ -1790,7 +1280,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tournament-list-wrapper {
+.dashboard-wrapper {
   min-height: 100vh;
   position: relative;
 }
@@ -1831,81 +1321,6 @@ onMounted(() => {
   width: 100vw !important;
 }
 
-.welcome-card,
-.actions-card {
-  background: rgba(45, 55, 75, 0.8);
-  border-radius: 20px;
-  border: 2px solid #42DDF2FF;
-  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
-  backdrop-filter: blur(2px);
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 24px;
-  padding: 24px;
-  width: 65%;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.welcome-content,
-.actions-content {
-  position: relative;
-  justify-items: center;
-  z-index: 2;
-}
-
-.welcome-text {
-  color: #42DDF2FF;
-  font-size: 1.8rem;
-  text-align: center;
-  margin: 0;
-}
-
-.actions-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.actions-row {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  width: 100%;
-}
-
-.action-btn {
-  flex: 1;
-  min-width: 200px;
-  max-width: 300px;
-  height: 56px !important;
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
-  font-weight: bold;
-  text-align: center;
-  padding: 20px 32px !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.action-btn:hover {
-  background: #FED854FF !important;
-  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
-}
-
-.filters-wrapper {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-bottom: 16px;
-  width: 100%;
-  max-width: 500px;
-}
 
 :deep(.v-field) {
   background: rgba(45, 55, 75, 0.8) !important;
@@ -2130,22 +1545,6 @@ onMounted(() => {
   color: white !important;
 }
 
-.dialog-card {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-}
-
-.dialog-content {
-  padding: 24px;
-}
-
-.dialog-title {
-  color: #42ddf2;
-  font-weight: bold;
-  font-size: 1.25rem;
-  text-align: center;
-}
 
 :deep(.v-alert) {
   background-color: rgba(254, 216, 84, 0.1) !important;
@@ -2241,23 +1640,6 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.file-upload-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.preview-avatar {
-  border: 2px solid #42DDF2FF;
-  background: rgba(8, 87, 144, 0.1);
-  transition: transform 0.2s;
-}
-
-.preview-avatar:hover {
-  transform: scale(1.05);
-}
 
 .upload-input {
   width: 100%;
