@@ -1,60 +1,10 @@
 <template>
   <div class="tournament-list-wrapper">
-    <!-- Header with fade effect -->
-    <div class="header-image"></div>
-    <div class="header-overlay"></div>
+    <HeaderSection />
 
     <div class="content-wrapper">
       <v-container>
-      <v-row class="filter-row">
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="selectedPeriod"
-            :items="periodOptions"
-            item-title="text"
-            item-value="value"
-            label="Period"
-            variant="outlined"
-            density="comfortable"
-            bg-color="rgba(45, 55, 75, 0.4)"
-            color="#42DDF2FF"
-            clearable
-            @update:model-value="handleFiltersChange"
-          />
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="selectedStatus"
-            :items="statusOptions"
-            item-title="text"
-            item-value="value"
-            label="Status"
-            variant="outlined"
-            density="comfortable"
-            class="filter-select"
-            bg-color="rgba(45, 55, 75, 0.4)"
-            color="#42DDF2FF"
-            clearable
-            @update:model-value="handleFiltersChange"
-          ></v-select>
-        </v-col>
-
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="selectedFormat"
-            :items="formatOptions"
-            item-title="text"
-            item-value="value"
-            label="Format"
-            variant="outlined"
-            density="comfortable"
-            bg-color="rgba(45, 55, 75, 0.4)"
-            color="#42DDF2FF"
-            clearable
-            @update:model-value="handleFiltersChange"
-          ></v-select>
-        </v-col>
-      </v-row>
+      <FilterBar @filter-change="handleFiltersChange"/>
 
         <!-- Loading state -->
         <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
@@ -73,85 +23,31 @@
                  cols="12"
                  md="6"
                  class="tournament-column">
-            <div class="tournament-card">
-              <div class="tournament-content">
-                <div class="tournament-header">
-                  <h3 class="tournament-title">{{ tournament.title }}</h3>
-                  <div class="format-tag" >
-                    {{ formatText(tournament.tournament_format).toUpperCase() }}
-                  </div>
-                </div>
-
-                <div class="tournament-info">
-                  <div class="info-section">
-                    <v-icon icon="mdi-calendar" class="mr-2 info-icon"></v-icon>
-                    <span>{{ formatDateRange(tournament.start_date, tournament.end_date) }}</span>
-                  </div>
-
-                  <div class="info-section">
-                    <v-icon icon="mdi-flag" class="mr-2 info-icon"></v-icon>
-                    <span>Stage: {{ formatStage(tournament.current_stage) }}</span>
-                  </div>
-
-                  <div class="info-section">
-                    <v-icon icon="mdi-account-group" class="mr-2 info-icon"></v-icon>
-                    <span>{{ tournament.number_of_teams }} teams</span>
-                  </div>
-<!--                  <div class="info-section">-->
-<!--                    <v-icon icon="mdi-cash" class="mr-2 info-icon"></v-icon>-->
-<!--                    <span>Prize Pool: {{ formatPrizePool(tournament.prize_pool) }}</span>-->
-<!--                  </div>-->
-                </div>
-
-                <v-btn class="view-details-btn"
-                       variant="outlined"
-                       :to="'/events/' + tournament.id">
-                  View Details
-                </v-btn>
-              </div>
-            </div>
+            <TournamentCard :tournament="tournament" />
           </v-col>
         </v-row>
+
         <!-- Load More Button -->
-          <div v-if="!isLoadingTournaments && hasMoreTournaments" class="load-more-wrapper">
-            <v-btn
-              class="load-more-btn"
-              variant="outlined"
-              @click="loadMoreTournaments"
-              :loading="isLoadingMore"
-              :disabled="isLoadingMore"
-            >
-              <v-icon left class="mr-2">mdi-refresh</v-icon>
-              Load More Tournaments
-            </v-btn>
-          </div>
+        <LoadMoreButton
+          v-if="!isLoadingTournaments && hasMoreTournaments"
+          :is-loading="isLoadingMore"
+          @load-more="loadMoreTournaments"
+        />
       </v-container>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { format } from 'date-fns'
+import { ref, onMounted, onUnmounted } from 'vue'
+import type { Tournament, FilterValues } from '@/types/types'
+
 import { API_URL } from '@/config'
-import singleEliminationBg from "@/assets/single-elimination.png";
-import roundRobinBg from "@/assets/round-robin.png";
-import oneOffMatchBg from "@/assets/one-off-match.png";
+import FilterBar from '@/components/TournamentFilterBar.vue';
+import HeaderSection from '@/components/HeaderSection.vue';
+import TournamentCard from '@/components/TournamentCard.vue';
+import LoadMoreButton from '@/components/LoadMoreButton.vue';
 
-interface Tournament {
-  id: string
-  title: string
-  tournament_format: string
-  start_date: string
-  end_date: string
-  current_stage: string
-  number_of_teams: number
-}
-
-interface FilterOption {
-  text: string
-  value: string
-}
 
 const isFiltered = ref(false);
 const tournaments = ref<Tournament[]>([]);
@@ -164,44 +60,26 @@ const selectedPeriod = ref<string | null>(null);
 const selectedStatus = ref<string | null>(null);
 const selectedFormat = ref<string | null>(null);
 
-
-const periodOptions: FilterOption[] = [
-  { text: 'Upcoming', value: 'future' },
-  { text: 'Current', value: 'present' },
-  { text: 'Past', value: 'past' }
-]
-
-const statusOptions: FilterOption[] = [
-  { text: 'Active', value: 'active' },
-  { text: 'Finished', value: 'finished' }
-]
-
-const formatOptions: FilterOption[] = [
-  { text: 'Single Elimination', value: 'single elimination' },
-  { text: 'Round Robin', value: 'round robin' },
-  { text: 'One Off Match', value: 'one off match' }
-]
-
-const handleFiltersChange = async () => {
+const handleFiltersChange = async (filters: FilterValues) => {
   try {
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
-    currentLimit.value = 10; // Reset limit
+    currentLimit.value = 10;
 
     const params = new URLSearchParams();
     params.append('offset', '0');
     params.append('limit', currentLimit.value.toString());
 
-    if (selectedPeriod.value) {
-      params.append('period', selectedPeriod.value);
+    if (filters.period) {
+      params.append('period', filters.period);
     }
 
-    if (selectedStatus.value) {
-      params.append('status', selectedStatus.value);
+    if (filters.status) {
+      params.append('status', filters.status);
     }
 
-    if (selectedFormat.value) {
-      params.append('tournament_format', selectedFormat.value);
+    if (filters.format) {
+      params.append('tournament_format', filters.format);
     }
 
     const response = await fetch(`${API_URL}/tournaments/?${params}`);
@@ -225,78 +103,6 @@ const handleFiltersChange = async () => {
   }
 };
 
-const getTournamentBackground = (format: string): string => {
-  const formatMap: Record<string, string> = {
-    "round robin": roundRobinBg,
-    "one off match": oneOffMatchBg,
-    "single elimination": singleEliminationBg,
-  };
-
-  const background = formatMap[format];
-
-  // Log the background URL to ensure correctness
-  console.log("Mapped Background URL:", background);
-
-  return background || "@/assets/top-image.png"; // Return an empty string if the format is not found
-};
-
-
-const handleFormatClick = async (format: string) => {
-  try {
-    isLoadingTournaments.value = true;
-    tournamentsError.value = null;
-    currentLimit.value = 10; // Reset limit
-    const encodedFormat = encodeURIComponent(format.toLowerCase());
-    console.log('Encoded Format:', encodedFormat);
-
-    const response = await fetch(
-      `${API_URL}/tournaments/?tournament_format=${encodedFormat}&offset=0&limit=${currentLimit.value}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const results = Array.isArray(data) ? data : data.results || [];
-    tournaments.value = results;
-    isFiltered.value = true;
-
-    // Check if we have reached the end
-    hasMoreTournaments.value = results.length === currentLimit.value;
-
-  } catch (e) {
-    console.error('Error fetching tournaments:', e);
-    tournamentsError.value = 'Failed to load tournaments. Please try again later.';
-  } finally {
-    isLoadingTournaments.value = false;
-  }
-};
-
-const resetFilters = async () => {
-  selectedPeriod.value = 'all';
-  selectedStatus.value = 'all';
-  await handleFiltersChange();
-};
-
-
-const formatText = (text: string) => {
-  return text.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-}
-
-
-const formatDateRange = (startDate: string, endDate: string) => {
-  const start = format(new Date(startDate), 'dd MMM yyyy')
-  const end = format(new Date(endDate), 'dd MMM yyyy')
-  return `${start} / ${end}`
-}
-
-
-const formatStage = (stage: string) => {
-  return stage.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-}
-
-// Fetch tournaments
 const fetchTournaments = async (loadMore = false) => {
   try {
     if (loadMore) {
@@ -331,7 +137,6 @@ const loadMoreTournaments = async () => {
   await fetchTournaments(true);
 };
 
-// Lifecycle
 onMounted(() => {
   fetchTournaments()
   window.addEventListener('search-results', ((event: CustomEvent) => {
@@ -344,11 +149,6 @@ onMounted(() => {
   }) as EventListener)
 })
 
-watch([selectedPeriod, selectedStatus, selectedFormat], () => {
-  handleFiltersChange();
-});
-
-// Don't forget to remove the event listener when component is destroyed
 onUnmounted(() => {
   window.removeEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/events') {
@@ -363,34 +163,6 @@ onUnmounted(() => {
 .tournament-list-wrapper {
   min-height: 100vh;
   position: relative;
-}
-
-.header-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 600px;
-  background-image: url('@/assets/top-image.png');
-  background-size: cover;
-  background-position: center;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-.header-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 600px; /* Same as header-image */
-  background: linear-gradient(
-    to bottom,
-    rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 25%,
-    rgba(23, 28, 38, 1) 80%
-  );
-  z-index: 2;
 }
 
 .content-wrapper {
@@ -411,103 +183,6 @@ onUnmounted(() => {
   justify-content: flex-start;
 }
 
-.tournament-card {
-  position: relative;
-  height: 300px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: rgba(45, 55, 75, 0.4);
-  backdrop-filter: blur(10px);
-  border: 2px solid #42DDF2FF;
-  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-  width: 500px;
-}
-
-.tournament-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(8, 117, 176, 0.4);
-}
-
-.tournament-content {
-  position: relative;
-  z-index: 3;
-  padding: 24px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.tournament-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 100px;
-}
-
-.tournament-title {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.5rem;
-  margin: 0;
-  font-weight: 600;
-  font-family: Orbitron, sans-serif;
-  max-width: 250px;
-}
-
-.format-tag {
-  background: rgba(17, 78, 112, 0.56);
-  color: #42DDF2FF;
-  padding: 6px 16px;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(8, 87, 144, 0.8);
-}
-
-.format-tag:hover {
-  color: #42DDF2FF !important;
-  background: rgba(66, 221, 242, 0.1);
-}
-
-.format-tag--loading {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.tournament-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-section {
-  display: flex;
-  align-items: center;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-}
-
-.info-icon {
-  color: rgba(66, 221, 242, 0.8) !important;
-}
-
-.view-details-btn {
-  margin-top: auto;
-  color: #42DDF2FF !important;
-  border-color: #42DDF2FF !important;
-  border-radius: 50px;
-  width: 40%;
-  align-self: center;
-}
-
-.view-details-btn:hover {
-  color: #42DDF2FF !important;
-  background: rgba(66, 221, 242, 0.1);
-}
-
 .error-text {
   text-align: center;
   color: rgba(255, 255, 255, 0.75);
@@ -516,59 +191,4 @@ onUnmounted(() => {
   border-radius: 10px;
   margin: 20px 0;
 }
-
-.load-more-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 40px 0;
-  position: relative;
-  z-index: 4;
-}
-
-.load-more-btn {
-  background: rgba(17, 78, 112, 0.56);
-  color: #ffffff !important;
-  border-color: #42DDF2FF !important;
-  border-width: 2px !important;
-  border-radius: 50px;
-  transition: all 0.2s ease;
-  padding: 5px 40px !important;
-  font-size: 1.1rem !important;
-}
-
-.load-more-btn:hover {
-  background: rgba(66, 221, 242, 0.1);
-  border-color: #42DDF2FF !important;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
-}
-
-.load-more-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-
-
-.reset-filter-wrapper {
-  position: absolute;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  margin-top: 70px;
-}
-
-
-.filter-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;/* Center the row horizontally */
-}
-
-.filter-row .v-col {
-  max-width: 300px; /* Adjust the max-width as needed */
-}
-
 </style>
