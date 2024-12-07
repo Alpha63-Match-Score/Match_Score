@@ -426,9 +426,7 @@
                     </v-autocomplete>
                   </template>
 
-                  <div v-else class="text-center mt-4">
-                    This player is linked to a user and cannot be updated.
-                  </div>
+                  <div class="mb-4">This player is linked to a user and cannot be updated.</div>
                 </div>
               </v-card-text>
 
