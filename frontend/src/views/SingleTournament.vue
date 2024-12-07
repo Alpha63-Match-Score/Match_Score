@@ -1678,7 +1678,6 @@ onMounted(async () => {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .tournament-title {

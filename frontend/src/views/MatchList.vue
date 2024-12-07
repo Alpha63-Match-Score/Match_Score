@@ -467,7 +467,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  height: 50px;
+  height: 100px;
 }
 
 .match-card-tournament-title {
@@ -658,17 +658,6 @@ onUnmounted(() => {
 }
 
 
-.custom-dialog-card {
-  width: 600px;
-  margin: 0 auto;
-  border-radius: 50px;
-  background: rgba(45, 55, 75, 0.8);
-  backdrop-filter: blur(10px);
-  border: 2px solid #42DDF2FF;
-  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
-  padding: 10px;
-}
-
 
 .custom-dialog-card {
   width: 600px;
@@ -701,7 +690,18 @@ onUnmounted(() => {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+}
+
+.match-details-centered .team-avatar:hover {
+  transform: none;
+  cursor: pointer;
+}
+
+.match-details-centered .team-avatar {
+  border: 3px solid rgba(66, 221, 242, 0);
+  background: rgba(8, 87, 144, 0.2);
+  transition: none;
+  cursor: default;
 }
 
 .custom-dialog-card .tournament-title {
@@ -726,17 +726,15 @@ onUnmounted(() => {
 .custom-dialog-card .match-layout {
   display: flex;
   justify-content: center;
-  align-items: center; /* Важно за вертикалното подравняване */
+  align-items: center;
   gap: 32px;
   margin: 24px 0;
-  min-height: 150px; /* Осигуряваме достатъчно пространство */
 }
 
 .custom-dialog-card .team-info-left, .team-info-right {
   display: flex;
-  align-items: center; /* Променяме от column на center */
+  align-items: center;
   gap: 16px;
-  height: 150px; /* Фиксирана височина */
 }
 
 .custom-dialog-card .score-divider {
