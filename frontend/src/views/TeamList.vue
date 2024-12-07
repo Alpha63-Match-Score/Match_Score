@@ -6,21 +6,6 @@
 
     <div class="content-wrapper">
       <v-container>
-        <!-- Add Reset Button when filtered -->
-        <div class="filter-button-space">
-          <transition name="fade">
-            <div v-if="isFiltered" class="reset-filter-wrapper">
-              <v-btn
-                class="reset-filter-btn"
-                variant="outlined"
-                @click="resetFilters"
-                prepend-icon="mdi-filter-off"
-              >
-                Show All Teams
-              </v-btn>
-            </div>
-          </transition>
-        </div>
 
         <!-- Loading state -->
         <div v-if="isLoadingTeams" class="d-flex justify-center align-center" style="height: 200px">
@@ -282,7 +267,13 @@ onUnmounted(() => {
 }
 
 .team-column {
-  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.team-column:nth-child(even) {
+  justify-content: flex-start;
 }
 
 .team-card {

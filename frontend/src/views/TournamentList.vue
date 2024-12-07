@@ -6,9 +6,8 @@
 
     <div class="content-wrapper">
       <v-container>
-      <!-- Add Reset Button when filtered -->
-      <div class="filter-button-space">
-        <div class="filters-wrapper">
+      <v-row class="filter-row">
+        <v-col cols="12" md="3">
           <v-select
             v-model="selectedPeriod"
             :items="periodOptions"
@@ -17,12 +16,13 @@
             label="Period"
             variant="outlined"
             density="comfortable"
-            bg-color="rgba(45, 55, 75, 0.8)"
-            color="#ffffff"
-            menu-icon="mdi-chevron-down"
+            bg-color="rgba(45, 55, 75, 0.4)"
+            color="#42DDF2FF"
+            clearable
             @update:model-value="handleFiltersChange"
           />
-
+        </v-col>
+        <v-col cols="12" md="3">
           <v-select
             v-model="selectedStatus"
             :items="statusOptions"
@@ -32,26 +32,29 @@
             variant="outlined"
             density="comfortable"
             class="filter-select"
-            bg-color="rgba(45, 55, 75, 0.8)"
-            color="#ffffff"
-            menu-icon="mdi-chevron-down"
+            bg-color="rgba(45, 55, 75, 0.4)"
+            color="#42DDF2FF"
+            clearable
             @update:model-value="handleFiltersChange"
           ></v-select>
-        </div>
+        </v-col>
 
-        <transition name="fade">
-          <div class="reset-filter-wrapper">
-            <v-btn
-              class="reset-filter-btn"
-              variant="outlined"
-              @click="resetFilters"
-              prepend-icon="mdi-filter-off"
-            >
-              Show All Tournaments
-            </v-btn>
-          </div>
-        </transition>
-      </div>
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="selectedFormat"
+            :items="formatOptions"
+            item-title="text"
+            item-value="value"
+            label="Format"
+            variant="outlined"
+            density="comfortable"
+            bg-color="rgba(45, 55, 75, 0.4)"
+            color="#42DDF2FF"
+            clearable
+            @update:model-value="handleFiltersChange"
+          ></v-select>
+        </v-col>
+      </v-row>
 
         <!-- Loading state -->
         <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
@@ -137,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { format } from 'date-fns'
 import { API_URL } from '@/config'
 import singleEliminationBg from "@/assets/single-elimination.png";
@@ -166,20 +169,26 @@ const tournamentsError = ref<string | null>(null);
 const currentLimit = ref(10);
 const hasMoreTournaments = ref(true);
 const isLoadingMore = ref(false);
-const selectedPeriod = ref('all');
-const selectedStatus = ref('all');
+const selectedPeriod = ref<string | null>(null);
+const selectedStatus = ref<string | null>(null);
+const selectedFormat = ref<string | null>(null);
+
 
 const periodOptions: FilterOption[] = [
-  { text: 'All Tournaments', value: 'all' },
   { text: 'Upcoming', value: 'future' },
   { text: 'Current', value: 'present' },
   { text: 'Past', value: 'past' }
 ]
 
 const statusOptions: FilterOption[] = [
-  { text: 'All Status', value: 'all' },
   { text: 'Active', value: 'active' },
   { text: 'Finished', value: 'finished' }
+]
+
+const formatOptions: FilterOption[] = [
+  { text: 'Single Elimination', value: 'single elimination' },
+  { text: 'Round Robin', value: 'round robin' },
+  { text: 'One Off Match', value: 'one off match' }
 ]
 
 const handleFiltersChange = async () => {
@@ -188,17 +197,23 @@ const handleFiltersChange = async () => {
     tournamentsError.value = null;
     currentLimit.value = 10; // Reset limit
 
-    let url = `${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`;
+    const params = new URLSearchParams();
+    params.append('offset', '0');
+    params.append('limit', currentLimit.value.toString());
 
-    if (selectedPeriod.value !== 'all') {
-      url += `&period=${selectedPeriod.value}`;
+    if (selectedPeriod.value) {
+      params.append('period', selectedPeriod.value);
     }
 
-    if (selectedStatus.value !== 'all') {
-      url += `&status=${selectedStatus.value}`;
+    if (selectedStatus.value) {
+      params.append('status', selectedStatus.value);
     }
 
-    const response = await fetch(url);
+    if (selectedFormat.value) {
+      params.append('tournament_format', selectedFormat.value);
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/?${params}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -207,7 +222,8 @@ const handleFiltersChange = async () => {
     const data = await response.json();
     const results = Array.isArray(data) ? data : data.results || [];
     tournaments.value = results;
-    isFiltered.value = selectedPeriod.value !== 'all' || selectedStatus.value !== 'all';
+
+    isFiltered.value = !!(selectedPeriod.value || selectedStatus.value || selectedFormat.value);
     hasMoreTournaments.value = results.length === currentLimit.value;
 
   } catch (e) {
@@ -337,6 +353,10 @@ onMounted(() => {
   }) as EventListener)
 })
 
+watch([selectedPeriod, selectedStatus, selectedFormat], () => {
+  handleFiltersChange();
+});
+
 // Don't forget to remove the event listener when component is destroyed
 onUnmounted(() => {
   window.removeEventListener('search-results', ((event: CustomEvent) => {
@@ -349,55 +369,6 @@ onUnmounted(() => {
 
 
 <style scoped>
-
-.filters-wrapper {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-bottom: 16px;
-  width: 100%;
-  max-width: 500px;
-}
-
-:deep(.v-field) {
-  background: rgba(45, 55, 75, 0.8) !important;
-}
-
-:deep(.v-select__selection) {
-  color: white !important;
-}
-
-:deep(.v-label) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-
-.reset-filter-wrapper {
-  margin-top: 8px;
-  margin-bottom: 16px;
-}
-
-.reset-filter-wrapper.hidden {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-.reset-filter-btn {
-  background: rgba(45, 55, 75, 0.8);
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.7)  !important;
-  border-width: 0.5px !important;
-  border-radius: 50px;
-  transition: all 0.2s ease;
-  padding: 7px 40px !important;
-  font-size: 1.1rem !important;
-}
-
-.reset-filter-btn:hover {
-  border-color: #ffffff !important;
-  transform: translateY(-2px);
-}
-
 .tournament-list-wrapper {
   min-height: 100vh;
   position: relative;
@@ -629,14 +600,15 @@ onUnmounted(() => {
   margin-top: 70px;
 }
 
-.filter-button-space {
+
+.filter-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 30px;
-  position: relative;
-  z-index: 4;
+  justify-content: center;
+  margin-bottom: 8px;/* Center the row horizontally */
+}
+
+.filter-row .v-col {
+  max-width: 300px; /* Adjust the max-width as needed */
 }
 
 </style>
