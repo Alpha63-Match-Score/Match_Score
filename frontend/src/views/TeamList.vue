@@ -268,7 +268,7 @@ onUnmounted(() => {
     to bottom,
     rgba(23, 28, 38, 0) 0%,
     rgba(23, 28, 38, 0.8) 25%,
-    rgba(23, 28, 38, 1) 50%
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }
@@ -279,6 +279,7 @@ onUnmounted(() => {
   padding-top: 100px;
   min-height: 100vh;
   width: 100vw !important;
+  margin-top: 105px;
 }
 
 .team-column {
@@ -292,24 +293,27 @@ onUnmounted(() => {
 }
 
 .team-card {
+  height: 300px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   backdrop-filter: blur(10px);
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
-  //height: 500px;
-  display: flex;
-  flex-direction: column;
-  //justify-content: space-between;
-  //padding: 24px;
+  width: 500px;
+}
+
+.team-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px rgba(8, 117, 176, 0.4);
 }
 
 .team-content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+  height: 100%;
   padding: 24px;
   display: flex;
   flex-direction: column;

@@ -74,19 +74,10 @@
                  md="6"
                  class="tournament-column">
             <div class="tournament-card">
-              <div
-                class="tournament-background"
-                :style="{ '--tournament-bg': `url(${getTournamentBackground(tournament.tournament_format)})` }"
-              ></div>
               <div class="tournament-content">
                 <div class="tournament-header">
                   <h3 class="tournament-title">{{ tournament.title }}</h3>
-                  <div
-                    class="format-tag"
-                    @click="handleFormatClick(tournament.tournament_format)"
-                    role="button"
-                    :class="{ 'format-tag--loading': isLoadingTournaments }"
-                  >
+                  <div class="format-tag" >
                     {{ formatText(tournament.tournament_format).toUpperCase() }}
                   </div>
                 </div>
@@ -397,7 +388,7 @@ onUnmounted(() => {
     to bottom,
     rgba(23, 28, 38, 0) 0%,
     rgba(23, 28, 38, 0.8) 25%,
-    rgba(23, 28, 38, 1) 50%
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }
@@ -425,7 +416,7 @@ onUnmounted(() => {
   height: 300px;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   backdrop-filter: blur(10px);
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -436,36 +427,6 @@ onUnmounted(() => {
 .tournament-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 0 20px rgba(8, 117, 176, 0.4);
-}
-
-.tournament-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: var(--tournament-bg, url('@/assets/top-image.png'));
-  background-position: center;
-  background-size: cover;
-  opacity: 0.3;
-  z-index: 1;
-}
-
-.tournament-background::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(45, 55, 75, 0) 0%,
-    rgba(45, 55, 75, 0.4) 10%,
-    rgba(45, 55, 75, 0.9) 35%,
-    rgba(45, 55, 75, 1) 50%
-  );
-  z-index: 2;
 }
 
 .tournament-content {
@@ -503,7 +464,6 @@ onUnmounted(() => {
   font-size: 0.8rem;
   font-weight: 500;
   border: 1px solid rgba(8, 87, 144, 0.8);
-  cursor: pointer;
 }
 
 .format-tag:hover {
