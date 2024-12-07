@@ -377,8 +377,8 @@ onMounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 80%,
-    rgba(23, 28, 38, 1) 100%
+    rgba(23, 28, 38, 0.8) 30%,
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }

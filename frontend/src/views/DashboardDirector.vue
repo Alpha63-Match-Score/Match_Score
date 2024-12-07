@@ -146,6 +146,9 @@
             </v-col>
           </v-row>
         </div>
+
+
+
         <!-- Create Tournament Dialog -->
         <v-dialog v-model="showAddTournamentDialog" max-width="500">
           <v-card class="dialog-card">
@@ -1814,8 +1817,8 @@ onMounted(() => {
   background: linear-gradient(
     to bottom,
     rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 20%,
-    rgba(23, 28, 38, 1) 40%
+    rgba(23, 28, 38, 0.8) 30%,
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }
