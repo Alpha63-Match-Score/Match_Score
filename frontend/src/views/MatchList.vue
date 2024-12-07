@@ -15,9 +15,10 @@
               item-title="text"
               item-value="value"
               label="Stage"
+              variant="outlined"
               density="comfortable"
               bg-color="rgba(45, 55, 75, 0.4)"
-              color="#ffffff"
+              color="#42DDF2FF"
               clearable
             ></v-select>
           </v-col>
@@ -28,38 +29,26 @@
               item-title="text"
               item-value="value"
               label="Status"
+              variant="outlined"
               density="comfortable"
               bg-color="rgba(45, 55, 75, 0.4)"
-              color="#ffffff"
+              color="#42DDF2FF"
               clearable
             ></v-select>
           </v-col>
           <v-col cols="12" md="3">
             <v-select
               v-model="selectedTeam"
-              :items="teamOptions"
+              :items="teams"
               item-title="text"
               item-value="value"
               label="Team"
+              variant="outlined"
               density="comfortable"
               bg-color="rgba(45, 55, 75, 0.4)"
-              color="#ffffff"
+              color="#42DDF2FF"
               clearable
             ></v-select>
-          </v-col>
-        </v-row>
-
-        <!-- Show All Matches Button -->
-        <v-row class="filter-row">
-          <v-col cols="auto">
-            <v-btn
-              class="reset-filter-btn"
-              variant="outlined"
-              @click="resetFilters"
-            >
-              <v-icon left class="mr-2">mdi-filter-off</v-icon>
-              Show All Matches
-            </v-btn>
           </v-col>
         </v-row>
 
@@ -75,12 +64,12 @@
 
         <!-- Matches Grid -->
         <v-row v-else justify="center">
-          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="6" class="match-column">
+          <v-col v-for="match in matches" :key="match.id" cols="12" md="6" class="match-column">
             <v-card class="match-card" @click="openMatchDialog(match)">
               <div class="match-background"></div>
               <div class="match-content">
                 <div class="tournament-tag">{{ match.tournament_title }}</div>
-                <div class="tournament-format" @click.stop="filterByFormat(getTournamentFormat(match.tournament_id))">
+                <div class="tournament-format">
                   {{ getTournamentFormat(match.tournament_id) }}
                 </div>
                 <v-card-text>
@@ -197,13 +186,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { API_URL } from '@/config'
 import { format } from 'date-fns'
-import singleEliminationBg from "@/assets/single-elimination.png";
-import roundRobinBg from "@/assets/round-robin.png";
-import oneOffMatchBg from "@/assets/one-off-match.png";
 
 interface Match {
   id: string
@@ -234,9 +219,14 @@ interface Team {
   name: string
 }
 
+interface FilterOption {
+  text: string
+  value: string
+}
+
 const matches = ref<Match[]>([])
 const tournaments = ref<Tournament[]>([])
-const teams = ref<Team[]>([])
+const teams = ref<FilterOption[]>([])
 const isLoadingMatches = ref(false)
 const matchesError = ref<string | null>(null)
 const currentLimit = ref(10)
@@ -249,20 +239,33 @@ const selectedStage = ref<string | null>(null)
 const selectedIsFinished = ref<string | null>(null)
 const selectedTeam = ref<string | null>(null)
 
-const stages = ref<string[]>(['Group Stage', 'Quarterfinals', 'Semifinals', 'Finals'])
-const isFinishedOptions = ref<string[]>(['All', 'Finished', 'Not Finished'])
-const teamOptions = computed(() => {
-  // Ensure unique team names and sort them
-  return [...new Set(
-    matches.value.flatMap(match => [match.team1_name, match.team2_name])
-  )].sort((a, b) => a.localeCompare(b));
-});
+const stages: FilterOption[] = [
+  { text: 'Group Stage', value: 'group stage' },
+  { text: 'Quarter-finals', value: 'quarter finals' },
+  { text: 'Semi-finals', value: 'semi finals' },
+  { text: 'Finals', value: 'finals' }
+]
+
+const isFinishedOptions: FilterOption[] = [
+  { text: 'Active', value: 'active' },
+  { text: 'Finished', value: 'finished' }
+]
 
 const fetchMatches = async () => {
   try {
     isLoadingMatches.value = true
     matchesError.value = null
-    const response = await fetch(`${API_URL}/matches/?offset=0&limit=${currentLimit.value}`)
+
+
+    const params = new URLSearchParams()
+    if (selectedStage.value) params.append('stage', selectedStage.value)
+    if (selectedIsFinished.value === 'active') params.append('is_finished', 'false')
+    if (selectedIsFinished.value === 'finished') params.append('is_finished', 'true')
+    if (selectedTeam.value) params.append('team_name', selectedTeam.value)
+    params.append('offset', '0')
+    params.append('limit', currentLimit.value.toString())
+
+    const response = await fetch(`${API_URL}/matches/?${params}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -290,6 +293,7 @@ const fetchTournaments = async () => {
   }
 }
 
+
 const fetchTeams = async () => {
   try {
     const response = await fetch(`${API_URL}/teams/?offset=0&limit=100`)
@@ -297,7 +301,15 @@ const fetchTeams = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    teams.value = Array.isArray(data) ? data : (data.results || [])
+    console.log('Received teams data:', data)
+
+    const teamsData = Array.isArray(data) ? data : (data.results || [])
+
+    teams.value = teamsData.map((team: Team) => ({
+      text: team.name,
+      value: team.name
+    }))
+    console.log('Processed teams for dropdown:', teams.value)
   } catch (e) {
     console.error('Error fetching teams:', e)
   }
@@ -326,48 +338,15 @@ const getTournamentFormat = (tournamentId: string) => {
   return tournament ? tournament.tournament_format : 'Unknown Format'
 }
 
-const filterByFormat = (format: string) => {
-  selectedFormat.value = format
-}
-
-const resetFilters = () => {
-  selectedFormat.value = null
-  selectedStage.value = null
-  selectedIsFinished.value = null
-  selectedTeam.value = null
-}
-
-const filteredMatches = computed(() => {
-  return matches.value.filter(match => {
-    // Filter by tournament format
-    const matchesFormat = !selectedFormat.value ||
-      getTournamentFormat(match.tournament_id) === selectedFormat.value;
-
-    // Filter by stage
-    const matchesStage = !selectedStage.value ||
-      selectedStage.value === 'All' ||
-      match.stage.toLowerCase() === selectedStage.value.toLowerCase();
-
-    // Filter by is_finished status
-    const matchesIsFinished = !selectedIsFinished.value ||
-      (selectedIsFinished.value === 'Finished' && match.is_finished) ||
-      (selectedIsFinished.value === 'Not Finished' && !match.is_finished) ||
-      selectedIsFinished.value === 'All';
-
-    // Filter by team (improved to handle case sensitivity and trim)
-    const matchesTeam = !selectedTeam.value ||
-      match.team1_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase() ||
-      match.team2_name.trim().toLowerCase() === selectedTeam.value.trim().toLowerCase();
-
-    // Combine all filter criteria
-    return matchesFormat && matchesStage && matchesIsFinished && matchesTeam;
-  });
-});
-
 onMounted(() => {
   fetchMatches()
   fetchTournaments()
   fetchTeams()
+})
+
+watch([selectedStage, selectedIsFinished, selectedTeam], () => {
+  currentLimit.value = 10 // Reset to initial limit when filters change
+  fetchMatches()
 })
 
 onUnmounted(() => {

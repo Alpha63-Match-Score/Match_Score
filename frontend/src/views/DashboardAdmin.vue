@@ -55,12 +55,12 @@
                 :items="statusOptions"
                 item-title="text"
                 item-value="value"
+                label="Filter by Status"
                 variant="outlined"
                 density="comfortable"
-                label="Filter by Status"
-                bg-color="rgba(45, 55, 75, 0.8)"
-                color="#ffffff"
-                menu-icon="mdi-chevron-down"
+                bg-color="rgba(45, 55, 75, 0.4)"
+                color="#42DDF2FF"
+                clearable
                 @update:model-value="fetchRequests"
               ></v-select>
             </div>
@@ -821,7 +821,7 @@ const rules = {
 
 // Filter Options
 const filterStatus = ref('');
-const statusOptions = ['All', 'Pending', 'Accepted', 'Rejected'];
+const statusOptions = ['Pending', 'Accepted', 'Rejected'];
 
 // Dialog visibility
 const showAddTournamentDialog = ref(false)

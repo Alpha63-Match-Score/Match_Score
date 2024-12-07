@@ -31,7 +31,13 @@ def get_all_matches(
     team_name: str | None = None,
 ) -> list[MatchResponse]:
 
-    query = db.query(Match).order_by(Match.start_time.desc())
+    if team_name:
+        v.team_exists(db, team_name=team_name)
+
+    query = db.query(Match).join(Team, or_(
+        Match.team1_id == Team.id,
+        Match.team2_id == Team.id
+    )).order_by(Match.start_time.desc())
 
     filters = []
     if tournament_title:
@@ -42,8 +48,9 @@ def get_all_matches(
     if is_finished is not None:
         filters.append(Match.is_finished == is_finished)
     if team_name:
-        v.team_exists(db, team_name=team_name)
-        filters.append(or_(Match.team1_id == team_name, Match.team2_id == team_name))
+        filters.append(or_(
+            Team.name == team_name
+        ))
 
     if filters:
         query = query.filter(*filters)
