@@ -351,7 +351,7 @@ onMounted(() => {
   z-index: 3;
   padding-top: 100px;
   min-height: 100vh;
-  width: 100vw !important;
+  width: 100vw;
 }
 
 
@@ -390,5 +390,30 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.7);
   font-size: 1.1rem;
   text-align: center;
+}
+
+
+
+:deep(.v-alert) {
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  color: #FED854FF !important;
+  border-color: #FED854FF !important;
+}
+
+:deep(.v-alert__close-button) {
+  color: #FED854FF !important;
+}
+
+:deep(.v-alert__prepend) {
+  color: #FED854FF !important;
+}
+
+.error-alert {
+  color: #FED854FF !important;
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  border: 1px solid #FED854FF !important;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
 }
 </style>
