@@ -41,7 +41,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import type { Tournament, FilterValues } from '@/types/types'
-
 import { API_URL } from '@/config'
 import FilterBar from '@/components/TournamentFilterBar.vue';
 import HeaderSection from '@/components/HeaderSection.vue';

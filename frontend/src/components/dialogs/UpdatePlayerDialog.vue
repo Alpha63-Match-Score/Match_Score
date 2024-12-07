@@ -354,7 +354,6 @@ const checkPlayer = async () => {
       selectedTeam.value = selectedPlayer.value.team_name || ''
 
       if (selectedPlayer.value.avatar) {
-        originalAvatarUrl.value = selectedPlayer.value.avatar
         previewAvatar.value = selectedPlayer.value.avatar
       }
 
@@ -486,6 +485,20 @@ const submitUpdatePlayer = async () => {
   }
 }
 
+const fetchTeamsForPlayers = async () => {
+  try {
+    loadingTeams.value = true;
+    const response = await fetch(`${API_URL}/teams?has_space=true&offset=0&limit=100`);
+    if (!response.ok) throw new Error('Failed to fetch teams');
+    const data = await response.json();
+    teams.value = data;
+  } catch (e) {
+    console.error('Error fetching teams:', e);
+  } finally {
+    loadingTeams.value = false;
+  }
+};
+
 const closeUpdatePlayerDialog = () => {
   showUpdatePlayerDialog.value = false
   playerUsername.value = ''
@@ -504,16 +517,7 @@ const closeUpdatePlayerDialog = () => {
 
 // Lifecycle
 onMounted(async () => {
-  try {
-    loadingTeams.value = true
-    const response = await fetch(`${API_URL}/teams?has_space=true`)
-    if (!response.ok) throw new Error('Failed to fetch teams')
-    teams.value = await response.json()
-  } catch (e) {
-    console.error('Error fetching teams:', e)
-  } finally {
-    loadingTeams.value = false
-  }
+  fetchTeamsForPlayers()
 })
 </script>
 
@@ -925,7 +929,5 @@ onMounted(async () => {
   color: white !important;
   font-size: 0.9rem;
 }
-
-
 </style>
 

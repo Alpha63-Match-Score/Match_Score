@@ -34,7 +34,7 @@
                         <v-avatar
                           v-for="(player, index) in team.players.slice(0, 10)"
                           :key="player.id"
-                          size="36"
+                          size="40"
                           class="player-avatar"
                           @click="handlePlayerClick(player.id)"
                         >
@@ -298,7 +298,7 @@ onUnmounted(() => {
 }
 
 .team-card {
-  height: 440px;
+  height: 450px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
@@ -373,11 +373,10 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  width: 230px;
+  width: 260px;
   padding: 8px;
-  background: rgba(45, 55, 75, 0.4);
   border-radius: 12px;
-  border: 1px solid rgba(66, 221, 242, 0.2);
+  border: 2px solid rgba(66, 221, 242, 0.2);
 }
 
 .player-avatar {

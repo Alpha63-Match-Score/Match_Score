@@ -311,7 +311,7 @@ const handleNext = async () => {
 
   try {
     loadingTeams.value = true
-    const response = await fetch(`${API_URL}/teams`)
+    const response = await fetch(`${API_URL}/teams?is_available=true&offset=0&limit=100`)
     if (!response.ok) throw new Error('Failed to load teams')
     const data = await response.json()
     teams.value = data
@@ -355,8 +355,8 @@ const submitTournament = async () => {
       const teamData = await response.json()
       const team = teamData[0]
 
-      if (team && team.tournament_id) {
-        tournamentError.value = `Team "${teamName}" is already participating in another tournament`
+      if (team && (!team.is_available || team.tournament_id)) {
+        tournamentError.value = `Team "${teamName}" is not available or already participating in another tournament`
         return
       }
     }

@@ -334,10 +334,10 @@ const submitAddPlayer = async () => {
   }
 };
 
-const fetchTeams = async () => {
+const fetchTeamsForPlayer = async () => {
   try {
     loadingTeams.value = true;
-    const response = await fetch(`${API_URL}/teams?is_available=true`);
+    const response = await fetch(`${API_URL}/teams?has_space=true&offset=0&limit=100`);
 
     if (!response.ok) throw new Error('Failed to fetch teams');
     const data = await response.json();
@@ -351,7 +351,7 @@ const fetchTeams = async () => {
 };
 
 onMounted(() => {
-  fetchTeams();
+  fetchTeamsForPlayer();
 })
 </script>
 
