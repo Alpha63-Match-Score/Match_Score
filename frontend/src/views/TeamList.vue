@@ -18,8 +18,8 @@
         </div>
 
         <!-- Teams Grid -->
-        <v-row v-else>
-          <v-col v-for="team in teams" :key="team.id" cols="12" md="6" class="team-column">
+        <v-row v-else class="row-width">
+          <v-col v-for="team in teams" :key="team.id" cols="12" md="4" class="team-column">
             <div class="team-card">
               <div class="team-content">
                 <div class="team-header">
@@ -60,7 +60,7 @@
                 </div>
 
                 <v-btn class="view-details-btn" variant="outlined" :to="'/teams/' + team.id">
-                  View Details
+                  VIEW DETAILS
                 </v-btn>
               </div>
             </div>
@@ -160,7 +160,7 @@ const isFiltered = ref(false)
 const teams = ref<Team[]>([])
 const isLoadingTeams = ref(false)
 const teamsError = ref<string | null>(null)
-const currentLimit = ref(10)
+const currentLimit = ref(9)
 const hasMoreTeams = ref(true)
 const isLoadingMore = ref(false)
 const router = useRouter()
@@ -189,7 +189,7 @@ const fetchTeams = async () => {
 }
 
 const loadMoreTeams = async () => {
-  currentLimit.value += 10
+  currentLimit.value += 9
   await fetchTeams()
 }
 
@@ -282,9 +282,14 @@ onUnmounted(() => {
   margin-top: 105px;
 }
 
+.row-width {
+  max-width: 1030px;
+  margin: 0 auto;
+}
+
 .team-column {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   padding: 8px;
 }
 
@@ -293,7 +298,7 @@ onUnmounted(() => {
 }
 
 .team-card {
-  height: 300px;
+  height: 440px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
@@ -318,49 +323,45 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
-}
-
-/* Add the box styles */
-.team-card {
-  height: 300px;
 }
 
 .team-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
 }
 
 .team-left-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
-  flex-grow: 1;
 }
 
 .team-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   align-items: center;
-  margin-left: 10px;
+  gap: 12px;
+  width: 100%;
 }
 
 .team-title {
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
-  font-weight: bold;
-  color: #42DDF2FF;
+  margin: 0;
+  font-weight: 600;
+  font-family: Orbitron, sans-serif;
   text-align: center;
-  margin-bottom: 5px;
 }
 
 .team-avatar {
-  min-width: 170px;
-  min-height: 170px;
+  width: 80px;
+  height: 80px;
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
+  margin-bottom: 8px;
 }
 
 .player-info p {
@@ -368,72 +369,71 @@ onUnmounted(() => {
 }
 
 .players-avatars {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  max-width: 400px;
-  flex: 1;
-  justify-content: flex-start;
-  margin-left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 230px;
+  padding: 8px;
+  background: rgba(45, 55, 75, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(66, 221, 242, 0.2);
 }
 
 .player-avatar {
-  min-width: 55px;
-  min-height: 55px;
-  border: 1px solid rgba(8, 117, 176, 0.3);
+  width: 50px;
+  height: 40px;
+  border: 1px solid rgba(66, 221, 242, 0.3);
   background: rgba(8, 87, 144, 0.1);
-  transition: transform 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .player-avatar:hover {
-  transform: scale(1.2);
+  transform: scale(1.5);
 }
 
 .team-right-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  width: 100%;
+  padding: 16px 0;
 }
 
 .progress-wrapper {
+  position: relative;
+  width: 60%;
   display: flex;
   align-items: center;
-  color: #42ddf2;
-  font-size: 0.9rem;
-  width: 170px; /* Match the width of team-avatar */
-  text-align: left;
-  align-self: flex-end;
-  position: absolute;
-  bottom: 60px;
-  left: 8px;
-  margin: 8px;
+  justify-self: center;
+  gap: 12px;
+  padding: 8px 0;
 }
 
 .progress-bar {
   flex-grow: 1;
-  bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(8, 87, 144, 0.2);
 }
 
 .win-ratio {
   color: #42ddf2;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
   min-width: 45px;
-  text-align: left;
-  align-self: flex-end;
-  position: absolute;
-  bottom: 5px;
-  left: 0;
-  margin: 8px;
 }
 
 .view-details-btn {
-  margin-top: 45px;
-  align-self: center;
+  margin-top: auto;
   color: #42DDF2FF !important;
   border-color: #42DDF2FF !important;
   border-radius: 50px;
+  width: 60%;
+  align-self: center;
+}
+
+.view-details-btn:hover {
+  color: #42DDF2FF !important;
+  background: rgba(66, 221, 242, 0.1);
 }
 
 .load-more-wrapper {
