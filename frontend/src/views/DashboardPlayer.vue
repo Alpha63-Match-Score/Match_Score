@@ -10,7 +10,7 @@
         <div class="welcome-card">
           <div class="welcome-background"></div>
           <div class="welcome-content">
-            <h2 class="welcome-text">Welcome, {{ userEmail }}</h2>
+            <h2 class="welcome-text">Welcome, {{  player?.username  }}</h2>
           </div>
         </div>
 
