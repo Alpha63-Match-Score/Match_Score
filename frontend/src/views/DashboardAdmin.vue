@@ -68,13 +68,6 @@ import type { Request, Player } from "@/types/types";
 
 const authStore = useAuthStore();
 
-// Props and Emits
-const props = defineProps({
-  showDialog: Boolean,
-  isSubmitting: Boolean
-})
-const emit = defineEmits(['update:showDialog', 'submit', 'cancel'])
-
 const requests = ref<Request[]>([])
 const isLoading = ref(true)
 const requestHistoryError = ref<string | null>(null)
@@ -250,48 +243,12 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-:deep(.filter-select) {
-  background: transparent !important;
-  color: #ffffff !important;
-  border-color: #42DDF2FF !important;
-}
-
-:deep(.v-select:focus),
-:deep(.v-select--active) {
-  background: transparent !important;
-  border-color: #42DDF2FF !important;
-}
-
-:deep(.v-menu__content) {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-:deep(.v-list-item) {
-  background: transparent !important;
-  color: #ffffff !important;
-}
-
-:deep(.v-list-item:hover) {
-  background: rgba(66, 221, 242, 0.2) !important;
-  color: #42DDF2FF !important;
-}
-
-
 :deep(.v-messages__message) {
   color: #fed854 !important;
   font-size: 0.85rem;
   line-height: 1.2;
   display: block !important;
 }
-
-:deep(.v-input input) {
-  color: white !important;
-}
-
-/*:deep(.v-field--error) {*/
-/*  --v-field-border-color: #fed854 !important;*/
-/*}*/
 
 :deep(.v-field--variant-outlined.v-field--error) {
   border-color: #fed854 !important;
@@ -321,72 +278,6 @@ onMounted(() => {
 :deep(.v-field--error input::placeholder),
 :deep(.v-field--error .v-label.v-field-label) {
   color: #fed854 !important;
-}
-:deep(.v-label) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-:deep(.v-field__outline) {
-  color: rgba(66, 221, 242, 0.3) !important;
-}
-.format-select :deep(.v-select__selection) {
-  color: white !important;
-}
-
-:deep(.v-file-input .v-field) {
-  border-color: rgba(66, 221, 242, 0.3) !important;
-}
-
-:deep(.v-file-input .v-field:hover) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-file-input .v-field.v-field--focused) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-file-input .v-field__input) {
-  color: white !important;
-  font-size: 0.9rem;
-}
-
-:deep(.v-file-input .v-field__append-inner) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-:deep(.v-file-input .v-field__input) {
-  color: white !important;
-  font-size: 0.9rem;
-}
-
-:deep(.v-file-input .v-field__append-inner) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.header-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background-image: url('@/assets/top-image.png');
-  background-size: cover;
-  background-position: center;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-.header-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background: linear-gradient(
-    to bottom,
-    rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 30%,
-    rgba(23, 28, 38, 1) 80%
-  );
-  z-index: 2;
 }
 
 .content-wrapper {

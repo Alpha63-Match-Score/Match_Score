@@ -87,10 +87,8 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { ref, onMounted } from 'vue'
 import { API_URL } from '@/config'
 import DashboardWelcome from "@/components/DashboardWelcome.vue";
 import AdminActions from "@/components/AdminActions.vue";
@@ -103,15 +101,6 @@ import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
 import type { Tournament, Player, FilterValues } from '@/types/types'
 import LoadMoreButton from "@/components/LoadMoreButton.vue";
 import HeaderSection from "@/components/HeaderSection.vue";
-
-// Props and Emits
-const props = defineProps({
-  showDialog: Boolean,
-  isSubmitting: Boolean
-})
-const emit = defineEmits(['update:showDialog', 'submit', 'cancel'])
-
-
 
 const tournaments = ref<Tournament[]>([])
 const tournamentsError = ref<string | null>(null)
@@ -133,13 +122,8 @@ const clearErrors = () => {
   countryError.value = ''
 }
 
-// Dialog visibility
 const showAddTournamentDialog = ref(false)
-
-// Form data and errors
 const tournamentName = ref('')
-
-// Player dialog state
 const showUpdatePlayerDialog = ref(false)
 const playerUsername = ref('')
 const playerError = ref('')
@@ -151,11 +135,14 @@ const playerAvatar = ref<File | null>(null)
 const previewAvatar = ref<string | null>(null)
 const selectedTeam = ref<string>('')
 
-
+const isFiltered = ref(false);
+const isLoadingTournaments = ref(false);
+const hasMoreTournaments = ref(true);
+const isLoadingMore = ref(false);
+const selectedFormat = ref<string | null>(null);
 const showAddTeamDialog = ref(false)
 const teamName = ref('')
 const teamError = ref('')
-const previewLogo = ref<string | null>(null)
 const teamLogo = ref<File | null>(null)
 
 const showAddPlayerDialog = ref(false)
@@ -179,19 +166,6 @@ const handlePlayerUpdated = (updatedPlayer: Player) => {
   showSuccessAlert.value = true
   successMessage.value = `Player ${updatedPlayer.username} was successfully updated!`
 }
-
-const resetTeamForm = () => {
-  teamName.value = '';
-  teamLogo.value = null;
-  previewLogo.value = null;
-  teamError.value = '';
-};
-
-const isFiltered = ref(false);
-const isLoadingTournaments = ref(false);
-const hasMoreTournaments = ref(true);
-const isLoadingMore = ref(false);
-const selectedFormat = ref<string | null>(null);
 
 const handleFiltersChange = async (filters: FilterValues) => {
   try {
@@ -300,7 +274,6 @@ const openAddTeamDialog = () => {
   showAddTeamDialog.value = true
 }
 
-// Player methods
 const openUpdatePlayerDialog = async () => {
   clearErrors()
   playerError.value = ''
