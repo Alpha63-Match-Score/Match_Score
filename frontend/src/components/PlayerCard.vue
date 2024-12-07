@@ -109,41 +109,22 @@ const showAvatarDialog = ref(false)
 const avatarFile = ref<File | null>(null)
 const avatarPreview = ref<string | null>(null)
 const avatarError = ref('')
-const editField = ref('')
-const editError = ref('')
-const editFirstName = ref('')
-const editLastName = ref('')
-const editValue = ref('')
-const showEditDialog = ref(false)
 const isLoadingTeams = ref(false)
 const teams = ref<Team[]>([])
 const teamsError = ref('')
 
 const openAvatarUpload = () => {
+  console.log('PlayerCard: Avatar click detected')
   avatarFile.value = null
   avatarPreview.value = null
   avatarError.value = ''
   showAvatarDialog.value = true
+  emit('avatarUpload')
 }
 
-const openEdit = async (field: string) => {
-  editField.value = field
-  editError.value = ''
-
-  if (!props.player) return
-
-  if (field === 'name') {
-    editFirstName.value = props.player.first_name || ''
-    editLastName.value = props.player.last_name || ''
-  } else if (field === 'team') {
-    editValue.value = props.player.team_name || ''
-    await fetchTeams()
-  } else {
-    editValue.value = props.player[field as keyof Player]?.toString() || ''
-  }
-
+const openEdit = (field: string) => {
+  console.log('PlayerCard: Emitting edit event with field:', field)
   emit('edit', field)
-  showEditDialog.value = true
 }
 
 const fetchTeams = async () => {

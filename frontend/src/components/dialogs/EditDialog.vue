@@ -107,6 +107,13 @@ const props = defineProps<{
   editLastName: string
 }>()
 
+console.log('EditDialog props:', {
+  editField: props.editField,
+  editValue: props.editValue,
+  editFirstName: props.editFirstName,
+  editLastName: props.editLastName
+})
+
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'update:editValue', value: string): void

@@ -13,9 +13,8 @@
             <PlayerCard
               :player="player"
               @edit="openEdit"
-              @avatarClick="openAvatarUpload"
+              @avatar-upload="openAvatarUpload"
             />
-
             <EditDialog
               v-model="showEditDialog"
               :player="player"
@@ -24,49 +23,16 @@
               :edit-first-name="editFirstName"
               :edit-last-name="editLastName"
               @update:modelValue="showEditDialog = $event"
+              @update:editValue="editValue = $event"
+              @update:editFirstName="editFirstName = $event"
+              @update:editLastName="editLastName = $event"
               @profile-updated="handleProfileUpdated"
             />
-            <!-- Avatar Upload Dialog -->
-            <v-dialog v-model="showAvatarDialog" max-width="500">
-              <v-card class="edit-dialog">
-                <v-card-title>Update Avatar</v-card-title>
-                <v-card-text>
-                  <v-alert
-                    v-if="avatarError"
-                    type="error"
-                    variant="tonal"
-                    class="mb-4"
-                  >
-                    {{ avatarError }}
-                  </v-alert>
-
-                  <v-file-input
-                    v-model="avatarFile"
-                    accept="image/*"
-                    label="Choose avatar"
-                    prepend-icon="mdi-camera"
-                    variant="outlined"
-                    @change="handleAvatarPreview"
-                  ></v-file-input>
-
-                  <div v-if="avatarPreview" class="avatar-preview">
-                    <img :src="avatarPreview" alt="Avatar preview" />
-                  </div>
-                </v-card-text>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="error" @click="closeAvatarDialog">Cancel</v-btn>
-                  <v-btn
-                    color="primary"
-                    @click="uploadAvatar"
-                    :loading="isUploading"
-                    :disabled="!avatarFile"
-                  >
-                    Upload
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
+            <AvatarUploadDialog
+              v-model="showAvatarDialog"
+              :player="player"
+              @avatar-updated="handleAvatarUpdated"
+            />
 
             <!-- Success Alert -->
             <v-snackbar
@@ -82,108 +48,65 @@
         <!-- Request History Section -->
           <v-col cols="12" md="6">
             <div class="history-card">
-          <div class="history-background"></div>
-          <div class="history-content">
-            <h3 class="section-title">Request History</h3>
+              <div class="history-background"></div>
+              <div class="history-content">
+              <h3 class="section-title">Request History</h3>
 
-            <!-- Loading state -->
-            <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
-              <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
-            </div>
+              <!-- Loading state -->
+              <div v-if="isLoading" class="d-flex justify-center align-center" style="height: 200px">
+                <v-progress-circular indeterminate color="#42DDF2FF"></v-progress-circular>
+              </div>
 
-            <!-- Error state -->
-            <div v-else-if="requestHistoryError" class="error-message">
-              {{ requestHistoryError }}
-            </div>
+              <!-- Error state -->
+              <div v-else-if="requestHistoryError" class="error-message">
+                {{ requestHistoryError }}
+              </div>
 
-            <!-- Request list -->
-            <div v-else-if="requests.length > 0" class="request-list">
-              <div v-for="request in requests" :key="request.request_date" class="request-item">
-                <div class="request-header">
-                  <div class="request-type">
-                    <v-icon
-                      :icon="getRequestTypeIcon(request.request_type)"
-                      class="request-icon"
-                    ></v-icon>
-                    {{ formatRequestType(request.request_type) }}
-                  </div>
-                  <div :class="['status-tag', `status-${request.status}`]">
-                    {{ formatStatus(request.status) }}
-                  </div>
-                </div>
-
-                <!-- Player Link Dialog -->
-                <v-dialog v-model="showPlayerLinkDialog" max-width="500">
-                  <v-card class="dialog-card">
-                    <div class="dialog-background"></div>
-                    <div class="dialog-content">
-                      <v-card-title class="dialog-title">
-                        <span>Link Player Profile</span>
-                      </v-card-title>
-                      <v-card-text>
-                        <v-text-field
-                          v-model="playerUsername"
-                          label="Player Username"
-                          variant="outlined"
-                          :rules="[rules.required]"
-                          class="player-username-input"
-                        ></v-text-field>
-
-                        <!-- Display Error for Player Link -->
-                        <div v-if="playerLinkError" class="error-message">
-                          {{ playerLinkError }}
-                        </div>
-                      </v-card-text>
-                      <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                          class="cancel-btn"
-                          variant="text"
-                          @click="closeEditDialog"
-                        >
-                          Cancel
-                        </v-btn>
-                        <v-btn
-                          class="submit-btn"
-                          @click="saveEdit"
-                          :loading="isSubmitting"
-                          :disabled="!hasValidChanges"
-                        >
-                          Submit
-                        </v-btn>
-                      </v-card-actions>
+              <!-- Request list -->
+              <div v-else-if="requests.length > 0" class="request-list">
+                <div v-for="request in requests" :key="request.request_date" class="request-item">
+                  <div class="request-header">
+                    <div class="request-type">
+                      <v-icon
+                        :icon="getRequestTypeIcon(request.request_type)"
+                        class="request-icon"
+                      ></v-icon>
+                      {{ formatRequestType(request.request_type) }}
                     </div>
-                  </v-card>
-                </v-dialog>
-
-                <!-- Success Alert -->
-                    <v-snackbar
-                      v-model="showSuccessAlert"
-                      color="success"
-                      timeout="3000"
-                    >
-                      {{ successMessage }}
-                    </v-snackbar>
-
-                <div class="request-details">
-                  <div class="detail-item">
-                    <v-icon icon="mdi-calendar" size="small" class="detail-icon"></v-icon>
-                    {{ formatDate(request.request_date) }}
+                    <div :class="['status-tag', `status-${request.status}`]">
+                      {{ formatStatus(request.status) }}
+                    </div>
                   </div>
-                  <div v-if="request.username" class="detail-item">
-                    <v-icon icon="mdi-account" size="small" class="detail-icon"></v-icon>
-                    Player: {{ request.username }}
+
+
+                  <!-- Success Alert -->
+                  <v-snackbar
+                    v-model="showSuccessAlert"
+                    color="success"
+                    timeout="3000"
+                  >
+                    {{ successMessage }}
+                  </v-snackbar>
+
+                  <div class="request-details">
+                    <div class="detail-item">
+                      <v-icon icon="mdi-calendar" size="small" class="detail-icon"></v-icon>
+                      {{ formatDate(request.request_date) }}
+                    </div>
+                    <div v-if="request.username" class="detail-item">
+                      <v-icon icon="mdi-account" size="small" class="detail-icon"></v-icon>
+                      Player: {{ request.username }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Empty state -->
-            <div v-else class="error-message">
-              No requests found. You have not submitted any requests.
+                <!-- Empty state -->
+                <div v-else class="error-message">
+                  You have not submitted any requests.
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
           </v-col>
         </v-row>
       </v-container>
@@ -201,6 +124,7 @@ import DashboardWelcome from "@/components/DashboardWelcome.vue";
 import PlayerCard from "@/components/PlayerCard.vue";
 import EditDialog from "@/components/dialogs/EditDialog.vue";
 import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
+import AvatarUploadDialog from "@/components/dialogs/AvatarUploadDialog.vue";
 
 const authStore = useAuthStore()
 const userEmail = ref(authStore.userEmail)
@@ -326,10 +250,18 @@ const rules = {
   ],
 }
 
-const handleProfileUpdated = () => {
+const handleProfileUpdated = async () => {
+  await fetchPlayer()
   showSuccessAlert.value = true
   successMessage.value = 'Profile updated successfully!'
 }
+
+const handleAvatarUpdated = async () => {
+  await fetchPlayer()
+  showSuccessAlert.value = true
+  successMessage.value = 'Avatar updated successfully!'
+}
+
 // Methods
 const formatRequestType = (type: string): string => {
   return type.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -500,22 +432,28 @@ const fetchPlayer = async () => {
 }
 
 const openEdit = async (field: string) => {
+  console.log('Opening edit dialog with field:', field)
   editField.value = field
   editError.value = ''
 
   if (field === 'name') {
     editFirstName.value = player.value?.first_name || ''
     editLastName.value = player.value?.last_name || ''
+    console.log('Setting name values:', {
+      first: editFirstName.value,
+      last: editLastName.value
+    })
   } else if (field === 'team') {
     editValue.value = player.value?.team_name || ''
     await fetchTeams()
+    console.log('Setting team value:', editValue.value)
   } else {
     editValue.value = player.value?.[field as keyof Player]?.toString() || ''
+    console.log('Setting field value:', editValue.value)
   }
 
   showEditDialog.value = true
 }
-
 const closeEditDialog = () => {
   showEditDialog.value = false
   editField.value = ''
@@ -629,6 +567,7 @@ if (editField.value === 'name') {
 }
 
 const openAvatarUpload = () => {
+  console.log('Opening avatar upload dialog')
   avatarFile.value = null
   avatarPreview.value = null
   avatarError.value = ''
@@ -1263,4 +1202,210 @@ onMounted(() => {
   color: #fed854 !important;
 }
 
+.edit-dialog {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.v-card-title) {
+  color: #42DDF2FF !important;
+  font-size: 1.4rem;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(66, 221, 242, 0.2);
+}
+
+:deep(.v-card-text) {
+  padding: 24px;
+}
+
+:deep(.v-field) {
+  border-color: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.v-field:hover) {
+  border-color: #42ddf2 !important;
+}
+
+:deep(.v-field.v-field--focused) {
+  border-color: #42ddf2 !important;
+}
+
+:deep(.v-label) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.v-field__input) {
+  color: white !important;
+}
+
+:deep(.v-text-field input) {
+  color: white !important;
+}
+
+:deep(.v-field__outline) {
+  color: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.v-icon) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.v-alert) {
+  background-color: rgba(254, 216, 84, 0.1) !important;
+  color: #fed854 !important;
+  border-color: #fed854 !important;
+}
+
+:deep(.v-alert__close-button) {
+  color: #fed854 !important;
+}
+
+:deep(.v-alert__prepend) {
+  color: #fed854 !important;
+}
+
+:deep(.v-card-actions) {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(66, 221, 242, 0.2);
+}
+
+:deep(.v-btn) {
+  text-transform: none !important;
+}
+
+
+:deep(.teams-menu) {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 1px solid rgba(66, 221, 242, 0.3);
+  max-height: 300px !important;
+  overflow-y: auto;
+}
+
+:deep(.teams-menu::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb) {
+  background: rgba(66, 221, 242, 0.3);
+  border-radius: 4px;
+}
+
+:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
+  background: rgba(66, 221, 242, 0.5);
+}
+
+:deep(.v-select__selection) {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+:deep(.v-select .v-field__input) {
+  min-height: 56px !important;
+  opacity: 1 !important;
+  color: white !important;
+}
+
+:deep(.v-select .v-field) {
+  background: transparent !important;
+}
+
+/* Update error message styling */
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  display: block !important;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--variant-outlined.v-field--error) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline) {
+  color: #fed854 !important;
+}
+
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.detail-icon {
+  color: #42DDF2FF !important;
+}
+
+.dialog-card {
+  background: rgba(45, 55, 75, 0.95) !important;
+  border: 2px solid #42DDF2FF;
+  backdrop-filter: blur(10px);
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+:deep(.v-text-field) {
+  margin-top: 24px;
+}
+
+.dialog-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -32px;
+}
+
+.cancel-btn {
+  background: transparent !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
+  border-radius: 50px !important;
+  padding: 0 24px !important;
+  height: 40px !important;
+  text-transform: none !important;
+}
+
+.cancel-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
+}
+
+.submit-btn {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
+  border-radius: 50px !important;
+  padding: 0 24px !important;
+  height: 40px !important;
+  text-transform: none !important;
+}
+
+.submit-btn:hover {
+  background: #FED854FF !important;
+  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(66, 221, 242, 0.5) !important;
+}
+
+:deep(.v-btn) {
+  text-transform: none !important;
+  padding: 0 24px !important;
+  height: 40px !important;
+}
 </style>
