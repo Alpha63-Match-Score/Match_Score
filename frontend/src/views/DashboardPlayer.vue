@@ -34,11 +34,6 @@
                     <div class="info-section">
                       <div class="info-row">
                         <div class="username">{{ player?.username }}</div>
-                        <v-icon
-                          icon="mdi-pencil"
-                          class="edit-icon"
-                          @click="openEdit('username')"
-                        ></v-icon>
                       </div>
 
                       <div class="info-row">
