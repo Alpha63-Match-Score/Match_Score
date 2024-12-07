@@ -374,6 +374,7 @@ onUnmounted(() => {
   gap: 8px;
   justify-content: center;
   width: 260px;
+  height: 110px;
   padding: 8px;
   border-radius: 12px;
   border: 2px solid rgba(66, 221, 242, 0.2);
@@ -405,6 +406,7 @@ onUnmounted(() => {
   justify-self: center;
   gap: 12px;
   padding: 8px 0;
+  margin-top: -15px;
 }
 
 .progress-bar {
