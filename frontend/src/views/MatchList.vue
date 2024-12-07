@@ -50,7 +50,7 @@
         </v-row>
 
         <!-- Show All Matches Button -->
-        <v-row class="filter-row" justify="center" style="margin-top: 8px;">
+        <v-row class="filter-row">
           <v-col cols="auto">
             <v-btn
               class="reset-filter-btn"
@@ -75,7 +75,7 @@
 
         <!-- Matches Grid -->
         <v-row v-else justify="center">
-          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="auto" class="match-column">
+          <v-col v-for="match in filteredMatches" :key="match.id" cols="12" md="6" class="match-column">
             <v-card class="match-card" @click="openMatchDialog(match)">
               <div class="match-background"></div>
               <div class="match-content">
