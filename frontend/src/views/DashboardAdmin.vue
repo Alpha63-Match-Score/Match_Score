@@ -693,6 +693,7 @@
                 block
                 class="request-close-btn"
                 @click="showPlayerModal = false"
+                max-width="30px"
               >
                 Close
               </v-btn>
