@@ -217,10 +217,25 @@ const handlePlayerClick = (playerId: string) => {
 
 onMounted(() => {
   fetchTeams()
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/teams') {
+      teams.value = event.detail.results
+      console.log('Received search results:', teams.value)
+      isLoadingTeams.value = false
+      teamsError.value = null
+    }
+  }) as EventListener)
 })
 
 onUnmounted(() => {
-  // Clean up if necessary
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/teams') {
+      teams.value = event.detail.results
+      console.log('Received search results:', teams.value)
+      isLoadingTeams.value = false
+      teamsError.value = null
+    }
+  }) as EventListener)
 })
 </script>
 

@@ -301,7 +301,6 @@ const fetchTeams = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    console.log('Received teams data:', data)
 
     const teamsData = Array.isArray(data) ? data : (data.results || [])
 
@@ -309,7 +308,6 @@ const fetchTeams = async () => {
       text: team.name,
       value: team.name
     }))
-    console.log('Processed teams for dropdown:', teams.value)
   } catch (e) {
     console.error('Error fetching teams:', e)
   }
@@ -342,6 +340,14 @@ onMounted(() => {
   fetchMatches()
   fetchTournaments()
   fetchTeams()
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/matches') {
+      matches.value = event.detail.results
+      console.log('Received search results:', matches.value)
+      isLoadingMatches.value = false
+      matchesError.value = null
+    }
+  }) as EventListener)
 })
 
 watch([selectedStage, selectedIsFinished, selectedTeam], () => {
@@ -350,7 +356,14 @@ watch([selectedStage, selectedIsFinished, selectedTeam], () => {
 })
 
 onUnmounted(() => {
-  // Clean up if necessary
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/matches') {
+      matches.value = event.detail.results
+      console.log('Received search results:', matches.value)
+      isLoadingMatches.value = false
+      matchesError.value = null
+    }
+  }) as EventListener)
 })
 </script>
 

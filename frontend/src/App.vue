@@ -192,7 +192,7 @@ const handleSearch = async () => {
         break
       case '/matches':
         endpoint = query
-          ? `${API_URL}/matches/?search=${query}&offset=0&limit=10`
+          ? `${API_URL}/matches/?tournament_title=${query}&offset=0&limit=10`
           : `${API_URL}/matches/?offset=0&limit=10`
         break
       default:
