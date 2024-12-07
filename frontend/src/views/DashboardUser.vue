@@ -205,10 +205,12 @@ const getRequestTypeIcon = (type: string): string => {
 }
 
 const hasPendingRequest = computed(() => {
+  const pendingRequests = requests.value.filter(request => request.status === 'pending');
   return requests.value.some(request =>
     request.status === 'pending' &&
-    (request.request_type === 'link player profile' || request.request_type === 'promote user to director')
+    (request.request_type === 'link user to player' || request.request_type === 'promote user to director')
   );
+
 });
 
 const fetchRequests = async () => {
@@ -244,7 +246,6 @@ const fetchRequests = async () => {
 };
 
 const openDirectorRequest = async () => {
-
   if (hasPendingRequest.value) {
     actionsError.value = 'You already have a pending request.';
     return;
@@ -275,11 +276,10 @@ const openDirectorRequest = async () => {
 };
 
 const openPlayerLinkDialog = () => {
-
-  if (hasPendingRequest.value) {
-    actionsError.value = 'You already have a pending request.';
-    return;
-  }
+    if (hasPendingRequest.value) {
+      actionsError.value = 'You already have a pending request.';
+      return;
+    }
 
   playerLinkError.value = '';
   playerUsername.value = '';
@@ -287,6 +287,10 @@ const openPlayerLinkDialog = () => {
 };
 
 const submitPlayerLink = async () => {
+  if (hasPendingRequest.value) {
+    playerLinkError.value = 'You already have a pending request.';
+    return;
+  }
 
   if (!playerUsername.value) {
     playerLinkError.value = 'Player username is required.';
@@ -296,6 +300,15 @@ const submitPlayerLink = async () => {
   try {
     isSubmitting.value = true;
     playerLinkError.value = null;
+
+    const existingRequest = requests.value.some(
+      (request) => request.request_type === 'link user to player' && request.username === playerUsername.value && request.status === 'pending'
+    );
+
+    if (existingRequest) {
+      playerLinkError.value = 'You already have a pending request.';
+      return;
+    }
 
     const response = await fetch(`${API_URL}/requests/players/${playerUsername.value}`, {
       method: 'POST',
