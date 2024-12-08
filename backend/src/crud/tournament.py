@@ -220,8 +220,6 @@ def _get_tournament_current_stage(
             return Stage.SEMI_FINAL
         elif number_of_teams == 8:
             return Stage.QUARTER_FINAL
-        else:
-            return Stage.ROUND_OF_16
 
     elif tournament_format == TournamentFormat.ROUND_ROBIN:
         if number_of_teams not in c.ROUND_ROBIN_TEAMS:
@@ -280,11 +278,11 @@ def update_tournament(
             v.is_author_of_tournament(db, tournament_id, current_user.id)
 
         if tournament.title is not None:
-            v.tournament_title_unique(db, tournament.title)
             if len(tournament.title) == 0:
                 raise HTTPException(
                     status_code=HTTP_400_BAD_REQUEST, detail="Title must not be empty"
                 )
+            v.tournament_title_unique(db, tournament.title)
             db_tournament.title = tournament.title
 
         if tournament.end_date is not None:
