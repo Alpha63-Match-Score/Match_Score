@@ -1,3 +1,5 @@
+from typing import Type
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from src.core.security import get_password_hash
@@ -7,7 +9,17 @@ from src.utils.notifications import send_email_notification
 from src.utils.validators import user_email_exists
 
 
-def create_user(user: UserCreate, db: Session):
+def create_user(user: UserCreate, db: Session) -> User:
+    """
+    Create a new user with the provided data.
+
+    Args:
+        user (UserCreate): The user data to create.
+        db (Session): The database session.
+
+    Returns:
+        User: The created user object.
+    """
     user_email_exists(db, user.email)
     hashed_password = get_password_hash(user.password)
     db_user = User(
@@ -26,7 +38,20 @@ def create_user(user: UserCreate, db: Session):
     return db_user
 
 
-def get_by_id(db: Session, user_id: str):
+def get_by_id(db: Session, user_id: str) -> Type[User]:
+    """
+    Retrieve a user by their ID.
+
+    Args:
+        db (Session): The database session.
+        user_id (str): The ID of the user to retrieve.
+
+    Returns:
+        User: The user object if found.
+
+    Raises:
+        HTTPException: If the user is not found.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
@@ -35,7 +60,18 @@ def get_by_id(db: Session, user_id: str):
     return user
 
 
-def update_email(db: Session, email: str, current_user: User):
+def update_email(db: Session, email: str, current_user: User) -> dict:
+    """
+    Update the email address of the current user.
+
+    Args:
+        db (Session): The database session.
+        email (str): The new email address.
+        current_user (User): The current user object.
+
+    Returns:
+        dict: A message indicating the email update was successful.
+    """
     user_email_exists(db, email)
     user = db.query(User).filter(User.id == current_user.id).first()
     old_email = user.email
