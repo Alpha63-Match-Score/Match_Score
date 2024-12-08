@@ -33,4 +33,4 @@ check if installed => vue --version
 
 5. For Cat Animations => npm install axios lucide-vue-next
 
-6. ![Database Diagram](https://i.imgur.com/ZOFR2H4.png)
+6. ![Database Diagram](https://i.imgur.com/BvVrz0I.png)
