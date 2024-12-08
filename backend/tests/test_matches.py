@@ -120,16 +120,34 @@ class MatchServiceShould(unittest.TestCase):
 
     def test_get_all_matches_with_filters(self):
         """Test get_all_matches with various filters."""
+        mock_base_query = MagicMock()
 
-        mock_query = MagicMock()
-        mock_query.join.return_value = mock_query
-        mock_query.order_by.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.offset.return_value = mock_query
-        mock_query.limit.return_value = mock_query
-        mock_query.all.return_value = [self.match]
+        mock_tournament = MagicMock()
+        mock_tournament.id = self.tournament_id
+        mock_tournament.title = "Test Tournament"
 
-        self.db.query.return_value = mock_query
+        mock_tournament_query = MagicMock()
+        mock_tournament_query.filter.return_value.all.return_value = [mock_tournament]
+
+        mock_team_query = MagicMock()
+        mock_team_query.filter.return_value.first.return_value = self.team1
+
+        def mock_query(model):
+            if model == Tournament:
+                return mock_tournament_query
+            if model == Team:
+                return mock_team_query
+            return mock_base_query
+
+        self.db.query.side_effect = mock_query
+
+        mock_base_query.order_by.return_value = mock_base_query
+        mock_base_query.join.return_value = mock_base_query
+        mock_base_query.filter.return_value = mock_base_query
+        mock_base_query.distinct.return_value = mock_base_query
+        mock_base_query.offset.return_value = mock_base_query
+        mock_base_query.limit.return_value = mock_base_query
+        mock_base_query.all.return_value = [self.match]
 
         result = get_all_matches(
             self.db,
@@ -144,6 +162,12 @@ class MatchServiceShould(unittest.TestCase):
         self.assertEqual(result[0].id, self.match_id)
         self.assertEqual(result[0].stage, Stage.QUARTER_FINAL)
         self.assertEqual(result[0].is_finished, False)
+
+        mock_base_query.order_by.assert_called_once()
+        mock_base_query.join.assert_called_once()
+        mock_base_query.distinct.assert_called_once()
+        mock_base_query.filter.assert_called()
+        mock_base_query.all.assert_called_once()
 
     @patch("src.utils.validators.director_or_admin")
     @patch("src.utils.validators.match_exists")
