@@ -30,9 +30,26 @@ def get_all(
         Literal["link user to player", "promote user to director"] | None
     ) = None,
     filter_by_admin: bool = False,
-    # request_date: str = None,
-    # response_date: str = None,
-):
+) -> list[RequestListResponse]:
+    """
+    Retrieve all requests from the database with optional filtering, sorting, and pagination.
+
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+        pagination (PaginationParams): The pagination parameters.
+        sort_by (Literal["asc", "desc"]): Sort order, either 'asc'
+        for ascending or 'desc' for descending.
+        status (Literal["pending", "accepted", "rejected"] | None):
+        Optional filter for request status.
+        request_type (Literal["link user to player", "promote user to director"] | None):
+        Optional filter for request type.
+        filter_by_admin (bool): Optional filter to only include
+        requests handled by the current admin.
+
+    Returns:
+        list[RequestListResponse]: A list of request response objects.
+    """
     user_role_is_admin(current_user)
     query = db.query(Request)
 
@@ -49,9 +66,6 @@ def get_all(
         query = query.order_by(asc(Request.request_date))
     elif sort_by == "desc":
         query = query.order_by(desc(Request.request_date))
-
-    # if response_date:
-    #     query = query.filter(Request.response_date == response_date)
 
     query = query.offset(pagination.offset).limit(pagination.limit)
 
@@ -73,8 +87,18 @@ def get_all(
 
 def get_current_user_request(
     db: Session, current_user: User, pagination: PaginationParams
-):
+) -> list[ResponseRequest]:
+    """
+    Retrieve the current user's requests from the database with pagination.
 
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+        pagination (PaginationParams): The pagination parameters.
+
+    Returns:
+        list[ResponseRequest]: A list of response request objects for the current user.
+    """
     query = db.query(Request).filter(Request.user_id == current_user.id)
     query = query.order_by(desc(Request.request_date))
     query = query.offset(pagination.offset).limit(pagination.limit)
@@ -91,7 +115,17 @@ def get_current_user_request(
     return result
 
 
-def send_director_request(db: Session, current_user: User):
+def send_director_request(db: Session, current_user: User) -> ResponseRequest:
+    """
+    Send a request to promote the current user to director.
+
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+
+    Returns:
+        ResponseRequest: The response request object for the director promotion request.
+    """
     user_role_is_user(current_user)
     check_valid_request(db, current_user)
 
@@ -109,7 +143,21 @@ def send_director_request(db: Session, current_user: User):
     )
 
 
-def send_link_to_player_request(db: Session, current_user: User, username: str):
+def send_link_to_player_request(db: Session,
+                                current_user: User,
+                                username: str
+                                ) -> ResponseRequest:
+    """
+    Send a request to link the current user to a player.
+
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+        username (str): The username of the player to link to.
+
+    Returns:
+        ResponseRequest: The response request object for the link to player request.
+    """
     user_role_is_user(current_user)
     player_exists(db, username=username)
     player_already_linked(db, username)
@@ -131,7 +179,17 @@ def send_link_to_player_request(db: Session, current_user: User, username: str):
     )
 
 
-def check_valid_request(db: Session, current_user: User):
+def check_valid_request(db: Session, current_user: User) -> None:
+    """
+    Check if the current user has a pending request.
+
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+
+    Raises:
+        HTTPException: If the user already has a pending request.
+    """
     existing_request = (
         db.query(Request)
         .filter(
@@ -151,7 +209,19 @@ def update_request(
     current_user: User,
     status: Literal["accepted", "rejected"],
     request_id: UUID,
-):
+) -> ResponseRequest:
+    """
+    Update the status of a request.
+
+    Args:
+        db (Session): The database session.
+        current_user (User): The current user making the request.
+        status (Literal["accepted", "rejected"]): The new status of the request.
+        request_id (UUID): The ID of the request to update.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     user_role_is_admin(current_user)
     request = request_exists(db, request_id)
     user = user_exists(db, request.user_id)
@@ -167,7 +237,22 @@ def update_request(
         return get_director_requests(db, current_user, status, request)
 
 
-def get_director_requests(db, admin: User, status: str, request: Request):
+def get_director_requests(db, admin: User,
+                          status: str,
+                          request: Request
+                          ) -> ResponseRequest:
+    """
+    Handle a request to promote a user to director.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        status (str): The status of the request, either 'accepted' or 'rejected'.
+        request (Request): The request object.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     user_id = request.user_id
     user = user_exists(db, user_id)
 
@@ -188,7 +273,19 @@ def get_director_requests(db, admin: User, status: str, request: Request):
         return reject_director_request(db, admin, request)
 
 
-def accept_director_request(db, admin: User, user: User, request: Request):
+def accept_director_request(db, admin: User, user: User, request: Request) -> ResponseRequest:
+    """
+    Accept a request to promote a user to director.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        user (User): The user to be promoted.
+        request (Request): The request object.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     request.status = RequestStatus.ACCEPTED
     request.admin_id = admin.id
     request.response_date = datetime.now()
@@ -205,7 +302,18 @@ def accept_director_request(db, admin: User, user: User, request: Request):
     )
 
 
-def reject_director_request(db, admin: User, request: Request):
+def reject_director_request(db, admin: User, request: Request) -> ResponseRequest:
+    """
+    Reject a request to promote a user to director.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        request (Request): The request object.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     request.status = RequestStatus.REJECTED
     request.admin_id = admin.id
     request.response_date = datetime.now()
@@ -220,7 +328,16 @@ def reject_director_request(db, admin: User, request: Request):
     )
 
 
-def check_request_status(request: Type[Request]):
+def check_request_status(request: Type[Request]) -> None:
+    """
+    Check if the request has already been responded to.
+
+    Args:
+        request (Type[Request]): The request object.
+
+    Raises:
+        HTTPException: If the request has already been responded to.
+    """
     if request.response_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -230,7 +347,21 @@ def check_request_status(request: Type[Request]):
 
 def get_link_to_player_requests(
     db, admin: User, user: User, status: str, request: Request, player: Player
-):
+) -> ResponseRequest:
+    """
+    Handle a request to link a user to a player.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        user (User): The user making the request.
+        status (str): The status of the request, either 'accepted' or 'rejected'.
+        request (Request): The request object.
+        player (Player): The player to link to.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     if status == RequestStatus.ACCEPTED:
         send_email_notification(
             email=user.email,
@@ -252,7 +383,20 @@ def get_link_to_player_requests(
 
 def accept_link_to_player_request(
     db, admin: User, user: User, request: Request, player: Player
-):
+) -> ResponseRequest:
+    """
+    Accept a request to link a user to a player.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        user (User): The user to be linked to the player.
+        request (Request): The request object.
+        player (Player): The player to link to.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     request.status = RequestStatus.ACCEPTED
     request.admin_id = admin.id
     request.response_date = datetime.now()
@@ -270,7 +414,18 @@ def accept_link_to_player_request(
     )
 
 
-def reject_link_to_player_request(db, admin: User, request: Request):
+def reject_link_to_player_request(db, admin: User, request: Request) -> ResponseRequest:
+    """
+    Reject a request to link a user to a player.
+
+    Args:
+        db (Session): The database session.
+        admin (User): The admin handling the request.
+        request (Request): The request object.
+
+    Returns:
+        ResponseRequest: The response request object with the updated status.
+    """
     request.status = RequestStatus.REJECTED
     request.admin_id = admin.id
     request.response_date = datetime.now()
