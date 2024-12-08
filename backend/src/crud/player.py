@@ -73,7 +73,8 @@ def get_players(
     sort_by: str = "asc",
 ) -> list[PlayerListResponse]:
     """
-    Retrieve a list of players from the database with optional filtering, sorting, and pagination.
+    Retrieve a list of players from the database
+    with optional filtering, sorting, and pagination.
 
     Args:
         db (Session): The database session.

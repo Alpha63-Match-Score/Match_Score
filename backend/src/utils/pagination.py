@@ -20,6 +20,7 @@ def get_pagination(
         Default is 10, minimum is 1, and maximum is 100.
 
     Returns:
-        PaginationParams: An instance of PaginationParams containing the offset and limit.
+        PaginationParams: An instance of PaginationParams
+        containing the offset and limit.
     """
     return PaginationParams(offset=offset, limit=limit)

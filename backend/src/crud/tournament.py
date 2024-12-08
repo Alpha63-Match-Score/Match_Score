@@ -45,9 +45,12 @@ def get_tournaments(
     Args:
         db (Session): The database session.
         pagination (PaginationParams): Pagination parameters.
-        period (Literal["past", "present", "future"], optional): The period filter for tournaments.
-        status (Literal["active", "finished"], optional): The status filter for tournaments.
-        tournament_format (TournamentFormat, optional): The format filter for tournaments.
+        period (Literal["past", "present", "future"], optional):
+        The period filter for tournaments.
+        status (Literal["active", "finished"], optional):
+        The status filter for tournaments.
+        tournament_format (TournamentFormat, optional):
+        The format filter for tournaments.
         search (str, optional): The search filter for tournament titles.
         author_id (UUID, optional): The author filter for tournaments.
 
@@ -84,7 +87,8 @@ def _get_period_filter(period: Literal["past", "present", "future"] | None) -> l
     Generate a filter for tournaments based on the specified period.
 
     Args:
-        period (Literal["past", "present", "future"], optional): The period filter for tournaments.
+        period (Literal["past", "present", "future"], optional):
+        The period filter for tournaments.
 
     Returns:
         list: A list of SQLAlchemy filter conditions.
@@ -288,7 +292,8 @@ def _get_tournament_current_stage(
     tournament_format: str, number_of_teams: int
 ) -> Stage:
     """
-    Determine the current stage of a tournament based on its format and number of teams.
+    Determine the current stage of a tournament
+    based on its format and number of teams.
 
     Args:
         tournament_format (str): The format of the tournament.
@@ -298,7 +303,8 @@ def _get_tournament_current_stage(
         Stage: The current stage of the tournament.
 
     Raises:
-        HTTPException: If the number of teams is invalid for the given tournament format.
+        HTTPException: If the number of teams is invalid
+        for the given tournament format.
     """
     if tournament_format == TournamentFormat.SINGLE_ELIMINATION:
         if number_of_teams not in c.SINGLE_ELIMINATION_TEAMS:

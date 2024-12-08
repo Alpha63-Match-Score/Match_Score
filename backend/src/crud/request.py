@@ -32,7 +32,8 @@ def get_all(
     filter_by_admin: bool = False,
 ) -> list[RequestListResponse]:
     """
-    Retrieve all requests from the database with optional filtering, sorting, and pagination.
+    Retrieve all requests from the database
+    with optional filtering, sorting, and pagination.
 
     Args:
         db (Session): The database session.
@@ -42,8 +43,8 @@ def get_all(
         for ascending or 'desc' for descending.
         status (Literal["pending", "accepted", "rejected"] | None):
         Optional filter for request status.
-        request_type (Literal["link user to player", "promote user to director"] | None):
-        Optional filter for request type.
+        request_type (Literal["link user to player",
+        "promote user to director"] | None): Optional filter for request type.
         filter_by_admin (bool): Optional filter to only include
         requests handled by the current admin.
 

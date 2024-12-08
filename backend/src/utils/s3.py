@@ -62,8 +62,9 @@ class S3Service:
         """
         Processes the uploaded image data.
 
-        This method opens the image, converts it to RGB if needed, resizes it if it exceeds the maximum size,
-        and optimizes it before converting it back to bytes.
+        This method opens the image, converts it to RGB if needed,
+        resizes it if it exceeds the maximum size, and optimizes it before
+        converting it back to bytes.
 
         Args:
             image_data (bytes): The raw image data to be processed.

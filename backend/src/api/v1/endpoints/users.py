@@ -40,7 +40,8 @@ def login(
     Authenticate a user and return an access token.
 
     Args:
-        form_data (OAuth2PasswordRequestForm): The form data containing username and password.
+        form_data (OAuth2PasswordRequestForm):
+        The form data containing username and password.
         db (Session): Database session dependency.
 
     Returns:

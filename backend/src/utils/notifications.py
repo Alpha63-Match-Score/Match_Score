@@ -7,7 +7,8 @@ from src.core.config import settings
 
 def send_email_notification(email: str, subject: str, message: str) -> None:
     """
-    Sends an email notification with the specified subject and message to the given email address.
+    Sends an email notification with the specified
+    subject and message to the given email address.
 
     Args:
         email (str): The recipient's email address.
