@@ -1133,3 +1133,31 @@ class MatchServiceShould(unittest.TestCase):
             )
             self.assertEqual(next_day_match.start_time.hour, 11)
             self.assertEqual(next_day_match.start_time.day, start_time.day + 1)
+
+    def test_update_match_score_tie_game(self):
+        """Test updating match score when game is tied."""
+        with (
+            patch("src.utils.validators.director_or_admin", return_value=None),
+            patch("src.utils.validators.match_exists", return_value=self.match),
+            patch("src.utils.validators.match_is_finished", return_value=None),
+            patch("src.utils.validators.team_has_five_players", return_value=None),
+            patch("src.utils.validators.is_author_of_tournament", return_value=None),
+        ):
+            self.match.team1_score = 14
+            self.match.team2_score = 14
+
+            result = update_match_score(self.db, self.match_id, "team1", self.director_user)
+
+            self.assertEqual(result.team1_score, 15)
+            self.assertEqual(result.team2_score, 14)
+            self.assertFalse(result.is_finished)
+
+    def test_handle_finished_match_round_robin(self):
+        """Test handling finished match in round robin tournament."""
+        self.tournament.tournament_format = TournamentFormat.ROUND_ROBIN
+        losing_team = self.team2
+
+        from src.crud.match import _handle_finished_match
+        _handle_finished_match(self.db, self.match, losing_team)
+
+        self.assertIsNotNone(losing_team.tournament_id)
