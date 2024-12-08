@@ -8,6 +8,18 @@ class Match(Base, BaseMixin):
     """
     Database model representing "match" table in the database.
     UUID and table name are inherited from BaseMixin.
+
+    Attributes:
+        match_format (MatchFormat): The format of the match.
+        start_time (datetime): The start time of the match.
+        is_finished (bool): Indicates if the match is finished.
+        stage (Stage): The stage of the match.
+        team1_id (UUID): The ID of the first team.
+        team2_id (UUID): The ID of the second team.
+        team1_score (int): The score of the first team.
+        team2_score (int): The score of the second team.
+        winner_team_id (UUID): The ID of the winning team.
+        tournament_id (UUID): The ID of the tournament.
     """
 
     match_format = Column(Enum(MatchFormat), nullable=False)

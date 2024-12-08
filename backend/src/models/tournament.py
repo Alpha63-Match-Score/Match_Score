@@ -8,6 +8,19 @@ class Tournament(Base, BaseMixin):
     """
     Database model representing "tournament" table in the database.
     UUID and table name are inherited from BaseMixin.
+
+    Attributes:
+        title (str): The title of the tournament.
+        tournament_format (TournamentFormat): The format of the tournament.
+        start_date (datetime): The start date of the tournament.
+        end_date (datetime): The end date of the tournament.
+        prize_pool (int): The prize pool of the tournament.
+        current_stage (Stage): The current stage of the tournament.
+        director_id (UUID): The ID of the director of the tournament.
+        director (User): The director of the tournament.
+        matches (list[Match]): The list of matches in the tournament.
+        prize_cuts (list[PrizeCut]): The list of prize cuts in the tournament.
+        teams (list[Team]): The list of teams in the tournament.
     """
 
     title = Column(String(45), unique=True, nullable=False)
