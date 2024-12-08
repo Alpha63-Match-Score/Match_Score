@@ -152,11 +152,11 @@ class PlayerServiceShould(unittest.TestCase):
     def test_create_player_not_authorized(self):
         """Test creating a player fails when user is not authorized."""
         with patch(
-                "src.utils.validators.director_or_admin",
-                side_effect=HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You are not authorized to perform this action",
-                ),
+            "src.utils.validators.director_or_admin",
+            side_effect=HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to perform this action",
+            ),
         ) as mock_auth:
             player_create = PlayerCreate(
                 username="newplayer",
@@ -166,8 +166,7 @@ class PlayerServiceShould(unittest.TestCase):
             )
 
             with patch(
-                    "src.utils.validators.player_username_unique",
-                    return_value=None
+                "src.utils.validators.player_username_unique", return_value=None
             ) as mock_username:
                 with self.assertRaises(HTTPException) as context:
                     create_player(self.db, player_create, None, self.current_user)
@@ -175,10 +174,12 @@ class PlayerServiceShould(unittest.TestCase):
                 mock_username.assert_called_once()
                 mock_auth.assert_called_once_with(self.current_user)
 
-                self.assertEqual(context.exception.status_code, status.HTTP_403_FORBIDDEN)
+                self.assertEqual(
+                    context.exception.status_code, status.HTTP_403_FORBIDDEN
+                )
                 self.assertEqual(
                     context.exception.detail,
-                    "You are not authorized to perform this action"
+                    "You are not authorized to perform this action",
                 )
 
     def test_get_players_with_filters(self):
@@ -217,7 +218,7 @@ class PlayerServiceShould(unittest.TestCase):
         mock_team = MagicMock()
         mock_team.ilike = MagicMock()
 
-        with patch('src.models.Player.team', mock_team):
+        with patch("src.models.Player.team", mock_team):
             result = get_players(
                 self.db,
                 self.pagination,
@@ -256,11 +257,11 @@ class PlayerServiceShould(unittest.TestCase):
     def test_get_player_not_found(self):
         """Test getting a player that doesn't exist."""
         with patch(
-                "src.utils.validators.player_exists",
-                side_effect=HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Player not found",
-                ),
+            "src.utils.validators.player_exists",
+            side_effect=HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Player not found",
+            ),
         ):
             with self.assertRaises(HTTPException) as context:
                 get_player(self.db, uuid4())
@@ -270,7 +271,7 @@ class PlayerServiceShould(unittest.TestCase):
     def test_get_player_by_user_id_success(self):
         """Test getting a player by user ID successfully."""
         with patch(
-                "src.utils.validators.user_associated_with_player", return_value=None
+            "src.utils.validators.user_associated_with_player", return_value=None
         ):
             mock_query = MagicMock()
             mock_query.filter.return_value = mock_query
@@ -287,11 +288,11 @@ class PlayerServiceShould(unittest.TestCase):
         """Test getting a player by user ID when user
         is not associated with a player."""
         with patch(
-                "src.utils.validators.user_associated_with_player",
-                side_effect=HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User not associated with player",
-                ),
+            "src.utils.validators.user_associated_with_player",
+            side_effect=HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User not associated with player",
+            ),
         ):
             with self.assertRaises(HTTPException) as context:
                 get_player_by_user_id(self.db, self.current_user)
@@ -370,7 +371,6 @@ class PlayerServiceShould(unittest.TestCase):
 
             self.assertEqual(context.exception.status_code, status.HTTP_403_FORBIDDEN)
 
-
     def test_update_player_no_changes(self):
         """Test updating a player with no changes provided."""
         with patch("src.utils.validators.player_exists", return_value=self.player):
@@ -397,11 +397,11 @@ class PlayerServiceShould(unittest.TestCase):
             played_games=0,
             won_games=0,
             avatar=None,
-            user=None
+            user=None,
         )
 
         with patch(
-                "src.utils.validators.player_exists", return_value=player_no_tournament
+            "src.utils.validators.player_exists", return_value=player_no_tournament
         ):
             result = get_player(self.db, player_no_tournament.id)
 
