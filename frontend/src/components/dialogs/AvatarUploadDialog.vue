@@ -128,16 +128,14 @@ const uploadAvatar = async () => {
 </script>
 
 <style scoped>
-.edit-dialog {
+/* Dialog base styles */
+.edit-dialog, .dialog-card {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
 }
 
-:deep(.v-file-input) {
-  margin-top: 16px;
-}
-
+/* Avatar preview */
 .avatar-preview {
   margin-top: 16px;
   text-align: center;
@@ -149,97 +147,9 @@ const uploadAvatar = async () => {
   border: 2px solid #42DDF2FF;
 }
 
-/* Alert Styling */
-:deep(.v-alert) {
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  color: #fed854 !important;
-  border-color: #fed854 !important;
-}
-
-:deep(.v-alert__close-button) {
-  color: #fed854 !important;
-}
-
-:deep(.v-alert__prepend) {
-  color: #fed854 !important;
-}
-
-:deep(.v-card-actions) {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(66, 221, 242, 0.2);
-}
-
-:deep(.v-btn) {
-  text-transform: none !important;
-}
-
-
-:deep(.teams-menu) {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 1px solid rgba(66, 221, 242, 0.3);
-  max-height: 300px !important;
-  overflow-y: auto;
-}
-
-:deep(.teams-menu::-webkit-scrollbar) {
-  width: 8px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb) {
-  background: rgba(66, 221, 242, 0.3);
-  border-radius: 4px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
-  background: rgba(66, 221, 242, 0.5);
-}
-
-:deep(.v-select__selection) {
-  color: white !important;
-  opacity: 1 !important;
-}
-
-:deep(.v-select .v-field__input) {
-  min-height: 56px !important;
-  opacity: 1 !important;
-  color: white !important;
-}
-
-:deep(.v-select .v-field) {
-  background: transparent !important;
-}
-
-/* Update error message styling */
-:deep(.v-messages__message) {
-  color: #fed854 !important;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  display: block !important;
-}
-
-:deep(.v-field--error) {
-  --v-field-border-color: #fed854 !important;
-}
-
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline) {
-  color: #fed854 !important;
-}
-
-
+/* Common layout */
 .dialog-content {
   padding: 24px;
-}
-
-:deep(.v-text-field) {
-  margin-top: 24px;
 }
 
 .dialog-actions {
@@ -250,14 +160,26 @@ const uploadAvatar = async () => {
   margin-top: -32px;
 }
 
-.cancel-btn {
-  background: transparent !important;
-  color: #42DDF2FF !important;
-  border: 2px solid #42DDF2FF !important;
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+/* Buttons */
+.cancel-btn, .submit-btn {
   border-radius: 50px !important;
   padding: 0 24px !important;
   height: 40px !important;
   text-transform: none !important;
+}
+
+.cancel-btn {
+  background: transparent !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
 }
 
 .cancel-btn:hover {
@@ -267,10 +189,6 @@ const uploadAvatar = async () => {
 .submit-btn {
   background: #42DDF2FF !important;
   color: #171c26 !important;
-  border-radius: 50px !important;
-  padding: 0 24px !important;
-  height: 40px !important;
-  text-transform: none !important;
 }
 
 .submit-btn:hover {
@@ -284,24 +202,14 @@ const uploadAvatar = async () => {
   background: rgba(66, 221, 242, 0.5) !important;
 }
 
-:deep(.v-btn) {
-  text-transform: none !important;
-  padding: 0 24px !important;
-  height: 40px !important;
-}
-
+/* Error message */
 .error-message {
   text-align: center;
   color: #fed854;
   padding: 16px;
 }
 
-.edit-dialog {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-}
-
+/* Deep selectors for Vuetify components */
 :deep(.v-card-title) {
   color: #42DDF2FF !important;
   font-size: 1.4rem;
@@ -313,27 +221,20 @@ const uploadAvatar = async () => {
   padding: 24px;
 }
 
-:deep(.v-field) {
-  border-color: rgba(66, 221, 242, 0.3) !important;
+:deep(.v-card-actions) {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(66, 221, 242, 0.2);
 }
 
-:deep(.v-field:hover) {
-  border-color: #42ddf2 !important;
+:deep(.v-text-field) {
+  margin-top: 24px;
 }
 
-:deep(.v-field.v-field--focused) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-label) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:deep(.v-field__input) {
-  color: white !important;
-}
-
-:deep(.v-text-field input) {
+/* Input fields */
+:deep(.v-field),
+:deep(.v-field__input),
+:deep(.v-text-field input),
+:deep(.v-select .v-field__input) {
   color: white !important;
 }
 
@@ -341,74 +242,23 @@ const uploadAvatar = async () => {
   color: rgba(66, 221, 242, 0.3) !important;
 }
 
-:deep(.v-icon) {
+:deep(.v-label) {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 
+/* Alerts */
 :deep(.v-alert) {
   background-color: rgba(254, 216, 84, 0.1) !important;
   color: #fed854 !important;
   border-color: #fed854 !important;
 }
 
-:deep(.v-alert__close-button) {
-  color: #fed854 !important;
-}
-
+:deep(.v-alert__close-button),
 :deep(.v-alert__prepend) {
   color: #fed854 !important;
 }
 
-:deep(.v-card-actions) {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(66, 221, 242, 0.2);
-}
-
-:deep(.v-btn) {
-  text-transform: none !important;
-}
-
-
-:deep(.teams-menu) {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 1px solid rgba(66, 221, 242, 0.3);
-  max-height: 300px !important;
-  overflow-y: auto;
-}
-
-:deep(.teams-menu::-webkit-scrollbar) {
-  width: 8px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb) {
-  background: rgba(66, 221, 242, 0.3);
-  border-radius: 4px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
-  background: rgba(66, 221, 242, 0.5);
-}
-
-:deep(.v-select__selection) {
-  color: white !important;
-  opacity: 1 !important;
-}
-
-:deep(.v-select .v-field__input) {
-  min-height: 56px !important;
-  opacity: 1 !important;
-  color: white !important;
-}
-
-:deep(.v-select .v-field) {
-  background: transparent !important;
-}
-
-/* Update error message styling */
+/* Error states */
 :deep(.v-messages__message) {
   color: #fed854 !important;
   font-size: 0.85rem;
@@ -420,87 +270,17 @@ const uploadAvatar = async () => {
   --v-field-border-color: #fed854 !important;
 }
 
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
-
 :deep(.v-field--error .v-field__outline) {
   color: #fed854 !important;
 }
 
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
+/* Icon colors */
+:deep(.v-icon),
+.detail-icon {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .detail-icon {
   color: #42DDF2FF !important;
 }
-
-.dialog-card {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 2px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-}
-
-.dialog-content {
-  padding: 24px;
-}
-
-:deep(.v-text-field) {
-  margin-top: 24px;
-}
-
-.dialog-actions {
-  padding: 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: -32px;
-}
-
-.cancel-btn {
-  background: transparent !important;
-  color: #42DDF2FF !important;
-  border: 2px solid #42DDF2FF !important;
-  border-radius: 50px !important;
-  padding: 0 24px !important;
-  height: 40px !important;
-  text-transform: none !important;
-}
-
-.cancel-btn:hover {
-  background: rgba(66, 221, 242, 0.1) !important;
-}
-
-.submit-btn {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
-  border-radius: 50px !important;
-  padding: 0 24px !important;
-  height: 40px !important;
-  text-transform: none !important;
-}
-
-.submit-btn:hover {
-  background: #FED854FF !important;
-  box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
-}
-
-.submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: rgba(66, 221, 242, 0.5) !important;
-}
-
-:deep(.v-btn) {
-  text-transform: none !important;
-  padding: 0 24px !important;
-  height: 40px !important;
-}
-
 </style>
