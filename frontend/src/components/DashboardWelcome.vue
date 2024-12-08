@@ -25,7 +25,7 @@ defineProps<WelcomeProps>()
   overflow: hidden;
   margin-bottom: 24px;
   padding: 24px;
-  width: 65%;
+  width: 55%;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;

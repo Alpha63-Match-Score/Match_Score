@@ -139,6 +139,7 @@ onMounted(() => {
   margin-left: auto;
   margin-right: auto;
   min-height: 500px;
+  max-width: 650px;
 }
 
 .history-content {
