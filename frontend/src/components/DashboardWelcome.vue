@@ -26,7 +26,7 @@ defineProps<WelcomeProps>()
   margin-bottom: 24px;
   padding: 24px;
   width: 65%;
-  max-width: 1400px;
+  max-width: 900px;
   margin-left: auto;
   margin-right: auto;
 }
