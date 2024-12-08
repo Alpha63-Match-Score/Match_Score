@@ -36,7 +36,11 @@ def get_all_matches(
     filters = []
     if tournament_title:
         filters.append(Tournament.title.ilike(f"%{tournament_title}%"))
-        db_tournament = db.query(Tournament).filter(Tournament.title.ilike(f"%{tournament_title}%")).all()
+        db_tournament = (
+            db.query(Tournament)
+            .filter(Tournament.title.ilike(f"%{tournament_title}%"))
+            .all()
+        )
         tournament_ids = [t.id for t in db_tournament]
         filters.append(Match.tournament_id.in_(tournament_ids))
     if stage is not None:
@@ -45,13 +49,16 @@ def get_all_matches(
         filters.append(Match.is_finished == is_finished)
     if team_name:
         v.team_exists(db, team_name=team_name)
-        query = query.join(Team, or_(
-            Match.team1_id == Team.id,
-            Match.team2_id == Team.id
-        )).filter(or_(
-            Team.name == team_name,  # Check team1
-            Team.name == team_name  # Check team2
-        )).distinct()  # Add distinct to avoid duplicates
+        query = (
+            query.join(Team, or_(Match.team1_id == Team.id, Match.team2_id == Team.id))
+            .filter(
+                or_(
+                    Team.name == team_name,  # Check team1
+                    Team.name == team_name,  # Check team2
+                )
+            )
+            .distinct()
+        )  # Add distinct to avoid duplicates
 
     if filters:
         query = query.filter(*filters)
