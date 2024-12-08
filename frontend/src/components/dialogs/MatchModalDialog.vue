@@ -105,32 +105,44 @@
     <!-- Time Edit Dialog -->
     <v-dialog v-model="showTimeEdit" max-width="500px">
       <v-card class="edit-dialog">
-        <v-card-title>Edit Match Time</v-card-title>
-        <v-card-text>
-          <v-alert
-            v-if="editError"
-            type="error"
-            variant="tonal"
-            class="mb-4"
-          >
-            {{ editError }}
-          </v-alert>
-          <v-text-field
-            v-model="editedStartTime"
-            label="Match Time"
-            type="datetime-local"
-            variant="outlined"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="error" @click="showTimeEdit = false">Cancel</v-btn>
-          <v-btn color="primary" @click="updateTime">Save</v-btn>
-        </v-card-actions>
+        <div class="dialog-content">
+          <v-card-title class="dialog-title">Edit Match Time</v-card-title>
+          <v-card-text>
+            <v-text-field
+              v-model="editedStartTime"
+              label="Match Time"
+              type="datetime-local"
+              variant="outlined"
+              :rules="dateRules"
+              :error="!isValidDate && !!editedStartTime"
+              :error-messages="getDateErrorMessage"
+              class="time-field custom-time-field"
+              persistent-hint
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions class="dialog-actions">
+            <v-spacer></v-spacer>
+            <v-btn
+              class="cancel-btn"
+              variant="text"
+              @click="showTimeEdit = false"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              class="submit-btn"
+              @click="updateTime"
+              :loading="isUpdatingTime"
+              :disabled="!hasTimeChanges"
+            >
+              {{ hasTimeChanges ? 'Save' : 'No Changes' }}
+            </v-btn>
+          </v-card-actions>
+        </div>
       </v-card>
     </v-dialog>
 
-    <!-- Team Edit Dialog -->
+     <!-- Team Edit Dialog -->
     <v-dialog v-model="showTeamEdit" max-width="500px">
       <v-card class="dialog-card">
         <div class="dialog-content">
@@ -156,14 +168,17 @@
                     label="Team 1"
                     variant="outlined"
                     :loading="loadingTeams"
+                    :model-value="newTeam1"
                     clearable
-                    class="flex-grow-1 custom-autocomplete"
+                    class="custom-autocomplete"
+                    :menu-props="{ contentClass: 'teams-menu' }"
                   >
                     <template v-slot:item="{ props, item }">
                       <v-list-item
                         v-bind="props"
                         :title="item.raw.name"
                         class="team-list-item"
+                        :class="{ 'team-list-item--selected': item.raw.id === newTeam1 }"
                       ></v-list-item>
                     </template>
                   </v-autocomplete>
@@ -180,14 +195,17 @@
                     label="Team 2"
                     variant="outlined"
                     :loading="loadingTeams"
+                    :model-value="newTeam2"
                     clearable
-                    class="flex-grow-1 custom-autocomplete"
+                    class="custom-autocomplete"
+                    :menu-props="{ contentClass: 'teams-menu' }"
                   >
                     <template v-slot:item="{ props, item }">
                       <v-list-item
                         v-bind="props"
                         :title="item.raw.name"
                         class="team-list-item"
+                        :class="{ 'team-list-item--selected': item.raw.id === newTeam2 }"
                       ></v-list-item>
                     </template>
                   </v-autocomplete>
@@ -195,10 +213,23 @@
               </div>
             </v-form>
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions class="dialog-actions">
             <v-spacer></v-spacer>
-            <v-btn color="error" @click="showTeamEdit = false">Cancel</v-btn>
-            <v-btn color="primary" @click="updateTeams">Save</v-btn>
+            <v-btn
+              class="cancel-btn"
+              variant="text"
+              @click="showTeamEdit = false"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              class="submit-btn"
+              @click="updateTeams"
+              :loading="isUpdatingTeams"
+              :disabled="!hasTeamChanges"
+            >
+              {{ hasTeamChanges ? 'Save' : 'No Changes' }}
+            </v-btn>
           </v-card-actions>
         </div>
       </v-card>
@@ -241,12 +272,77 @@ const loadingTeams = ref(false)
 const teamForm = ref(null)
 const editError = ref('')
 const scoreUpdateError = ref('')
+const isUpdatingTime = ref(false)
+const isUpdatingTeams = ref(false)
+const dateRules = [
+  (v: string) => {
+    const selectedDate = new Date(v)
+    const now = new Date()
+    return selectedDate > now || 'Match time cannot be in the past'
+  },
+  (v: string) => {
+    const selectedDate = new Date(v)
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds())
+    return selectedDate > tomorrow || 'Match time must be at least 1 day in the future'
+  }
+]
 
 // Computed
 const canEdit = computed(() => {
   return authStore.isAuthenticated &&
     (authStore.userRole === 'admin' || props.tournamentDirectorId === authStore.userId)
 })
+
+const hasTimeChanges = computed(() => {
+  if (!props.match || !editedStartTime.value) return false
+
+  const currentDate = new Date(props.match.start_time)
+  const newDate = new Date(editedStartTime.value)
+
+  return currentDate.getTime() !== newDate.getTime() && isValidDate.value
+})
+
+const isValidDate = computed(() => {
+  if (!editedStartTime.value) return true
+
+  const selectedDate = new Date(editedStartTime.value)
+  const now = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds())
+
+  return selectedDate > now && selectedDate > tomorrow
+})
+
+const getDateErrorMessage = computed(() => {
+  if (!editedStartTime.value) return ''
+
+  const selectedDate = new Date(editedStartTime.value)
+  const now = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds())
+
+  if (selectedDate <= now) {
+    return 'Match time cannot be in the past'
+  }
+  if (selectedDate <= tomorrow) {
+    return 'Match time must be at least 1 day in the future'
+  }
+  return ''
+})
+
+const hasTeamChanges = computed(() => {
+  if (!props.match) return false
+
+  const team1Changed = newTeam1.value && newTeam1.value !== props.match.team1_id
+  const team2Changed = newTeam2.value && newTeam2.value !== props.match.team2_id
+
+  return team1Changed || team2Changed
+})
+
 
 // Methods
 const closeDialog = () => {
@@ -273,6 +369,7 @@ const extractErrorMessage = async (response: Response) => {
     return 'An error occurred'
   }
 }
+
 
 // Match score update
 const handleScoreIncrement = async (team: 'team1' | 'team2') => {
@@ -307,19 +404,17 @@ const handleScoreIncrement = async (team: 'team1' | 'team2') => {
 }
 
 // Time edit
-const openTimeEdit = () => {
-  if (!props.match) return
-  editedStartTime.value = props.match.start_time
-  showTimeEdit.value = true
-}
-
 const updateTime = async () => {
+  if (!props.match || !editedStartTime.value || !isValidDate.value) return
+
   try {
     editError.value = ''
-    if (!props.match) return
+    isUpdatingTime.value = true
+
+    const formattedDate = new Date(editedStartTime.value).toISOString()
 
     const response = await fetch(
-      `${API_URL}/matches/${props.match.id}?start_time=${encodeURIComponent(editedStartTime.value)}`,
+      `${API_URL}/matches/${props.match.id}?start_date=${encodeURIComponent(formattedDate)}`,
       {
         method: 'PUT',
         headers: {
@@ -329,7 +424,15 @@ const updateTime = async () => {
     )
 
     if (!response.ok) {
-      editError.value = await extractErrorMessage(response)
+      const fullText = await response.text()
+      console.log('Full server response:', fullText)
+
+      try {
+        const errorData = JSON.parse(fullText)
+        editError.value = errorData.detail || 'Failed to update match time'
+      } catch {
+        editError.value = fullText || 'Failed to update match time'
+      }
       return
     }
 
@@ -338,25 +441,61 @@ const updateTime = async () => {
     }
     showTimeEdit.value = false
   } catch (e) {
+    console.error('Full error:', e)
     editError.value = 'Failed to update match time'
+  } finally {
+    isUpdatingTime.value = false
   }
 }
+
+const openTimeEdit = () => {
+  if (!props.match) return
+
+  const date = new Date(props.match.start_time)
+
+  // Format date to local datetime-local input format
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  // Set the value in the format required by datetime-local input
+  editedStartTime.value = `${year}-${month}-${day}T${hours}:${minutes}`
+  showTimeEdit.value = true
+}
+
 
 // Team edit
 const openTeamEdit = async () => {
   try {
     loadingTeams.value = true
+    editError.value = ''
+
     const response = await fetch(`${API_URL}/teams/?is_available=true`)
     if (!response.ok) throw new Error('Failed to load teams')
     const data = await response.json()
     availableTeams.value = data
 
     if (props.match) {
-      const team1 = availableTeams.value.find(t => t.name === props.match?.team1_name)
-      const team2 = availableTeams.value.find(t => t.name === props.match?.team2_name)
+      const team1Exists = data.some(t => t.id === props.match?.team1_id)
+      const team2Exists = data.some(t => t.id === props.match?.team2_id)
 
-      newTeam1.value = team1?.id || ''
-      newTeam2.value = team2?.id || ''
+      if (!team1Exists && props.match.team1_id) {
+        availableTeams.value.push({
+          id: props.match.team1_id,
+          name: props.match.team1_name
+        })
+      }
+      if (!team2Exists && props.match.team2_id) {
+        availableTeams.value.push({
+          id: props.match.team2_id,
+          name: props.match.team2_name
+        })
+      }
+
+      newTeam1.value = props.match.team1_id
+      newTeam2.value = props.match.team2_id
     }
 
     showTeamEdit.value = true
@@ -373,6 +512,8 @@ const updateTeams = async () => {
 
   try {
     editError.value = ''
+    isUpdatingTeams.value = true
+
     let params = new URLSearchParams()
 
     if (newTeam1.value) {
@@ -414,6 +555,8 @@ const updateTeams = async () => {
   } catch (e) {
     console.error('Error updating teams:', e)
     editError.value = e.message || 'Failed to update teams'
+  } finally {
+    isUpdatingTeams.value = false
   }
 }
 </script>
@@ -681,4 +824,126 @@ const updateTeams = async () => {
 .error-alert :deep(.v-alert__prepend) {
   color: #ffd700 !important;
 }
+
+.dialog-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -32px;
+}
+
+.cancel-btn {
+  color: #42DDF2FF !important;
+}
+
+.submit-btn {
+  background: #42DDF2FF !important;
+  color: #171c26 !important;
+  margin-left: 16px;
+}
+
+.team-list-item {
+  padding: 8px 16px;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.team-list-item:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
+.team-list-item--selected {
+  background: rgba(66, 221, 242, 0.15);
+}
+
+:deep(.v-btn) {
+  border-radius: 50px !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+  min-width: 100px !important;
+}
+
+:deep(.v-btn:disabled) {
+  opacity: 0.7 !important;
+  background: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.custom-time-field) {
+  margin-bottom: 16px;
+}
+
+
+:deep(.custom-time-field .v-field__input input),
+:deep(.custom-time-field.v-field--error .v-field__input input) {
+  color: white !important;
+}
+
+:deep(.custom-time-field.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.custom-time-field.v-field--error .v-field__outline),
+:deep(.custom-time-field.v-field--error .v-field__outline__start),
+:deep(.custom-time-field.v-field--error .v-field__outline__end),
+:deep(.custom-time-field.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+}
+
+:deep(.custom-time-field.v-field--error .v-label) {
+  color: #fed854 !important;
+}
+
+:deep(.custom-time-field .v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  min-height: 0;
+  padding-top: 4px;
+}
+
+
+:deep(.custom-time-field) {
+  margin-bottom: 16px;
+}
+
+:deep(.v-field--error .v-field__outline) {
+  --v-field-border-color: #fed854 !important;
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-label) {
+  color: #fed854 !important;
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+:deep(.v-field--error:not(.v-field--disabled) .v-field__outline) {
+  color: #fed854 !important;
+  border-color: #fed854 !important;
+}
+
+
+:deep(.v-field--error) {
+  background-color: transparent !important;
+}
+
+
+:deep(.v-input--error) {
+  --v-theme-error: #fed854 !important;
+  color: #fed854 !important;
+}
+
 </style>
