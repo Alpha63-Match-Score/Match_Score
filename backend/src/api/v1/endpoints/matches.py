@@ -98,7 +98,8 @@ def update_match_score(
 
     Args:
         match_id (UUID): The unique identifier of the match.
-        team_to_upvote_score (Literal["team1", "team2"]): The team whose score should be upvoted.
+        team_to_upvote_score (Literal["team1", "team2"]):
+        The team whose score should be upvoted.
         db (Session): Database session dependency.
         current_user: The current authenticated user.
 
