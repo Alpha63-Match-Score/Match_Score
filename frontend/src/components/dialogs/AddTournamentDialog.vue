@@ -330,6 +330,7 @@ const handleNext = async () => {
 }
 
 const submitTournament = async () => {
+  console.log('Starting tournament submission...')
   if (!teamForm.value) return
   const { valid } = await teamForm.value.validate()
   if (!valid) return
@@ -340,27 +341,6 @@ const submitTournament = async () => {
 
     const formattedDate = new Date(tournamentStartDate.value).toISOString()
 
-    const teamNamesForCheck = selectedTeams.value
-      .map((selectedTeam, index) => {
-        if (isCustomTeam.value[index]) {
-          return null
-        }
-        const existingTeam = teams.value.find(t => t.id === selectedTeam)
-        return existingTeam?.name
-      })
-      .filter(name => name !== null)
-
-    for (const teamName of teamNamesForCheck) {
-      const response = await fetch(`${API_URL}/teams?search=${encodeURIComponent(teamName)}`)
-      const teamData = await response.json()
-      const team = teamData[0]
-
-      if (team && (!team.is_available || team.tournament_id)) {
-        tournamentError.value = `Team "${teamName}" is not available or already participating in another tournament`
-        return
-      }
-    }
-
     const teamNames = selectedTeams.value.map((selectedTeam, index) => {
       if (isCustomTeam.value[index]) {
         return customTeamNames.value[index]
@@ -368,6 +348,8 @@ const submitTournament = async () => {
       const existingTeam = teams.value.find(t => t.id === selectedTeam)
       return existingTeam?.name || ''
     }).filter(name => name !== '')
+
+    console.log('Final team names for submission:', teamNames)
 
     const params = new URLSearchParams({
       title: tournamentTitle.value,
@@ -397,9 +379,9 @@ const submitTournament = async () => {
       }
     }
 
-    showAddTournamentDialog.value = false;
-    const newTournament = await response.json();
-    emit('tournament-added', newTournament);
+    showAddTournamentDialog.value = false
+    const newTournament = await response.json()
+    emit('tournament-added', newTournament)
     resetForm()
 
   } catch (e) {
@@ -410,10 +392,10 @@ const submitTournament = async () => {
   }
 }
 
-onMounted(async () => {
+const fetchTeams = async () => {
   try {
     loadingTeams.value = true
-    const response = await fetch(`${API_URL}/teams?is_available=true`)
+    const response = await fetch(`${API_URL}/teams?is_available=true&offset=0&limit=100`)
     if (!response.ok) throw new Error('Failed to fetch teams')
     teams.value = await response.json()
   } catch (e) {
@@ -421,6 +403,10 @@ onMounted(async () => {
   } finally {
     loadingTeams.value = false
   }
+}
+
+onMounted(async () => {
+  await fetchTeams()
 })
 </script>
 
