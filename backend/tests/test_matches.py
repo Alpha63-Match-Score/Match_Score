@@ -1009,8 +1009,10 @@ class MatchServiceShould(unittest.TestCase):
         self.tournament.tournament_format = TournamentFormat.SINGLE_ELIMINATION
         self.tournament.current_stage = Stage.QUARTER_FINAL
 
-        with patch("src.crud.match.send_email_notification") :
+        with patch("src.crud.match.send_email_notification",
+                   return_value=None) as mock_send:
             generate_matches(self.db, self.tournament)
+            mock_send.assert_called()
 
             matches = self.db.query(Match).all()
             for match in matches:
