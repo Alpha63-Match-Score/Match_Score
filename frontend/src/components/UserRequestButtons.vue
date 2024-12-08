@@ -111,18 +111,9 @@ const handlePlayerLinkDialog = () => {
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   backdrop-filter: blur(2px);
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 24px;
   padding: 24px;
   width: 55%;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.actions-content {
-  position: relative;
-  z-index: 2;
+  margin: 0 auto 24px;
 }
 
 .section-title {
@@ -142,11 +133,7 @@ const handlePlayerLinkDialog = () => {
   background: #42DDF2FF !important;
   color: #171c26 !important;
   font-weight: bold;
-  padding: 20px 32px !important;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 2px 32px !important;
 }
 
 .action-btn:hover {
@@ -155,8 +142,8 @@ const handlePlayerLinkDialog = () => {
 }
 
 .error-message {
-  text-align: center;
   color: #fed854;
+  text-align: center;
   padding: 16px;
 }
 </style>

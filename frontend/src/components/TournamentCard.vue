@@ -67,17 +67,17 @@ const formatStage = (stage: string) => {
 </script>
 
 <style scoped>
+/* Card base */
 .tournament-card {
-  position: relative;
   height: 300px;
+  width: 500px;
   border-radius: 20px;
-  overflow: hidden;
   background: rgba(45, 55, 75, 0.4);
   backdrop-filter: blur(10px);
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 500px;
+  overflow: hidden;
 }
 
 .tournament-card:hover {
@@ -86,16 +86,14 @@ const formatStage = (stage: string) => {
 }
 
 .tournament-content {
-  position: relative;
-  z-index: 3;
-  padding: 24px;
   height: 100%;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: 10px;
 }
 
+/* Header */
 .tournament-header {
   display: flex;
   justify-content: space-between;
@@ -106,12 +104,12 @@ const formatStage = (stage: string) => {
 .tournament-title {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
-  margin: 0;
   font-weight: 600;
   font-family: Orbitron, sans-serif;
   max-width: 250px;
 }
 
+/* Format tag */
 .format-tag {
   background: rgba(17, 78, 112, 0.56);
   color: #42DDF2FF;
@@ -123,11 +121,10 @@ const formatStage = (stage: string) => {
 }
 
 .format-tag:hover {
-  color: #42DDF2FF !important;
   background: rgba(66, 221, 242, 0.1);
 }
 
-
+/* Info section */
 .tournament-info {
   flex-grow: 1;
   display: flex;
@@ -146,17 +143,17 @@ const formatStage = (stage: string) => {
   color: rgba(66, 221, 242, 0.8) !important;
 }
 
+/* Button */
 .view-details-btn {
+  width: 40%;
+  border-radius: 50px;
   margin-top: auto;
+  align-self: center;
   color: #42DDF2FF !important;
   border-color: #42DDF2FF !important;
-  border-radius: 50px;
-  width: 40%;
-  align-self: center;
 }
 
 .view-details-btn:hover {
-  color: #42DDF2FF !important;
   background: rgba(66, 221, 242, 0.1);
 }
 </style>

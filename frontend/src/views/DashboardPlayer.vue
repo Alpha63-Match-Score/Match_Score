@@ -1,55 +1,53 @@
 <template>
-  <div class="dashboard-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
-        <!-- Director Welcome Section -->
-        <DashboardWelcome :userRole="player?.username" />
+  <div class="content-wrapper">
+    <v-container>
+      <!-- Director Welcome Section -->
+      <DashboardWelcome :userRole="player?.username" />
 
-        <v-row class="dashboard-row">
-          <!-- Player Profile Column -->
-          <v-col cols="12" md="6">
-            <PlayerCard
-              :player="player"
-              @edit="openEdit"
-              @avatar-upload="openAvatarUpload"
-            />
-            <EditDialog
-              v-model="showEditDialog"
-              :player="player"
-              :edit-field="editField"
-              :edit-value="editValue"
-              :edit-first-name="editFirstName"
-              :edit-last-name="editLastName"
-              @update:modelValue="showEditDialog = $event"
-              @update:editValue="editValue = $event"
-              @update:editFirstName="editFirstName = $event"
-              @update:editLastName="editLastName = $event"
-              @profile-updated="handleProfileUpdated"
-            />
-            <AvatarUploadDialog
-              v-model="showAvatarDialog"
-              :player="player"
-              @avatar-updated="handleAvatarUpdated"
-            />
-            <v-snackbar
-              v-model="showSuccessAlert"
-              color="success"
-              timeout="3000"
-            >
-              {{ successMessage }}
-            </v-snackbar>
-          </v-col>
+      <v-row class="dashboard-row">
+        <!-- Player Profile Column -->
+        <v-col cols="12" md="6">
+          <PlayerCard
+            :player="player"
+            @edit="openEdit"
+            @avatar-upload="openAvatarUpload"
+          />
+          <EditDialog
+            v-model="showEditDialog"
+            :player="player"
+            :edit-field="editField"
+            :edit-value="editValue"
+            :edit-first-name="editFirstName"
+            :edit-last-name="editLastName"
+            @update:modelValue="showEditDialog = $event"
+            @update:editValue="editValue = $event"
+            @update:editFirstName="editFirstName = $event"
+            @update:editLastName="editLastName = $event"
+            @profile-updated="handleProfileUpdated"
+          />
+          <AvatarUploadDialog
+            v-model="showAvatarDialog"
+            :player="player"
+            @avatar-updated="handleAvatarUpdated"
+          />
+          <v-snackbar
+            v-model="showSuccessAlert"
+            color="success"
+            timeout="3000"
+          >
+            {{ successMessage }}
+          </v-snackbar>
+        </v-col>
 
-          <!-- Request History Column -->
-          <v-col cols="12" md="6">
-            <RequestHistory />
-          </v-col>
+        <!-- Request History Column -->
+        <v-col cols="12" md="6">
+          <RequestHistory />
+        </v-col>
 
-        </v-row>
-      </v-container>
-    </div>
+      </v-row>
+    </v-container>
   </div>
 </template>
 
@@ -251,65 +249,11 @@ onMounted(() => {
 
 
 <style scoped>
-.dashboard-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 .content-wrapper {
   position: relative;
   z-index: 3;
   padding-top: 100px;
-  min-height: 100vh;
   width: 100vw;
-}
-
-.error-message {
-  color: #fed854; /* Error text color */
-  font-size: 0.9rem;
-  margin-top: 8px;
-  text-align: center;
-}
-
-:deep(.v-messages__message) {
-  color: #fed854 !important;
-  font-size: 14px;
-}
-
-:deep(.v-field--error) {
-  --v-field-border-color: #fed854 !important;
-}
-
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline) {
-  color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline__start),
-:deep(.v-field--error .v-field__outline__end),
-:deep(.v-field--error .v-field__outline__notch) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-alert) {
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  color: #fed854 !important;
-  border-color: #fed854 !important;
-}
-
-:deep(.v-alert__close-button) {
-  color: #fed854 !important;
-}
-
-:deep(.v-alert__prepend) {
-  color: #fed854 !important;
-}
-
-:deep(.v-alert__content) {
-  color: #fed854 !important;
 }
 
 .dashboard-row {

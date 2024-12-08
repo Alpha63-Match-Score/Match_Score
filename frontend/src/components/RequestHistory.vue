@@ -55,17 +55,7 @@ import { ref, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth'
 import { API_URL } from '@/config'
-
-interface Request {
-  id: string
-  email: string
-  request_type: string
-  status: string
-  request_date: string
-  response_date: string | null
-  admin_id: string | null
-  username: string | null
-}
+import type { Request } from '@/types/types'
 
 const authStore = useAuthStore()
 const requests = ref<Request[]>([])
@@ -125,6 +115,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Card base */
 .history-card {
   background: rgba(45, 55, 75, 0.8);
   border-radius: 20px;
@@ -133,24 +124,11 @@ onMounted(() => {
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
-  margin-bottom: 24px;
   padding: 24px;
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  min-height: 500px;
   max-width: 650px;
-}
-
-.history-content {
-  position: relative;
-  z-index: 2;
-}
-
-.request-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  min-height: 500px;
+  margin: 0 auto 24px;
 }
 
 .section-title {
@@ -160,15 +138,20 @@ onMounted(() => {
   text-align: center;
 }
 
-
 .error-message {
   color: #fed854;
   font-size: 0.9rem;
-  margin-top: 8px;
   text-align: center;
   padding: 16px;
+  margin-top: 8px;
 }
 
+/* Request list */
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .request-item {
   background: rgba(45, 55, 75, 0.8);
@@ -185,6 +168,7 @@ onMounted(() => {
   box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
 }
 
+/* Request header */
 .request-header {
   display: flex;
   justify-content: space-between;
@@ -204,6 +188,7 @@ onMounted(() => {
   color: #42DDF2FF !important;
 }
 
+/* Status tags */
 .status-tag {
   padding: 4px 12px;
   border-radius: 12px;
@@ -228,11 +213,11 @@ onMounted(() => {
   border: 1px solid rgba(255, 99, 99, 0.3);
 }
 
+/* Details */
 .request-details {
   display: flex;
   gap: 24px;
 }
-
 
 .detail-item {
   display: flex;
@@ -245,5 +230,4 @@ onMounted(() => {
 .detail-icon {
   color: #42DDF2FF !important;
 }
-
 </style>

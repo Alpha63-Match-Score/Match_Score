@@ -97,20 +97,11 @@ const handleUpdatePlayerClick = () => {
   backdrop-filter: blur(2px);
   position: relative;
   overflow: hidden;
-  margin-bottom: 24px;
   padding: 24px;
   width: 65%;
   max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto 24px;
 }
-
-.actions-content {
-  position: relative;
-  justify-items: center;
-  z-index: 2;
-}
-
 
 .actions-grid {
   display: flex;
@@ -136,8 +127,7 @@ const handleUpdatePlayerClick = () => {
   background: #42DDF2FF !important;
   color: #171c26 !important;
   font-weight: bold;
-  text-align: center;
-  padding: 20px 32px !important;
+  padding: 0 32px !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,5 +138,3 @@ const handleUpdatePlayerClick = () => {
   box-shadow: 0 0 15px rgba(254, 216, 84, 0.3);
 }
 </style>
-
-

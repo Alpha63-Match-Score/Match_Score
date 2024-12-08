@@ -70,58 +70,7 @@ const openMatchDialog = (match: Match) => {
 </script>
 
 <style scoped>
-.match-list-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
-.header-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 600px;
-  background-image: url('@/assets/top-image.png');
-  background-size: cover;
-  background-position: center;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-.header-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 600px;
-  background: linear-gradient(
-    to bottom,
-    rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 25%,
-    rgba(23, 28, 38, 1) 80%
-  );
-  z-index: 2;
-}
-
-.content-wrapper {
-  position: relative;
-  z-index: 3;
-  padding-top: 100px;
-  min-height: 100vh;
-  width: 100vw !important;
-}
-
-.match-column {
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px;
-}
-
-.match-column:nth-child(even) {
-  justify-content: flex-start;
-}
-
-
+/* Card base styles */
 .match-card {
   height: 300px;
   position: relative;
@@ -151,6 +100,7 @@ const openMatchDialog = (match: Match) => {
   justify-content: space-between;
 }
 
+/* Tournament header */
 .tournament-header-section {
   display: flex;
   justify-content: space-between;
@@ -167,6 +117,25 @@ const openMatchDialog = (match: Match) => {
   max-width: 250px;
 }
 
+.tournament-format {
+  display: inline-block;
+  background: rgba(17, 78, 112, 0.56);
+  color: #42DDF2FF;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid rgba(8, 87, 144, 0.8);
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+.tournament-format:hover {
+  background: rgba(66, 221, 242, 0.1);
+}
+
+/* Match layout */
 .match-layout {
   display: flex;
   align-items: center;
@@ -175,77 +144,12 @@ const openMatchDialog = (match: Match) => {
   padding: 0 10px;
 }
 
-.match-card .team-info-left, .team-info-right {
+.team-info-left, .team-info-right {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
 }
-
-.match-card .team-avatar {
-  min-width: 60px;
-  min-height: 60px;
-  border: 2px solid #42ddf2;
-  background: rgba(8, 87, 144, 0.1);
-  transition: transform 0.2s ease;
-}
-
-.match-card .team-score {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #fed854;
-  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
-}
-
-.score-divider {
-  font-size: 2rem;
-  color: #fed854;
-  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
-  margin: 0 8px;
-  align-self: center;
-}
-
-.match-time {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.neon-text {
-  color: #fed854 !important;
-}
-
-.time-text {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.winner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.winner-name {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #fed854;
-  margin-left: 10px;
-}
-
-
-.team-info-left .team-score {
-  margin-left: auto; /* Push the score inward */
-  margin-right: 10px; /* Fine-tune spacing if needed */
-}
-
-.team-info-right .team-score {
-  margin-right: auto; /* Push the score inward */
-  margin-left: 10px; /* Fine-tune spacing if needed */
-}
-
-
 
 .team-avatar {
   min-width: 60px;
@@ -262,14 +166,25 @@ const openMatchDialog = (match: Match) => {
   text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
 }
 
-.score-divider {
-  font-size: 2rem;
-  color: #FED854FF;
-  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
-  margin: 0 8px;
-  align-self: center; /* Centers it vertically within the layout */
+.team-info-left .team-score {
+  margin-left: auto;
+  margin-right: 10px;
 }
 
+.team-info-right .team-score {
+  margin-right: auto;
+  margin-left: 10px;
+}
+
+.score-divider {
+  font-size: 2rem;
+  color: #fed854;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+  margin: 0 8px;
+  align-self: center;
+}
+
+/* Footer elements */
 .match-divider {
   opacity: 0.2;
   margin: 5px 0;
@@ -283,69 +198,10 @@ const openMatchDialog = (match: Match) => {
   color: rgba(255, 255, 255, 0.7);
 }
 
-
-.tournament-format {
-  display: inline-block !important; /* Adjust width based on content */
-  background: rgba(17, 78, 112, 0.56);
-  color: #42DDF2FF;
-  padding: 6px 16px;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(8, 87, 144, 0.8);
-  cursor: pointer;
-  text-transform: uppercase; /* This will make the text uppercase */
-  text-align: center;
-  margin-top: 5px;
-}
-
-.tournament-format:hover {
+/* Dialog styles */
+:deep(.v-card-title) {
   color: #42DDF2FF !important;
-  background: rgba(66, 221, 242, 0.1);
 }
-
-.error-text {
-  text-align: center !important;
-  color: rgba(255, 255, 255, 0.75);
-  padding: 10px;
-}
-
-.load-more-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 40px 0;
-  position: relative;
-  z-index: 4;
-}
-
-.load-more-btn {
-  background: rgba(17, 78, 112, 0.56);
-  color: #ffffff !important;
-  border-color: #42DDF2FF !important;
-  border-width: 2px !important;
-  border-radius: 50px;
-  transition: all 0.2s ease;
-  padding: 5px 40px !important;
-  font-size: 1.1rem !important;
-}
-
-.load-more-btn:hover {
-  background: rgba(66, 221, 242, 0.1);
-  border-color: #42DDF2FF !important;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
-}
-
-.load-more-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.match-dialog :deep(.v-card) {
-  border-radius: 35px !important;
-}
-
-
 
 .custom-dialog-card {
   width: 600px;
@@ -369,121 +225,8 @@ const openMatchDialog = (match: Match) => {
   transition: all 0.2s ease;
 }
 
-.team-avatar-link {
-  text-decoration: none;
-  background: transparent !important;
-}
-
-.team-avatar-link:hover {
-  text-decoration: none;
-  background: transparent !important;
-}
-
 .custom-dialog-card .v-btn:hover {
   background: rgba(66, 221, 242, 0.1) !important;
   transform: translateY(-2px);
 }
-
-.custom-dialog-card .match-details-centered {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-}
-
-.match-details-centered .team-avatar:hover {
-  transform: none;
-  cursor: pointer;
-}
-
-.match-details-centered .team-avatar {
-  border: 3px solid rgba(66, 221, 242, 0);
-  background: rgba(8, 87, 144, 0.2);
-  transition: none;
-  cursor: default;
-}
-
-.custom-dialog-card .tournament-title {
-  color: #42DDF2FF;
-  font-size: 1.6rem;
-  font-weight: bold;
-  margin-top: -30px;
-  align-self: center;
-}
-
-.custom-dialog-card .tournament-stage {
-  color: #FED854FF;
-  font-size: 1.2rem;
-}
-
-.custom-dialog-card .is-finished {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
-  margin-bottom: 8px;
-}
-
-.custom-dialog-card .match-layout {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
-  margin: 24px 0;
-}
-
-.custom-dialog-card .team-info-left, .team-info-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.custom-dialog-card .score-divider {
-  margin: 0 20px;
-  font-size: 2.5rem;
-  color: #FED854FF;
-  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
-  align-self: center;
-  padding-bottom: 10px;
-}
-
-.custom-dialog-card .winner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.custom-dialog-card .winner-name {
-  color: #FED854FF;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-
-:deep(.v-card-title) {
-  color: #42DDF2FF !important;
-}
-
-
-.reset-filter-btn .mdi-filter-remove-outline {
-  margin-right: 8px;
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.reset-filter-btn:hover {
-  background: rgba(66, 221, 242, 0.1);
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(66, 221, 242, 0.3);
-}
-
-.filter-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;/* Center the row horizontally */
-}
-
-.filter-row .v-col {
-  max-width: 300px; /* Adjust the max-width as needed */
-}
-
 </style>

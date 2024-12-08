@@ -1,48 +1,46 @@
 <template>
-  <div class="team-list-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
+  <div class="content-wrapper">
+    <v-container>
 
-        <!-- Loading state -->
-        <div v-if="isLoadingTeams" class="d-flex justify-center align-center" style="height: 200px">
-          <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
-        </div>
+      <!-- Loading state -->
+      <div v-if="isLoadingTeams" class="d-flex justify-center align-center" style="height: 200px">
+        <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+      </div>
 
-        <!-- Error state -->
-        <div v-else-if="teamsError" class="error-text pa-4">
-          {{ teamsError }}
-        </div>
+      <!-- Error state -->
+      <div v-else-if="teamsError" class="error-text pa-4">
+        {{ teamsError }}
+      </div>
 
-        <!-- Teams Grid -->
-        <v-row v-else class="row-width">
-          <v-col v-for="team in teams" :key="team.id" cols="12" md="4" class="team-column">
-            <TeamCard
-              :key="team.id"
-              :team="team"
-              @player-click="handlePlayerClick"
-            />
-          </v-col>
-        </v-row>
-
-        <!-- Player Modal -->
-        <PlayerModalDialog
-          v-model="showPlayerModal"
-          :player="selectedPlayer"
-        />
-
-        <!-- Load More Button -->
-        <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
-          <LoadMoreButton
-            v-if="!isLoadingTeams && hasMoreTeams"
-            :is-loading="isLoadingMore"
-            button-text="Load More Teams"
-            @load-more="loadMoreTeams"
+      <!-- Teams Grid -->
+      <v-row v-else class="row-width">
+        <v-col v-for="team in teams" :key="team.id" cols="12" md="4" class="team-column">
+          <TeamCard
+            :key="team.id"
+            :team="team"
+            @player-click="handlePlayerClick"
           />
-        </div>
-      </v-container>
-    </div>
+        </v-col>
+      </v-row>
+
+      <!-- Player Modal -->
+      <PlayerModalDialog
+        v-model="showPlayerModal"
+        :player="selectedPlayer"
+      />
+
+      <!-- Load More Button -->
+      <div v-if="!isLoadingTeams && hasMoreTeams" class="load-more-wrapper">
+        <LoadMoreButton
+          v-if="!isLoadingTeams && hasMoreTeams"
+          :is-loading="isLoadingMore"
+          button-text="Load More Teams"
+          @load-more="loadMoreTeams"
+        />
+      </div>
+    </v-container>
   </div>
 </template>
 
@@ -54,7 +52,6 @@ import TeamCard from "@/components/TeamCard.vue";
 import HeaderSection from "@/components/HeaderSection.vue";
 import LoadMoreButton from "@/components/LoadMoreButton.vue";
 import type { Player, Team } from '@/types/types'
-
 
 const teams = ref<Team[]>([])
 const isLoadingTeams = ref(false)
@@ -138,18 +135,13 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.team-list-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 .content-wrapper {
   position: relative;
   z-index: 3;
   padding-top: 100px;
   min-height: 100vh;
   width: 100vw !important;
-  margin-top: 105px;
+  margin-top: 100px;
 }
 
 .row-width {
@@ -161,9 +153,5 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   padding: 8px;
-}
-
-.team-column:nth-child(even) {
-  justify-content: flex-start;
 }
 </style>
