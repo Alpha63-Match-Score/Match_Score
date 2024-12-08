@@ -29,6 +29,25 @@ def read_tournaments(
     author_id: UUID | None = None,
     db: Session = Depends(get_db),
 ):
+    """
+    Retrieve a list of tournaments with optional filtering and pagination.
+
+    Args:
+        pagination (PaginationParams): Pagination parameters for the query.
+        period (Literal["past", "present", "future"] | None):
+        Optional filter by tournament period.
+        status (Literal["active", "finished"] | None):
+        Optional filter by tournament status.
+        tournament_format (TournamentFormat | None):
+        Optional filter by tournament format.
+        search (str | None): Optional search term for tournament names.
+        author_id (UUID | None): Optional filter by author ID.
+        db (Session): Database session dependency.
+
+    Returns:
+        list[TournamentListResponse]: A list of tournament
+        responses matching the filters.
+    """
     return tournament_crud.get_tournaments(
         db,
         pagination,
@@ -42,6 +61,16 @@ def read_tournaments(
 
 @router.get("/{tournament_id}", response_model=TournamentDetailResponse)
 def read_tournament(tournament_id: UUID, db: Session = Depends(get_db)):
+    """
+    Retrieve a tournament by its ID.
+
+    Args:
+        tournament_id (UUID): The unique identifier of the tournament.
+        db (Session): Database session dependency.
+
+    Returns:
+        TournamentDetailResponse: The tournament details response object.
+    """
     return tournament_crud.get_tournament(db, tournament_id)
 
 
@@ -51,6 +80,17 @@ def create_tournament(
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
+    """
+    Create a new tournament.
+
+    Args:
+        tournament (TournamentCreate): The tournament creation data.
+        db (Session): Database session dependency.
+        current_user (UserResponse): The current authenticated user.
+
+    Returns:
+        TournamentDetailResponse: The created tournament response object.
+    """
     return tournament_crud.create_tournament(db, tournament, current_user)
 
 
@@ -61,15 +101,19 @@ def update_tournament(
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ):
+    """
+    Update a tournament's details by its ID.
+
+    Args:
+        tournament_id (UUID): The unique identifier of the tournament.
+        tournament (TournamentUpdate): The tournament update data.
+        db (Session): Database session dependency.
+        current_user (UserResponse): The current authenticated user.
+
+    Returns:
+        TournamentDetailResponse: The updated tournament response object.
+    """
     return tournament_crud.update_tournament(
         db, tournament_id, tournament, current_user
     )
 
-
-# @router.put("/{tournament_id}/stages", response_model=TournamentDetailResponse)
-# def update_tournament(tournament_id: UUID,
-#                       db: Session = Depends(get_db),
-#                       current_user: UserResponse = Depends(get_current_user)
-# ):
-#
-#     return tournament_crud.update_tournament_stage(db, tournament_id, current_user)
