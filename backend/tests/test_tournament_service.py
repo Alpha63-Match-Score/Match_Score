@@ -427,7 +427,8 @@ class TournamentServiceShould(unittest.TestCase):
             self.assertEqual(context.exception.detail, "Title must not be empty")
 
     def test_calculate_tournament_end_date_round_robin(self):
-        """Test _calculate_tournament_end_date for round robin format with correct days calculation."""
+        """Test _calculate_tournament_end_date for round robin
+        format with correct days calculation."""
         start_date = datetime(2024, 12, 1, 12, 0, tzinfo=timezone.utc)
         format = TournamentFormat.ROUND_ROBIN
         current_stage = Stage.GROUP_STAGE
@@ -453,7 +454,8 @@ class TournamentServiceShould(unittest.TestCase):
 
 
     def test_get_tournament_current_stage_invalid_one_off_teams(self):
-        """Test _get_tournament_current_stage fails with invalid number of teams for one off match."""
+        """Test _get_tournament_current_stage fails with
+        invalid number of teams for one off match."""
         with self.assertRaises(HTTPException) as context:
             _get_tournament_current_stage(
                 TournamentFormat.ONE_OFF_MATCH.value,
@@ -467,7 +469,8 @@ class TournamentServiceShould(unittest.TestCase):
         )
 
     def test_get_tournament_current_stage_invalid_round_robin_teams(self):
-        """Test _get_tournament_current_stage fails with invalid number of teams for round robin."""
+        """Test _get_tournament_current_stage fails with
+        invalid number of teams for round robin."""
         with self.assertRaises(HTTPException) as context:
             _get_tournament_current_stage(
                 TournamentFormat.ROUND_ROBIN.value,
@@ -481,7 +484,8 @@ class TournamentServiceShould(unittest.TestCase):
         )
 
     def test_get_tournament_current_stage_single_elimination(self):
-        """Test _get_tournament_current_stage returns correct stages for different number of teams in single elimination."""
+        """Test _get_tournament_current_stage returns correct stages
+        for different number of teams in single elimination."""
         stage = _get_tournament_current_stage(
             TournamentFormat.SINGLE_ELIMINATION.value,
             4
@@ -495,7 +499,8 @@ class TournamentServiceShould(unittest.TestCase):
         self.assertEqual(stage, Stage.QUARTER_FINAL)
 
     def test_get_tournament_current_stage_invalid_single_elimination(self):
-        """Test _get_tournament_current_stage fails for invalid number of teams in single elimination."""
+        """Test _get_tournament_current_stage fails for
+        invalid number of teams in single elimination."""
         invalid_numbers = [2, 3, 5, 6, 7, 9, 16]
 
         for num in invalid_numbers:

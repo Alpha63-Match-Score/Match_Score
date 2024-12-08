@@ -320,7 +320,8 @@ class MatchServiceShould(unittest.TestCase):
         mock_director_or_admin,
         mock_team_exists
     ):
-        """Test update_match fails when team_exists raises exception due to invalid team name."""
+        """Test update_match fails when team_exists
+        raises exception due to invalid team name."""
         mock_director_or_admin.return_value = None
         mock_match_exists.return_value = self.match
         mock_match_is_finished.return_value = None
@@ -417,7 +418,8 @@ class MatchServiceShould(unittest.TestCase):
         mock_match_exists,
         mock_director_admin
     ):
-        """Test update_match_score when no winner is decided yet (MR15 or MR12 still ongoing)."""
+        """Test update_match_score when no winner is
+        decided yet (MR15 or MR12 still ongoing)."""
         mock_director_admin.return_value = None
         mock_match_exists.return_value = self.match
         mock_match_is_finished.return_value = None
@@ -544,7 +546,8 @@ class MatchServiceShould(unittest.TestCase):
 
 
     def test_update_match_no_changes(self):
-        """Test update_match when no changes are provided (no start_time, stage, team1_name, team2_name)."""
+        """Test update_match when no changes are provided
+        (no start_time, stage, team1_name, team2_name)."""
 
         with patch("src.utils.validators.director_or_admin", return_value=None), \
              patch("src.utils.validators.match_exists", return_value=self.match), \
@@ -682,7 +685,8 @@ class MatchServiceShould(unittest.TestCase):
         self.db.refresh.assert_called()
 
     def test_handle_finished_match_non_final_non_robin(self):
-        """Test _handle_finished_match when stage is not final and format is not ROUND_ROBIN."""
+        """Test _handle_finished_match when stage is
+        not final and format is not ROUND_ROBIN."""
         from src.crud.match import _handle_finished_match
         self.match.is_finished = True
         self.match.stage = Stage.SEMI_FINAL
@@ -783,7 +787,8 @@ class MatchServiceShould(unittest.TestCase):
         self.assertEqual(self.match.team1_score, 0)
 
     def test_check_for_winner_for_mr15_team2_wins_high_score(self):
-        """Test _check_for_winner_for_mr15 elif part for team2 winning with >=19 points."""
+        """Test _check_for_winner_for_mr15 elif
+        part for team2 winning with >=19 points."""
         from src.crud.match import _check_for_winner_for_mr15, _mark_match_as_finished
         self.match.match_format = MatchFormat.MR15
         self.match.team1_score = 18
@@ -797,7 +802,8 @@ class MatchServiceShould(unittest.TestCase):
             self.assertEqual(result, self.match.team1)
 
     def test_check_for_winner_for_mr12_team2_wins(self):
-        """Test _check_for_winner_for_mr12 elif part where team2 wins with >=16 points."""
+        """Test _check_for_winner_for_mr12 elif
+        part where team2 wins with >=16 points."""
         from src.crud.match import _check_for_winner_for_mr12, _mark_match_as_finished
         self.match.match_format = MatchFormat.MR12
         self.match.team1_score = 14
@@ -844,7 +850,8 @@ class MatchServiceShould(unittest.TestCase):
             mock_send.assert_called()
 
     def test_get_pairs_robin_round_multiple_teams(self):
-        """Test _get_pairs_robin_round with more than 2 teams to ensure for team2 in teams[i+1:] runs."""
+        """Test _get_pairs_robin_round with more than 2
+        teams to ensure for team2 in teams[i+1:] runs."""
         from src.crud.match import _get_pairs_robin_round
 
         team3_id = uuid4()

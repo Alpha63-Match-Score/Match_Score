@@ -371,7 +371,8 @@ class RequestServiceShould(unittest.TestCase):
 
 
     def test_get_all_filter_by_admin(self):
-        """Test get_all with filter_by_admin=True returns only requests by current admin."""
+        """Test get_all with filter_by_admin=True
+        returns only requests by current admin."""
         self.admin_user.id = uuid4()
         mock_request = Request(
             id=uuid4(),

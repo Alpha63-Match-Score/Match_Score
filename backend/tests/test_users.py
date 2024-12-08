@@ -114,12 +114,14 @@ class UserServiceShould(unittest.TestCase):
         mock_send_email_notification.assert_any_call(
             email="test_user@example.com",
             subject="Email Updated",
-            message=f"Your email has been changed from test_user@example.com to {updated_email}",
+            message=f"Your email has been changed from "
+                    f"test_user@example.com to {updated_email}",
         )
         mock_send_email_notification.assert_any_call(
             email=updated_email,
             subject="Email Updated",
-            message=f"Your email has been changed from test_user@example.com to {updated_email}",
+            message=f"Your email has been changed from "
+                    f"test_user@example.com to {updated_email}",
         )
 
 
