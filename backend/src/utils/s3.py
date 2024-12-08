@@ -25,6 +25,19 @@ class S3Service:
         )
 
     def validate_image(self, file: UploadFile) -> None:
+        """
+        Validates the uploaded image file.
+
+        This method checks if the file format is allowed and if the file size
+        is within the maximum limit.
+
+        Args:
+            file (UploadFile): The uploaded image file to be validated.
+
+        Raises:
+            HTTPException: If the file format is not allowed or if the file size
+            exceeds the maximum limit.
+        """
         ext = os.path.splitext(file.filename)[1].lower()
         if ext not in self.ALLOWED_FORMATS:
             raise HTTPException(
@@ -46,6 +59,21 @@ class S3Service:
             )
 
     def process_image(self, image_data: bytes) -> bytes:
+        """
+        Processes the uploaded image data.
+
+        This method opens the image, converts it to RGB if needed, resizes it if it exceeds the maximum size,
+        and optimizes it before converting it back to bytes.
+
+        Args:
+            image_data (bytes): The raw image data to be processed.
+
+        Returns:
+            bytes: The processed image data in bytes.
+
+        Raises:
+            HTTPException: If there is an error processing the image.
+        """
         try:
             image = Image.open(io.BytesIO(image_data))
 
@@ -68,6 +96,23 @@ class S3Service:
             )
 
     def upload_file(self, file: UploadFile, folder: str) -> str:
+        """
+        Uploads a file to an S3 bucket.
+
+        This method generates a unique filename, reads the file content,
+        uploads it to the specified S3 bucket,
+        and returns the URL of the uploaded file.
+
+        Args:
+            file (UploadFile): The file to be uploaded.
+            folder (str): The folder in the S3 bucket where the file will be stored.
+
+        Returns:
+            str: The URL of the uploaded file.
+
+        Raises:
+            HTTPException: If there is an error uploading the file.
+        """
         try:
             # Generate unique filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -97,6 +142,22 @@ class S3Service:
             file.file.close()
 
     def delete_file(self, file_url: str) -> bool:
+        """
+        Deletes a file from an S3 bucket.
+
+        This method extracts the key from the given file URL and deletes
+        the corresponding file from the S3 bucket.
+
+        Args:
+            file_url (str): The URL of the file to be deleted.
+
+        Returns:
+            bool: True if the file was successfully deleted or if the file
+            URL is empty, False otherwise.
+
+        Raises:
+            Exception: If there is an error deleting the file.
+        """
         try:
             if not file_url:
                 return True

@@ -22,6 +22,16 @@ router = APIRouter()
 def director_request(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
+    """
+    Send a request to promote the current user to a director.
+
+    Args:
+        db (Session): Database session dependency.
+        current_user (User): The current authenticated user.
+
+    Returns:
+        The result of the director request operation.
+    """
     return send_director_request(db, current_user)
 
 
@@ -31,6 +41,17 @@ def player_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Send a request to link the current user to a player by username.
+
+    Args:
+        username (str): The username of the player to link.
+        db (Session): Database session dependency.
+        current_user (User): The current authenticated user.
+
+    Returns:
+        The result of the link to player request operation.
+    """
     return send_link_to_player_request(db, current_user, username)
 
 
@@ -46,7 +67,23 @@ def get_all_requests(
     filter_by_current_admin: bool = False,
     pagination: PaginationParams = Depends(get_pagination),
 ):
+    """
+    Retrieve all requests with optional filters and pagination.
 
+    Args:
+        db (Session): Database session dependency.
+        current_user (User): The current authenticated user.
+        sort_by (Literal["asc", "desc"]): Sort order for the requests.
+        status (Literal["pending", "accepted", "rejected"] | None):
+        Filter by request status.
+        request_type (Literal["link user to player",
+        "promote user to director"] | None): Filter by request type.
+        filter_by_current_admin (bool): Filter requests by the current admin.
+        pagination (PaginationParams): Pagination parameters.
+
+    Returns:
+        List[Request]: A list of requests matching the filters.
+    """
     return get_all(
         db,
         current_user,
@@ -65,6 +102,19 @@ def put_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Update the status of a request by its ID.
+
+    Args:
+        status (Literal["accepted", "rejected"]):
+        The new status of the request.
+        request_id (UUID): The unique identifier of the request.
+        db (Session): Database session dependency.
+        current_user (User): The current authenticated user.
+
+    Returns:
+        The result of the update request operation.
+    """
     return update_request(db, current_user, status, request_id)
 
 
@@ -74,4 +124,15 @@ def get_my_requests(
     current_user: User = Depends(get_current_user),
     pagination: PaginationParams = Depends(get_pagination),
 ):
+    """
+    Retrieve the current user's requests with pagination.
+
+    Args:
+        db (Session): Database session dependency.
+        current_user (User): The current authenticated user.
+        pagination (PaginationParams): Pagination parameters.
+
+    Returns:
+        List[Request]: A list of the current user's requests.
+    """
     return get_current_user_request(db, current_user, pagination)

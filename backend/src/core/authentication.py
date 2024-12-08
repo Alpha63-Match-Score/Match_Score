@@ -10,6 +10,20 @@ from src.models.user import User
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Type[User]:
+    """
+    Authenticate a user by their email and password.
+
+    Args:
+        db (Session): Database session dependency.
+        email (str): The user's email.
+        password (str): The user's password.
+
+    Returns:
+        Type[User]: The authenticated user object.
+
+    Raises:
+        HTTPException: If the user is not found or the password is incorrect.
+    """
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
@@ -27,6 +41,15 @@ def authenticate_user(db: Session, email: str, password: str) -> Type[User]:
 
 
 def create_access_token(data: dict) -> str:
+    """
+    Create a JWT access token.
+
+    Args:
+        data (dict): The data to encode in the token.
+
+    Returns:
+        str: The encoded JWT token.
+    """
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRATION)
@@ -39,4 +62,13 @@ def create_access_token(data: dict) -> str:
 
 
 def is_token_blacklisted(token: str) -> bool:
+    """
+    Check if a token is blacklisted.
+
+    Args:
+        token (str): The token to check.
+
+    Returns:
+        bool: True if the token is blacklisted, False otherwise.
+    """
     return token in settings.BLACKLISTED_TOKENS

@@ -7,6 +7,19 @@ class Team(Base, BaseMixin):
     """
     Database model representing "team" table in the database.
     UUID and table name are inherited from BaseMixin.
+
+    Attributes:
+        name (str): The name of the team.
+        logo (str): The URL of the team's logo.
+        played_games (int): The number of games the team has played.
+        won_games (int): The number of games the team has won.
+        tournament_id (UUID): The ID of the associated tournament.
+        players (list[Player]): The list of players in the team.
+        matches_as_team1 (list[Match]): The list of matches where the team is team1.
+        matches_as_team2 (list[Match]): The list of matches where the team is team2.
+        prize_cuts (list[PrizeCut]): The list of prize cuts associated with the team.
+        tournament (Tournament): The associated tournament object.
+        wins (list[Match]): The list of matches the team has won.
     """
 
     name = Column(String(45), nullable=False, unique=True)
@@ -18,7 +31,7 @@ class Team(Base, BaseMixin):
     )
 
     players = relationship("Player", back_populates="team")
-    # matches = relationship("Match", back_populates="team")
+
     matches_as_team1 = relationship(
         "Match", foreign_keys="[Match.team1_id]", back_populates="team1"
     )

@@ -5,7 +5,19 @@ import smtplib
 from src.core.config import settings
 
 
-def send_email_notification(email: str, subject: str, message: str):
+def send_email_notification(email: str, subject: str, message: str) -> None:
+    """
+    Sends an email notification with the specified subject and message to the given email address.
+
+    Args:
+        email (str): The recipient's email address.
+        subject (str): The subject of the email.
+        message (str): The body of the email message.
+
+    Raises:
+        Exception: If there is an error sending the email.
+    """
+
     try:
         sender_email = settings.EMAIL_SENDER
         password = settings.EMAIL_PASSWORD

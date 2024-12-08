@@ -31,10 +31,21 @@ def get_teams(
     has_space: Literal["true", "false"] | None = None,
     sort_by: Literal["asc", "desc"] = "asc",
 ) -> list[TeamListResponse]:
+    """
+    Retrieve a list of teams with optional filters and sorting.
 
-    query = db.query(
-        Team,
-    )
+    Args:
+        db (Session): The database session.
+        pagination (PaginationParams): The pagination parameters.
+        search (str | None): Optional search term to filter teams by name.
+        is_available (Literal["true", "false"] | None): Filter teams by availability.
+        has_space (Literal["true", "false"] | None): Filter teams by player space.
+        sort_by (Literal["asc", "desc"]): Sort order for the teams.
+
+    Returns:
+        list[TeamListResponse]: A list of team responses.
+    """
+    query = db.query(Team)
 
     if search:
         query = query.filter(Team.name.ilike(f"%{search}%"))
@@ -84,7 +95,18 @@ def get_teams(
 def create_team(
     db: Session, team: TeamCreate, logo: UploadFile | None, current_user: UserResponse
 ) -> TeamListResponse:
+    """
+    Create a new team with the provided data.
 
+    Args:
+        db (Session): The database session.
+        team (TeamCreate): The team data to create.
+        logo (UploadFile | None): The logo file for the team.
+        current_user (UserResponse): The current user creating the team.
+
+    Returns:
+        TeamListResponse: The detailed response of the created team.
+    """
     v.director_or_admin(current_user)
 
     v.team_name_unique(db, team_name=team.name)
@@ -106,6 +128,16 @@ def create_team(
 
 
 def get_team(db: Session, team_id: UUID) -> TeamDetailedResponse:
+    """
+    Retrieve detailed information about a team, including statistics.
+
+    Args:
+        db (Session): The database session.
+        team_id (UUID): The ID of the team to retrieve.
+
+    Returns:
+        TeamDetailedResponse: The detailed response of the team.
+    """
     db_team = v.team_exists(db, team_id=team_id)
 
     stats = {
@@ -209,7 +241,19 @@ def update_team(
     logo: UploadFile | None,
     current_user: UserResponse,
 ) -> TeamListResponse:
+    """
+    Update an existing team with the provided data.
 
+    Args:
+        db (Session): The database session.
+        team_id (UUID): The ID of the team to update.
+        team (TeamUpdate): The updated team data.
+        logo (UploadFile | None): The logo file for the team.
+        current_user (UserResponse): The current user performing the update.
+
+    Returns:
+        TeamListResponse: The detailed response of the updated team.
+    """
     db_team = v.team_exists(db, team_id=team_id)
     v.director_or_admin(current_user)
 
@@ -233,7 +277,18 @@ def update_team(
 def create_teams_lst_for_tournament(
     db: Session, team_names: list[str], tournament_id: UUID
 ) -> None:
+    """
+    Create a list of teams for a tournament, ensuring each team is unique
+    and not already participating in another tournament.
 
+    Args:
+        db (Session): The database session.
+        team_names (list[str]): The list of team names to add to the tournament.
+        tournament_id (UUID): The ID of the tournament.
+
+    Raises:
+        HTTPException: If a team already participates in another tournament.
+    """
     teams = []
     for name in team_names:
         db_team = db.query(Team).filter(Team.name == name).first()
@@ -259,6 +314,16 @@ def create_teams_lst_for_tournament(
 
 
 def leave_top_teams_from_robin_round(db, db_tournament: Tournament) -> None:
+    """
+    Retain the top two teams from a round-robin tournament and remove the rest.
+
+    Args:
+        db (Session): The database session.
+        db_tournament (Tournament): The tournament object containing teams and matches.
+
+    Returns:
+        None
+    """
     team_stats = {}
     for team in db_tournament.teams:
         team_stats[team] = {

@@ -25,7 +25,18 @@ def create_player(
     avatar: UploadFile | None,
     current_user: UserResponse,
 ) -> PlayerListResponse:
+    """
+    Create a new player in the database.
 
+    Args:
+        db (Session): The database session.
+        player (PlayerCreate): The player creation schema.
+        avatar (UploadFile | None): The player's avatar file.
+        current_user (UserResponse): The current user making the request.
+
+    Returns:
+        PlayerListResponse: The response schema for the created player.
+    """
     v.player_username_unique(db, username=player.username)
     v.director_or_admin(current_user)
 
@@ -61,7 +72,20 @@ def get_players(
     country: str | None = None,
     sort_by: str = "asc",
 ) -> list[PlayerListResponse]:
+    """
+    Retrieve a list of players from the database with optional filtering, sorting, and pagination.
 
+    Args:
+        db (Session): The database session.
+        pagination (PaginationParams): The pagination parameters.
+        search (str | None): Optional search term for player username.
+        team (str | None): Optional filter for team name.
+        country (str | None): Optional filter for country.
+        sort_by (str): Sort order, either 'asc' for ascending or 'desc' for descending.
+
+    Returns:
+        list[PlayerListResponse]: A list of player response objects.
+    """
     query = db.query(Player).order_by(Player.username.asc())
 
     filters = []
@@ -91,6 +115,16 @@ def get_players(
 
 
 def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
+    """
+    Retrieve a player's details from the database.
+
+    Args:
+        db (Session): The database session.
+        player_id (UUID): The ID of the player.
+
+    Returns:
+        PlayerDetailResponse: The detailed response schema for the player.
+    """
     db_player = v.player_exists(db, player_id)
 
     tournament_title = None
@@ -103,7 +137,16 @@ def get_player(db: Session, player_id: UUID) -> PlayerDetailResponse:
 def get_player_by_user_id(
     db: Session, current_user: UserResponse
 ) -> PlayerDetailResponse:
+    """
+    Retrieve a player's details by the user ID from the database.
 
+    Args:
+        db (Session): The database session.
+        current_user (UserResponse): The current user making the request.
+
+    Returns:
+        PlayerDetailResponse: The detailed response schema for the player.
+    """
     v.user_associated_with_player(current_user)
     db_player = db.query(Player).filter(Player.user_id == current_user.id).first()
 
@@ -121,7 +164,19 @@ def update_player(
     avatar: UploadFile | None,
     current_user: UserResponse,
 ) -> PlayerListResponse:
+    """
+    Update an existing player's details in the database.
 
+    Args:
+        db (Session): The database session.
+        player_id (UUID): The ID of the player to update.
+        player (PlayerUpdate): The player update schema.
+        avatar (UploadFile | None): The player's new avatar file.
+        current_user (UserResponse): The current user making the request.
+
+    Returns:
+        PlayerListResponse: The response schema for the updated player.
+    """
     db_player = v.player_exists(db, player_id=player_id)
 
     if db_player.user_id:

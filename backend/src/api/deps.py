@@ -30,7 +30,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/users/login")
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
 ) -> UserResponse:
+    """
+    Retrieve the current authenticated user based on the provided token.
 
+    Args:
+        db (Session): Database session dependency.
+        token (str): The JWT token for authentication.
+
+    Returns:
+        UserResponse: The authenticated user's response object.
+
+    Raises:
+        HTTPException: If the credentials are invalid or the user is logged out.
+    """
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -59,4 +71,14 @@ def get_current_user(
 
 
 def convert_db_to_user_response(user: User) -> UserResponse:
+    """
+    Convert a database user object to a user response object.
+
+    Args:
+        user (User): The user object from the database.
+
+    Returns:
+        UserResponse: The user response object containing the
+        user's ID, email, and role.
+    """
     return UserResponse(id=user.id, email=user.email, role=user.role)
