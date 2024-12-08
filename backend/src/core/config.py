@@ -1,10 +1,25 @@
 from functools import lru_cache
 import os
 from typing import List, Union
-
+from pathlib import Path
+from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
+
+cwd = os.getcwd()
+possible_env_paths = [
+    Path(cwd) / '.env',
+    Path(cwd).parent / '.env',
+    Path(__file__).parent.parent.parent / '.env',
+]
+
+
+for env_path in possible_env_paths:
+    if env_path.exists():
+        env_file = env_path
+        load_dotenv(env_path)
+        break
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
@@ -16,33 +31,33 @@ class Settings(BaseSettings):
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
-        else:
-            return v
+        return v
 
-    JWT_SECRET_KEY: str = os.getenv("SECRET_KEY")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
-    JWT_EXPIRATION: int = os.getenv("JWT_EXPIRATION")
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    JWT_EXPIRATION: int
     BLACKLISTED_TOKENS: list[str] = []
 
-    DATABASE_URL: str = os.getenv("DATABASE_URL")
+    DATABASE_URL: str
+    EMAIL_SENDER: str
+    EMAIL_PASSWORD: str
+    SMTP_SERVER: str
 
-    EMAIL_SENDER: str = os.getenv("EMAIL_SENDER")
-    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")
-    SMTP_SERVER: str = os.getenv("SMTP_SERVER")
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    SECRET_KEY: str
 
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
-    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
-    SECRET_KEY: str = os.getenv("SECRET_KEY")
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_KEY: str
+    AWS_BUCKET_NAME: str
+    AWS_REGION: str
 
-    AWS_ACCESS_KEY: str = os.getenv("AWS_ACCESS_KEY")
-    AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_KEY")
-    AWS_BUCKET_NAME: str = os.getenv("AWS_BUCKET_NAME")
-    AWS_REGION: str = os.getenv("AWS_REGION")
-
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = {
+        "case_sensitive": True,
+        "env_file": str(env_file),
+        "env_file_encoding": "utf-8",
+        "extra": "allow"
+    }
 
 
 @lru_cache()
