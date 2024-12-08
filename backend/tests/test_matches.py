@@ -1011,7 +1011,6 @@ class MatchServiceShould(unittest.TestCase):
 
         with patch("src.crud.match.send_email_notification") as mock_send:
             generate_matches(self.db, self.tournament)
-
             mock_send.assert_called()
 
             matches = self.db.query(Match).all()
