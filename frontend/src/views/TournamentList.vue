@@ -1,41 +1,39 @@
 <template>
-  <div class="tournament-list-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
-      <FilterBar @filter-change="handleFiltersChange"/>
+  <div class="content-wrapper">
+    <v-container>
+    <FilterBar @filter-change="handleFiltersChange"/>
 
-        <!-- Loading state -->
-        <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
-          <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
-        </div>
+      <!-- Loading state -->
+      <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
+        <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
+      </div>
 
-        <!-- Error state -->
-        <div v-else-if="tournamentsError" class="error-text pa-4">
-          {{ tournamentsError }}
-        </div>
+      <!-- Error state -->
+      <div v-else-if="tournamentsError" class="error-text pa-4">
+        {{ tournamentsError }}
+      </div>
 
-        <!-- Tournaments Grid -->
-        <v-row v-else>
-          <v-col v-for="tournament in tournaments"
-                 :key="tournament.id"
-                 cols="12"
-                 md="6"
-                 class="tournament-column">
-            <TournamentCard :tournament="tournament" />
-          </v-col>
-        </v-row>
+      <!-- Tournaments Grid -->
+      <v-row v-else>
+        <v-col v-for="tournament in tournaments"
+               :key="tournament.id"
+               cols="12"
+               md="6"
+               class="tournament-column">
+          <TournamentCard :tournament="tournament" />
+        </v-col>
+      </v-row>
 
-        <!-- Load More Button -->
-        <LoadMoreButton
-          v-if="!isLoadingTournaments && hasMoreTournaments"
-          :is-loading="isLoadingMore"
-          button-text="Load More Tournaments"
-          @load-more="loadMoreTournaments"
-        />
-      </v-container>
-    </div>
+      <!-- Load More Button -->
+      <LoadMoreButton
+        v-if="!isLoadingTournaments && hasMoreTournaments"
+        :is-loading="isLoadingMore"
+        button-text="Load More Tournaments"
+        @load-more="loadMoreTournaments"
+      />
+    </v-container>
   </div>
 </template>
 
@@ -160,11 +158,6 @@ onUnmounted(() => {
 
 
 <style scoped>
-.tournament-list-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 .content-wrapper {
   position: relative;
   z-index: 3;

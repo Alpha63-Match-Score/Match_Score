@@ -1,52 +1,50 @@
 <template>
-  <div class="dashboard-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
-        <!-- Admin Welcome Section -->
-        <DashboardWelcome :userRole="'Admin'" />
+  <div class="content-wrapper">
+    <v-container>
+      <!-- Admin Welcome Section -->
+      <DashboardWelcome :userRole="'Admin'" />
 
-        <!-- Action Buttons Section -->
-        <AdminActions
-          :openAddTournamentDialog="openAddTournamentDialog"
-          :openAddTeamDialog="openAddTeamDialog"
-          :openAddPlayerDialog="openAddPlayerDialog"
-          :openUpdatePlayerDialog="openUpdatePlayerDialog"
-          @open-tournament="openAddTournamentDialog"
-          @open-team="openAddTeamDialog"
-          @open-player="openAddPlayerDialog"
-          @open-update-player="openUpdatePlayerDialog"
-        />
+      <!-- Action Buttons Section -->
+      <AdminActions
+        :openAddTournamentDialog="openAddTournamentDialog"
+        :openAddTeamDialog="openAddTeamDialog"
+        :openAddPlayerDialog="openAddPlayerDialog"
+        :openUpdatePlayerDialog="openUpdatePlayerDialog"
+        @open-tournament="openAddTournamentDialog"
+        @open-team="openAddTeamDialog"
+        @open-player="openAddPlayerDialog"
+        @open-update-player="openUpdatePlayerDialog"
+      />
 
 
-        <!-- Requests Management Section -->
-        <AdminRequestManagement />
+      <!-- Requests Management Section -->
+      <AdminRequestManagement />
 
-        <!-- Dialogs -->
-        <AddTournamentDialog
-          v-model="showAddTournamentDialog"
-          @tournament-added="handleTournamentAdded"
-        />
-        <AddTeamDialog
-          v-model="showAddTeamDialog"
-          @team-added="handleTeamAdded"
-        />
-        <AddPlayerDialog
-          v-model="showAddPlayerDialog"
-          @player-added="handlePlayerAdded"
-        />
-        <UpdatePlayerDialog
-          v-model="showUpdatePlayerDialog"
-          @player-updated="handlePlayerUpdated"
-        />
+      <!-- Dialogs -->
+      <AddTournamentDialog
+        v-model="showAddTournamentDialog"
+        @tournament-added="handleTournamentAdded"
+      />
+      <AddTeamDialog
+        v-model="showAddTeamDialog"
+        @team-added="handleTeamAdded"
+      />
+      <AddPlayerDialog
+        v-model="showAddPlayerDialog"
+        @player-added="handlePlayerAdded"
+      />
+      <UpdatePlayerDialog
+        v-model="showUpdatePlayerDialog"
+        @player-updated="handlePlayerUpdated"
+      />
 
-        <!-- Success Snackbar -->
-        <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
-          {{ successMessage }}
-        </v-snackbar>
-      </v-container>
-    </div>
+      <!-- Success Snackbar -->
+      <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
+        {{ successMessage }}
+      </v-snackbar>
+    </v-container>
   </div>
 </template>
 
@@ -228,11 +226,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 :deep(.v-select) {
   background: transparent !important;
 }
@@ -249,34 +242,18 @@ onMounted(() => {
   display: block !important;
 }
 
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
 
-:deep(.v-field--error .v-field__outline) {
-  color: #fed854 !important;
-}
-:deep(.v-text-field .v-field--error) {
-  --v-field-border-color: #fed854;
-}
-:deep(.v-messages__message) {
-  color: #FED854FF !important;
-  margin-bottom: 8px;
-}
-
-:deep(.v-field--error .v-label) {
-  color: #FED854FF !important;
-}
-
-:deep(.v-field--error .v-field__outline__start),
-:deep(.v-field--error .v-field__outline__end),
-:deep(.v-field--error .v-field__outline__notch) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-field--error input::placeholder),
-:deep(.v-field--error .v-label.v-field-label) {
-  color: #fed854 !important;
+  .v-field__outline,
+  .v-field__outline__start,
+  .v-field__outline__end,
+  .v-field__outline__notch,
+  .v-label,
+  input::placeholder {
+    color: #fed854 !important;
+    border-color: #fed854 !important;
+  }
 }
 
 .content-wrapper {
@@ -286,29 +263,5 @@ onMounted(() => {
   flex-direction: column;
   gap: 20px;
   width: 100vw;
-}
-
-
-:deep(.v-alert) {
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  color: #FED854FF !important;
-  border-color: #FED854FF !important;
-}
-
-:deep(.v-alert__close-button) {
-  color: #FED854FF !important;
-}
-
-:deep(.v-alert__prepend) {
-  color: #FED854FF !important;
-}
-
-.error-alert {
-  color: #FED854FF !important;
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  border: 1px solid #FED854FF !important;
-  border-radius: 4px;
-  padding: 12px;
-  margin-bottom: 16px;
 }
 </style>

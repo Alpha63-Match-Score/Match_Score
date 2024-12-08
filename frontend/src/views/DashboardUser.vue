@@ -1,32 +1,30 @@
 <template>
-  <div class="dashboard-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
-        <!-- User Welcome Section -->
-        <DashboardWelcome :userRole="userEmail" />
+  <div class="content-wrapper">
+    <v-container>
+      <!-- User Welcome Section -->
+      <DashboardWelcome :userRole="userEmail" />
 
 
-        <!-- Request Buttons Section -->
-        <UserRequestButtons
-          :requests="requests"
-          @update-requests="fetchRequests"
-          @show-player-dialog="showPlayerLinkDialog = true"
-          @show-success="handleSuccess"
-        />
+      <!-- Request Buttons Section -->
+      <UserRequestButtons
+        :requests="requests"
+        @update-requests="fetchRequests"
+        @show-player-dialog="showPlayerLinkDialog = true"
+        @show-success="handleSuccess"
+      />
 
-        <!-- Player Link Dialog -->
-        <LinkPlayerRequestDialog
-          v-model="showPlayerLinkDialog"
-          :has-pending-request="hasPendingRequest"
-          @submit-success="handleSuccess"
-        />
+      <!-- Player Link Dialog -->
+      <LinkPlayerRequestDialog
+        v-model="showPlayerLinkDialog"
+        :has-pending-request="hasPendingRequest"
+        @submit-success="handleSuccess"
+      />
 
-        <!-- Request History Section -->
-        <RequestHistory />
-      </v-container>
-    </div>
+      <!-- Request History Section -->
+      <RequestHistory />
+    </v-container>
   </div>
 </template>
 
@@ -109,11 +107,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 .content-wrapper {
   position: relative;
   z-index: 3;

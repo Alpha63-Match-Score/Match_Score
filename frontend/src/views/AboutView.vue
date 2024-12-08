@@ -134,35 +134,16 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import HeaderSection from "@/components/HeaderSection.vue";
+</script>
+
 <style scoped>
 .about-wrapper {
   position: relative;
   display: flex;
   margin-left: -350px;
 }
-
-.match-format-info {
-  background: rgba(45, 55, 75, 0.8);
-  border-radius: 20px;
-  border: 2px solid #42DDF2FF;
-  box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
-  backdrop-filter: blur(10px);
-  padding: 24px;
-}
-
-.format-item {
-  background: rgba(66, 221, 242, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  padding: 16px;
-  border-radius: 8px;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.format-item:hover {
-  background: rgba(66, 221, 242, 0.2);
-}
-
 
 .content-wrapper {
   position: relative;
@@ -188,21 +169,6 @@
   text-align: center;
 }
 
-.tournament-card {
-  grid-column: 1 / 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tournament-info-container {
-  grid-column: 2 / 3;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .welcome-content {
   text-align: center;
 }
@@ -225,19 +191,11 @@
   gap: 24px;
 }
 
-.full-width {
-  width: 100%;
-}
-
 .second-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   align-items: stretch;
-}
-
-.prizes-card {
-  grid-column: 1 / -1;
 }
 
 .section-title {
@@ -263,9 +221,7 @@
   gap: 12px;
 }
 
-.feature-item,
-.tournament-type,
-.prize-item {
+.feature-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -273,14 +229,18 @@
   border-radius: 8px;
   background: rgba(66, 221, 242, 0.1);
   transition: all 0.2s;
-}
-
-.feature-item {
   color: white;
 }
 
-.tournament-type {
+.tournament-type,
+.prize-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
   background: rgba(254, 216, 84, 0.1);
+  transition: all 0.2s;
 }
 
 .tournament-info {
@@ -300,45 +260,12 @@
 }
 
 .prize-item {
-  background: rgba(254, 216, 84, 0.1);
   color: #FED854FF;
 }
 
 .prize-item:last-child {
   background: rgba(192, 192, 192, 0.1);
   color: #C0C0C0;
-}
-
-@media (max-width: 768px) {
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-.match-format-info {
-  flex: 1;
-}
-
-.format-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.format-item {
-  background: rgba(66, 221, 242, 0.1);
-  padding: 16px;
-  border-radius: 8px;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.format-item:hover {
-  background: rgba(66, 221, 242, 0.2);
-}
-
-.stages-info {
-  flex: 1;
 }
 
 .stages-grid {
@@ -369,8 +296,10 @@
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
 }
-</style>
 
-<script setup lang="ts">
-import HeaderSection from "@/components/HeaderSection.vue";
-</script>
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

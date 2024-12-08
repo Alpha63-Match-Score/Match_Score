@@ -66,9 +66,10 @@ const handlePlayerClick = (playerId: string) => {
 </script>
 
 <style scoped>
-
+/* Card base */
 .team-card {
-  height: 450px;
+  height: 400px;
+  width: 500px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
@@ -77,7 +78,6 @@ const handlePlayerClick = (playerId: string) => {
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 500px;
 }
 
 .team-card:hover {
@@ -86,8 +86,6 @@ const handlePlayerClick = (playerId: string) => {
 }
 
 .team-content {
-  position: relative;
-  z-index: 3;
   height: 100%;
   padding: 24px;
   display: flex;
@@ -95,6 +93,7 @@ const handlePlayerClick = (playerId: string) => {
   justify-content: space-between;
 }
 
+/* Team header and info */
 .team-header {
   display: flex;
   flex-direction: column;
@@ -109,33 +108,20 @@ const handlePlayerClick = (playerId: string) => {
   gap: 16px;
 }
 
-.team-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
 .team-title {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
-  margin: 0;
   font-weight: 600;
   font-family: Orbitron, sans-serif;
   text-align: center;
 }
 
+/* Avatars */
 .team-avatar {
   width: 80px;
   height: 80px;
   border: 2px solid #42ddf2;
   background: rgba(8, 87, 144, 0.1);
-  margin-bottom: 8px;
-}
-
-.player-info p {
-  margin: 4px 0;
 }
 
 .players-avatars {
@@ -143,20 +129,18 @@ const handlePlayerClick = (playerId: string) => {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  align-items: center;
   width: 260px;
   height: 110px;
   padding: 8px;
   border-radius: 12px;
   border: 2px solid rgba(66, 221, 242, 0.2);
+  margin-bottom: -20px;
 }
 
 .player-avatar {
-  width: 50px;
-  height: 40px;
   border: 1px solid rgba(66, 221, 242, 0.3);
   background: rgba(8, 87, 144, 0.1);
-  transition: all 0.2s ease;
+  transition: transform 0.2s;
   cursor: pointer;
 }
 
@@ -164,26 +148,19 @@ const handlePlayerClick = (playerId: string) => {
   transform: scale(1.5);
 }
 
-.team-right-section {
-  width: 100%;
-  padding: 16px 0;
-}
-
+/* Progress section */
 .progress-wrapper {
-  position: relative;
   width: 60%;
   display: flex;
   align-items: center;
-  justify-self: center;
   gap: 12px;
   padding: 8px 0;
-  margin-top: -15px;
+  justify-self: center;
 }
 
 .progress-bar {
   flex-grow: 1;
   border-radius: 8px;
-  overflow: hidden;
   background: rgba(8, 87, 144, 0.2);
 }
 
@@ -194,6 +171,7 @@ const handlePlayerClick = (playerId: string) => {
   min-width: 45px;
 }
 
+/* Button */
 .view-details-btn {
   margin-top: auto;
   color: #42DDF2FF !important;
@@ -204,7 +182,6 @@ const handlePlayerClick = (playerId: string) => {
 }
 
 .view-details-btn:hover {
-  color: #42DDF2FF !important;
   background: rgba(66, 221, 242, 0.1);
 }
 </style>

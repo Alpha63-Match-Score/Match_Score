@@ -1,90 +1,88 @@
 <template>
-  <div class="dashboard-wrapper">
-    <HeaderSection />
+  <HeaderSection />
 
-    <div class="content-wrapper">
-      <v-container>
-        <!-- Director Welcome Section -->
-        <DashboardWelcome :userRole="'Director'" />
+  <div class="content-wrapper">
+    <v-container>
+      <!-- Director Welcome Section -->
+      <DashboardWelcome :userRole="'Director'" />
 
-        <!-- Action Buttons Section -->
-        <AdminActions
-          :openAddTournamentDialog="openAddTournamentDialog"
-          :openAddTeamDialog="openAddTeamDialog"
-          :openAddPlayerDialog="openAddPlayerDialog"
-          :openUpdatePlayerDialog="openUpdatePlayerDialog"
-          @open-tournament="openAddTournamentDialog"
-          @open-team="openAddTeamDialog"
-          @open-player="openAddPlayerDialog"
-          @open-update-player="openUpdatePlayerDialog"
-        />
+      <!-- Action Buttons Section -->
+      <AdminActions
+        :openAddTournamentDialog="openAddTournamentDialog"
+        :openAddTeamDialog="openAddTeamDialog"
+        :openAddPlayerDialog="openAddPlayerDialog"
+        :openUpdatePlayerDialog="openUpdatePlayerDialog"
+        @open-tournament="openAddTournamentDialog"
+        @open-team="openAddTeamDialog"
+        @open-player="openAddPlayerDialog"
+        @open-update-player="openUpdatePlayerDialog"
+      />
 
-        <!-- Filter section -->
-        <FilterBar @filter-change="handleFiltersChange"/>
+      <!-- Filter section -->
+      <FilterBar @filter-change="handleFiltersChange"/>
 
-        <!-- Tournaments Content -->
-        <div class="tournaments-section">
-          <!-- Loading state -->
-          <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
-            <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
-          </div>
-
-          <!-- Error state -->
-          <div v-else-if="tournamentsError" class="error-text pa-4">
-            {{ tournamentsError }}
-          </div>
-
-          <!-- Empty state -->
-          <div v-else-if="!tournaments.length" class="empty-state">
-            <v-icon icon="mdi-tournament" size="64" color="#42DDF2FF" class="mb-4"></v-icon>
-            <div class="empty-text">No tournaments created yet</div>
-            <div class="empty-subtext">Get started by clicking the "Add Tournament" button</div>
-          </div>
-
-          <!-- Tournament Cards Grid -->
-          <v-row v-else>
-            <v-col v-for="tournament in tournaments"
-               :key="tournament.id"
-               cols="12"
-               md="6"
-               class="tournament-column">
-              <TournamentCard :tournament="tournament" />
-            </v-col>
-          </v-row>
-
-          <!-- Load More Button -->
-          <LoadMoreButton
-            v-if="!isLoadingTournaments && hasMoreTournaments"
-            :is-loading="isLoadingMore"
-            button-text="Load More Tournaments"
-            @load-more="loadMoreTournaments"
-          />
+      <!-- Tournaments Content -->
+      <div class="tournaments-section">
+        <!-- Loading state -->
+        <div v-if="isLoadingTournaments" class="d-flex justify-center align-center" style="height: 200px">
+          <v-progress-circular indeterminate color="#00ff9d"></v-progress-circular>
         </div>
 
-        <!-- Dialogs -->
-        <AddTournamentDialog
-          v-model="showAddTournamentDialog"
-          @tournament-added="handleTournamentAdded"
-        />
-        <AddTeamDialog
-          v-model="showAddTeamDialog"
-          @team-added="handleTeamAdded"
-        />
-        <AddPlayerDialog
-          v-model="showAddPlayerDialog"
-          @player-added="handlePlayerAdded"
-        />
-        <UpdatePlayerDialog
-          v-model="showUpdatePlayerDialog"
-          @player-updated="handlePlayerUpdated"
-        />
+        <!-- Error state -->
+        <div v-else-if="tournamentsError" class="error-text pa-4">
+          {{ tournamentsError }}
+        </div>
 
-        <!-- Success Snackbar -->
-        <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
-          {{ successMessage }}
-        </v-snackbar>
-      </v-container>
-    </div>
+        <!-- Empty state -->
+        <div v-else-if="!tournaments.length" class="empty-state">
+          <v-icon icon="mdi-tournament" size="64" color="#42DDF2FF" class="mb-4"></v-icon>
+          <div class="empty-text">No tournaments created yet</div>
+          <div class="empty-subtext">Get started by clicking the "Add Tournament" button</div>
+        </div>
+
+        <!-- Tournament Cards Grid -->
+        <v-row v-else>
+          <v-col v-for="tournament in tournaments"
+             :key="tournament.id"
+             cols="12"
+             md="6"
+             class="tournament-column">
+            <TournamentCard :tournament="tournament" />
+          </v-col>
+        </v-row>
+
+        <!-- Load More Button -->
+        <LoadMoreButton
+          v-if="!isLoadingTournaments && hasMoreTournaments"
+          :is-loading="isLoadingMore"
+          button-text="Load More Tournaments"
+          @load-more="loadMoreTournaments"
+        />
+      </div>
+
+      <!-- Dialogs -->
+      <AddTournamentDialog
+        v-model="showAddTournamentDialog"
+        @tournament-added="handleTournamentAdded"
+      />
+      <AddTeamDialog
+        v-model="showAddTeamDialog"
+        @team-added="handleTeamAdded"
+      />
+      <AddPlayerDialog
+        v-model="showAddPlayerDialog"
+        @player-added="handlePlayerAdded"
+      />
+      <UpdatePlayerDialog
+        v-model="showUpdatePlayerDialog"
+        @player-updated="handlePlayerUpdated"
+      />
+
+      <!-- Success Snackbar -->
+      <v-snackbar v-model="showSuccessAlert" color="success" timeout="3000">
+        {{ successMessage }}
+      </v-snackbar>
+    </v-container>
   </div>
 </template>
 
@@ -315,30 +313,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
 .content-wrapper {
   position: relative;
   z-index: 3;
   padding-top: 100px;
-  min-height: 100vh;
   width: 100vw;
 }
-
 
 .tournaments-section {
   width: 85%;
   max-width: 1400px;
   margin: 8px auto 0;
 }
-
-.tournament-column {
-  padding: 8px;
-}
-
 
 .empty-state {
   display: flex;
@@ -364,30 +350,5 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.7);
   font-size: 1.1rem;
   text-align: center;
-}
-
-
-
-:deep(.v-alert) {
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  color: #FED854FF !important;
-  border-color: #FED854FF !important;
-}
-
-:deep(.v-alert__close-button) {
-  color: #FED854FF !important;
-}
-
-:deep(.v-alert__prepend) {
-  color: #FED854FF !important;
-}
-
-.error-alert {
-  color: #FED854FF !important;
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  border: 1px solid #FED854FF !important;
-  border-radius: 4px;
-  padding: 12px;
-  margin-bottom: 16px;
 }
 </style>

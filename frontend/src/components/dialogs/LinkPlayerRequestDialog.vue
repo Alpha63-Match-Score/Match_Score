@@ -129,6 +129,7 @@ watch(() => props.modelValue, (newVal) => {
 </script>
 
 <style scoped>
+/* Dialog base */
 .dialog-card {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
@@ -148,10 +149,12 @@ watch(() => props.modelValue, (newVal) => {
   text-align: center;
 }
 
+/* Form elements */
 .player-username-input {
   margin-top: 16px;
 }
 
+/* Error states */
 .error-message {
   color: #fed854;
   font-size: 0.9rem;
@@ -159,29 +162,7 @@ watch(() => props.modelValue, (newVal) => {
   text-align: center;
 }
 
-:deep(.v-messages__message) {
-  color: #fed854 !important;
-  font-size: 14px;
-}
-
-:deep(.v-field--error) {
-  --v-field-border-color: #fed854 !important;
-}
-
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline) {
-  color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline__start),
-:deep(.v-field--error .v-field__outline__end),
-:deep(.v-field--error .v-field__outline__notch) {
-  border-color: #fed854 !important;
-}
-
+/* Buttons */
 .cancel-btn {
   color: #42DDF2FF !important;
 }
@@ -192,8 +173,24 @@ watch(() => props.modelValue, (newVal) => {
   margin-left: 16px;
 }
 
+/* Vuetify overrides */
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 14px;
+}
+
+/* Field error states */
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline),
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch),
 :deep(.v-field--error input::placeholder),
 :deep(.v-field--error .v-label.v-field-label) {
+  border-color: #fed854 !important;
   color: #fed854 !important;
 }
 </style>

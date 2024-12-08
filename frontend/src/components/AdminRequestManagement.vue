@@ -130,7 +130,6 @@ import { API_URL } from '@/config'
 import type { Request, Player } from "@/types/types";
 import PlayerModal from "@/components/dialogs/PlayerModalDialog.vue";
 
-
 const authStore = useAuthStore()
 
 // State
@@ -148,8 +147,6 @@ const successMessage = ref('')
 const isLoadingPlayer = ref(false)
 const selectedPlayer = ref<Player | null>(null)
 const showPlayerModal = ref(false)
-
-
 
 // Helper functions
 const formatDate = (date: string): string => {
@@ -330,24 +327,17 @@ onMounted(() => {
   backdrop-filter: blur(2px);
   position: relative;
   overflow: hidden;
-  margin-bottom: 24px;
   padding: 24px;
   width: 65%;
   max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.history-content {
-  position: relative;
-  justify-items: center;
-  z-index: 2;
+  margin: 0 auto 24px;
 }
 
 .filter-options {
   display: flex;
   gap: 16px;
   width: 400px;
+  justify-self: center;
 }
 
 .error-message {
@@ -357,10 +347,8 @@ onMounted(() => {
   text-align: center;
 }
 
-
 .request-list {
   display: grid;
-  flex-direction: column;
   gap: 16px;
   width: 100%;
 }
@@ -405,7 +393,6 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-
 .request-details {
   display: flex;
   flex-wrap: wrap;
@@ -427,7 +414,6 @@ onMounted(() => {
 .request-player-link {
   cursor: pointer;
   color: #42DDF2FF;
-  transition: transform 0.2s;
   margin-left: 4px;
 }
 
@@ -435,6 +421,7 @@ onMounted(() => {
   transform: scale(1.1);
 }
 
+/* Status styles */
 .status-pending {
   background: rgba(254, 216, 84, 0.1);
   color: #FED854FF;
@@ -459,6 +446,11 @@ onMounted(() => {
   margin-top: 16px;
 }
 
+/* Button styles */
+.approve-btn, .reject-btn {
+  transition: 0.2s;
+}
+
 .approve-btn {
   background: rgba(0, 255, 157, 0.1);
   color: #00ff9d;
@@ -471,25 +463,8 @@ onMounted(() => {
   border: 1px solid rgba(255, 99, 99, 0.3);
 }
 
-.reject-btn:disabled {
+.approve-btn:disabled, .reject-btn:disabled {
   opacity: 0.3;
-  background-color: rgba(255, 99, 99, 0.1);
-  color: #ff6363;
-  border: 1px solid rgba(255, 99, 99, 0.3);
-}
-
-.approve-btn:disabled {
-  opacity: 0.3;
-  background: rgba(0, 255, 157, 0.1);
-  color: #00ff9d;
-  border: 1px solid rgba(0, 255, 157, 0.3);
-}
-
-.dialog-card {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 1px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
 }
 
 :deep(.v-messages__message) {
@@ -499,12 +474,5 @@ onMounted(() => {
 
 :deep(.v-field--error) {
   --v-field-border-color: #fed854 !important;
-}
-
-.error-message {
-  color: #fed854;
-  font-size: 0.9rem;
-  margin-top: 8px;
-  text-align: center;
 }
 </style>

@@ -181,7 +181,7 @@ const extractErrorMessage = async (response: Response) => {
 </script>
 
 <style scoped>
-
+/* Card base */
 .player-card {
   background: rgba(45, 55, 75, 0.8);
   border-radius: 20px;
@@ -190,20 +190,15 @@ const extractErrorMessage = async (response: Response) => {
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
-  margin-bottom: 24px;
   padding: 24px;
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto 24px;
   min-height: 500px;
 }
 
 .player-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-position: center;
   background-size: cover;
   opacity: 0.1;
@@ -219,11 +214,11 @@ const extractErrorMessage = async (response: Response) => {
   gap: 32px;
 }
 
+/* Main info section */
 .player-main-info {
   display: flex;
   gap: 32px;
 }
-
 
 .avatar-section {
   flex-shrink: 0;
@@ -240,7 +235,7 @@ const extractErrorMessage = async (response: Response) => {
   box-shadow: 0 0 20px rgba(66, 221, 242, 0.4);
 }
 
-
+/* Info section */
 .info-section {
   flex-grow: 1
 }
@@ -271,6 +266,7 @@ const extractErrorMessage = async (response: Response) => {
   gap: 8px;
 }
 
+/* Icons */
 .info-icon {
   color: #42DDF2FF !important;
 }
@@ -287,6 +283,7 @@ const extractErrorMessage = async (response: Response) => {
   transform: scale(1.1);
 }
 
+/* Stats section */
 .player-stats-section {
   margin-top: auto;
   padding-top: 24px;

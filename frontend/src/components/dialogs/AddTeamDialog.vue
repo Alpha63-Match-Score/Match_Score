@@ -225,10 +225,12 @@ const submitAddTeam = async () => {
 </script>
 
 <style scoped>
+/* Base dialog styles */
 .dialog-card {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
+  border-radius: 12px;
 }
 
 .dialog-content {
@@ -237,12 +239,13 @@ const submitAddTeam = async () => {
 
 .dialog-title {
   color: #42ddf2;
-  font-weight: bold;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
+  font-weight: 500;
   text-align: center;
+  margin-bottom: 16px;
 }
 
-
+/* File upload section */
 .file-upload-section {
   display: flex;
   flex-direction: column;
@@ -261,197 +264,17 @@ const submitAddTeam = async () => {
   transform: scale(1.05);
 }
 
-.upload-input {
-  width: 100%;
-}
-
-
-.team-list-item {
-  padding: 8px 16px;
-  transition: background-color 0.2s;
-  border-radius: 4px;
-  margin: 2px 0;
-}
-
-.team-list-item:hover {
-  background: rgba(66, 221, 242, 0.1);
-}
-
-:deep(.v-field) {
-  background: rgba(45, 55, 75, 0.8) !important;
-}
-
-:deep(.v-select__selection) {
-  color: white !important;
-}
-
-:deep(.v-label) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:deep(.v-messages) {
-  min-height: 14px;
-  padding-top: 2px;
-  display: block !important;
-}
-
-:deep(.v-text-field) {
-  margin-top: 16px;
-}
-
-:deep(.v-field__input input) {
-  color: white !important;
-  -webkit-text-fill-color: white !important;
-}
-
-:deep(.v-field__input input::selection) {
-  background-color: rgba(66, 221, 242, 0.3) !important;
-  color: white !important;
-}
-
-:deep(.v-field__input input::-moz-selection) {
-  background-color: rgba(66, 221, 242, 0.3) !important;
-  color: white !important;
-}
-
-:deep(.v-alert) {
-  background-color: rgba(254, 216, 84, 0.1) !important;
-  color: #fed854 !important;
-  border-color: #fed854 !important;
-}
-
-:deep(.v-alert__close-button) {
-  color: #fed854 !important;
-}
-
-:deep(.v-alert__prepend) {
-  color: #fed854 !important;
-}
-
-.dialog-actions {
-  padding: 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.cancel-btn {
-  color: #42DDF2FF !important;
-}
-
-.submit-btn {
-  background: #42DDF2FF !important;
-  color: #171c26 !important;
-  margin-left: 16px;
-}
-
-.upload-input {
-  width: 100%;
-}
-
 .preview-avatar .v-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-:deep(.v-field__input) {
-  color: white !important;
+.upload-input {
+  width: 100%;
 }
 
-:deep(.v-file-input .v-field) {
-  border-color: rgba(66, 221, 242, 0.3) !important;
-}
-
-:deep(.v-file-input .v-field:hover) {
-  border-color: #42ddf2 !important;
-}
-
-.dialog-content .v-card-text > div > * {
-  margin-top: 0 !important;
-}
-
-:deep(.teams-menu) {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 1px solid rgba(66, 221, 242, 0.3);
-  max-height: 300px !important;
-  overflow-y: auto;
-}
-
-:deep(.teams-menu::-webkit-scrollbar) {
-  width: 8px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb) {
-  background: rgba(66, 221, 242, 0.3);
-  border-radius: 4px;
-}
-
-:deep(.teams-menu::-webkit-scrollbar-thumb:hover) {
-  background: rgba(66, 221, 242, 0.5);
-}
-
-:deep(.v-select__selection) {
-  color: white !important;
-  opacity: 1 !important;
-}
-
-:deep(.v-select .v-field__input) {
-  min-height: 56px !important;
-  opacity: 1 !important;
-  color: white !important;
-}
-
-:deep(.v-select .v-field) {
-  background: transparent !important;
-}
-
-:deep(.v-overlay__content) {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(66, 221, 242, 0.5) transparent;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar) {
-  width: 8px;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-thumb) {
-  background-color: rgba(66, 221, 242, 0.5);
-  border-radius: 4px;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-thumb:hover) {
-  background-color: rgba(66, 221, 242, 0.7);
-}
-
-.custom-autocomplete :deep(.v-field__input) {
-  color: rgb(255, 255, 255) !important;
-}
-
-.custom-autocomplete :deep(.v-field--focused) {
-  color: #42DDF2FF !important;
-}
-
-
-.dialog-card {
-  background: rgba(45, 55, 75, 0.95) !important;
-  border: 1px solid #42DDF2FF;
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-}
-
-.dialog-content {
-  padding: 20px;
-}
-
+/* Dialog actions */
 .dialog-actions {
   padding: 16px;
   display: flex;
@@ -460,34 +283,6 @@ const submitAddTeam = async () => {
   margin-top: -32px;
 }
 
-.dialog-title {
-  color: #42ddf2;
-  font-size: 1.4rem;
-  font-weight: 500;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-:deep(.v-card-text) {
-  padding-bottom: 8px;
-}
-
-:deep(.v-messages__message) {
-  color: #fed854 !important;
-  font-size: 14px;
-}
-
-:deep(.v-field--error) {
-  --v-field-border-color: #fed854 !important;
-}
-
-.error-message {
-  color: #fed854;
-  font-size: 0.9rem;
-  margin-top: 8px;
-  text-align: center;
-}
-
 .cancel-btn {
   color: #42DDF2FF !important;
 }
@@ -498,78 +293,45 @@ const submitAddTeam = async () => {
   margin-left: 16px;
 }
 
-.team-slot {
+/* Error messages */
+.error-message {
+  color: #fed854;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* Deep selectors for Vuetify overrides */
+:deep(.v-field) {
+  background: rgba(45, 55, 75, 0.8) !important;
+}
+
+:deep(.v-field__input),
+:deep(.v-input input),
+:deep(.v-list-item__content),
+:deep(.v-select__selection) {
+  color: white !important;
+}
+
+:deep(.v-label) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.v-text-field), :deep(.v-select) {
   margin-bottom: 16px;
 }
 
-.team-slot .d-flex {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  display: block !important;
 }
 
-.team-slot .v-autocomplete,
-.team-slot .v-text-field {
-  flex: 1;
-}
-
-.team-list-item {
-  padding: 8px 16px;
-  transition: background-color 0.2s;
-  border-radius: 4px;
-  margin: 2px 0;
-}
-
-.team-list-item:hover {
-  background: rgba(66, 221, 242, 0.1);
-}
-
-.team-list-item--selected {
-  background: rgba(66, 221, 242, 0.15);
-}
-
-:deep(.v-autocomplete .v-field__input) {
-  color: white !important;
-  min-height: 56px;
-}
-
-:deep(.v-autocomplete .v-field__append-inner) {
-  padding-top: 14px;
-}
-
-:deep(.v-list-item__content) {
-  color: white;
-}
-
+/* List styles */
 :deep(.v-list) {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 1px solid rgba(66, 221, 242, 0.3);
-}
-
-:deep(.v-select) {
-  background: transparent !important;
-}
-
-:deep(.v-text-field),
-:deep(.v-select) {
-  margin-bottom: 16px;
-}
-
-:deep(.filter-select) {
-  background: transparent !important;
-  color: #ffffff !important;
-  border-color: #42DDF2FF !important;
-}
-
-:deep(.v-select:focus),
-:deep(.v-select--active) {
-  background: transparent !important;
-  border-color: #42DDF2FF !important;
-}
-
-:deep(.v-menu__content) {
-  background: transparent !important;
-  box-shadow: none !important;
 }
 
 :deep(.v-list-item) {
@@ -582,52 +344,41 @@ const submitAddTeam = async () => {
   color: #42DDF2FF !important;
 }
 
-:deep(.v-messages__message) {
-  color: #fed854 !important;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  display: block !important;
+/* Error states */
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
 }
 
-:deep(.v-input input) {
-  color: white !important;
-}
-
-:deep(.v-field--variant-outlined.v-field--error) {
-  border-color: #fed854 !important;
-}
-
-:deep(.v-field--error .v-field__outline) {
-  color: #fed854 !important;
-}
-
-:deep(.v-text-field .v-field--error) {
-  --v-field-border-color: #fed854;
-}
-
-:deep(.v-field--error .v-label) {
-  color: #FED854FF !important;
-}
-
+:deep(.v-field--error .v-field__outline),
+:deep(.v-field--error .v-label),
+:deep(.v-field--error input::placeholder),
 :deep(.v-field--error .v-field__outline__start),
 :deep(.v-field--error .v-field__outline__end),
 :deep(.v-field--error .v-field__outline__notch) {
   border-color: #fed854 !important;
+  color: #fed854 !important;
 }
 
-:deep(.v-field--error input::placeholder),
-:deep(.v-field--error .v-label.v-field-label) {
-  color: #fed854 !important;
+/* Custom scrollbar */
+:deep(.v-overlay__content) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(66, 221, 242, 0.5) transparent;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar-thumb) {
+  background-color: rgba(66, 221, 242, 0.5);
+  border-radius: 4px;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar-thumb:hover) {
+  background-color: rgba(66, 221, 242, 0.7);
 }
 
 :deep(.v-field__outline) {
   color: rgba(66, 221, 242, 0.3) !important;
 }
-
-:deep(.v-file-input .v-field__input) {
-  color: white !important;
-  font-size: 0.9rem;
-}
-
-
 </style>
