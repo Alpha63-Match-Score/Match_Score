@@ -56,6 +56,17 @@ export interface Match {
   tournament_title: string
 }
 
+export interface Prize {
+  id: string
+  place: number
+  prize_cut: number
+  tournament_id: string
+  tournament_name: string
+  team_id: string | null
+  team_name: string | null
+  team_logo: string | null
+}
+
 export interface FilterOption {
   text: string
   value: string

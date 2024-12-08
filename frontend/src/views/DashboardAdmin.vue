@@ -18,7 +18,6 @@
         @open-update-player="openUpdatePlayerDialog"
       />
 
-
       <!-- Requests Management Section -->
       <AdminRequestManagement />
 
