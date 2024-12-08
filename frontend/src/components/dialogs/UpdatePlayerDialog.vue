@@ -234,20 +234,38 @@ const rules = {
   ]
 }
 
-// Check if there are any changes to save
+const hasValidationErrors = computed(() => {
+  const isRequiredFieldEmpty = !playerUsername.value ||
+                             !playerFirstName.value ||
+                             !playerLastName.value ||
+                             !playerCountry.value;
+
+  const hasUsernameError = playerUsername.value && !rules.username.every(rule => rule(playerUsername.value) === true);
+  const hasFirstNameError = playerFirstName.value && !rules.firstName.every(rule => rule(playerFirstName.value) === true);
+  const hasLastNameError = playerLastName.value && !rules.lastName.every(rule => rule(playerLastName.value) === true);
+  const hasCountryError = playerCountry.value && !rules.country.every(rule => rule(playerCountry.value) === true);
+
+  return isRequiredFieldEmpty ||
+         hasUsernameError ||
+         hasFirstNameError ||
+         hasLastNameError ||
+         hasCountryError;
+})
+
+
 const hasChanges = computed(() => {
   if (!selectedPlayer.value) return false;
 
   const hasPlayerDataChanges =
-    playerUsername.value !== selectedPlayer.value.username ||
-    playerFirstName.value !== selectedPlayer.value.first_name ||
-    playerLastName.value !== selectedPlayer.value.last_name ||
-    playerCountry.value !== selectedPlayer.value.country ||
-    selectedTeam.value !== selectedPlayer.value.team_name;
+    (playerUsername.value !== selectedPlayer.value.username) ||
+    (playerFirstName.value !== selectedPlayer.value.first_name) ||
+    (playerLastName.value !== selectedPlayer.value.last_name) ||
+    (playerCountry.value !== selectedPlayer.value.country) ||
+    (selectedTeam.value !== (selectedPlayer.value.team_name || ''));
 
   const hasAvatarChanges = playerAvatar.value !== null;
 
-  return hasPlayerDataChanges || hasAvatarChanges;
+  return (hasPlayerDataChanges || hasAvatarChanges) && !hasValidationErrors.value;
 })
 
 // Methods
