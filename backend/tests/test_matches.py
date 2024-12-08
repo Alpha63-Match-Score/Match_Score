@@ -1146,7 +1146,9 @@ class MatchServiceShould(unittest.TestCase):
             self.match.team1_score = 14
             self.match.team2_score = 14
 
-            result = update_match_score(self.db, self.match_id, "team1", self.director_user)
+            result = update_match_score(
+                self.db, self.match_id, "team1", self.director_user
+            )
 
             self.assertEqual(result.team1_score, 15)
             self.assertEqual(result.team2_score, 14)
@@ -1158,6 +1160,7 @@ class MatchServiceShould(unittest.TestCase):
         losing_team = self.team2
 
         from src.crud.match import _handle_finished_match
+
         _handle_finished_match(self.db, self.match, losing_team)
 
         self.assertIsNotNone(losing_team.tournament_id)

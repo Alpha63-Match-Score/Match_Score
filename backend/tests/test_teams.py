@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 from src.crud.team import (
     create_team,
@@ -14,8 +13,8 @@ from src.crud.team import (
     leave_top_teams_from_robin_round,
     update_team,
 )
-from src.models import Match, Player, Team, Tournament, User
-from src.models.enums import Role, Stage, MatchFormat
+from src.models import Match, Team, Tournament, User
+from src.models.enums import MatchFormat, Role, Stage
 from src.schemas.team import TeamCreate, TeamUpdate
 from src.utils.pagination import PaginationParams
 
@@ -110,7 +109,7 @@ class TeamServiceShould(unittest.TestCase):
     @patch("src.utils.validators.team_name_unique")
     @patch("src.utils.s3.s3_service.upload_file")
     def test_create_team_success(
-            self, mock_upload_file, mock_team_name_unique, mock_director_or_admin
+        self, mock_upload_file, mock_team_name_unique, mock_director_or_admin
     ):
         """Test creating a team successfully."""
         mock_director_or_admin.return_value = None
@@ -175,8 +174,12 @@ class TeamServiceShould(unittest.TestCase):
         self.assertEqual(result.team_stats["matches_played"], 10)
         self.assertEqual(result.team_stats["matches_won"], 5)
         self.assertEqual(result.team_stats["tournaments_won"], 1)
-        self.assertEqual(result.team_stats["tournaments_played"], 0)  # Това е 0 според резултата
-        self.assertEqual(result.team_stats["most_often_played_opponent"], opponent_team.name)
+        self.assertEqual(
+            result.team_stats["tournaments_played"], 0
+        )  # Това е 0 според резултата
+        self.assertEqual(
+            result.team_stats["most_often_played_opponent"], opponent_team.name
+        )
         self.assertEqual(result.team_stats["best_opponent"], opponent_team.name)
         self.assertEqual(result.team_stats["worst_opponent"], opponent_team.name)
 
@@ -205,12 +208,12 @@ class TeamServiceShould(unittest.TestCase):
     @patch("src.utils.s3.s3_service.delete_file")
     @patch("src.utils.s3.s3_service.upload_file")
     def test_update_team_success(
-            self,
-            mock_upload_file,
-            mock_delete_file,
-            mock_team_name_unique,
-            mock_director_or_admin,
-            mock_team_exists,
+        self,
+        mock_upload_file,
+        mock_delete_file,
+        mock_team_name_unique,
+        mock_director_or_admin,
+        mock_team_exists,
     ):
         """Test updating a team successfully."""
         mock_team_exists.return_value = self.team
@@ -221,7 +224,9 @@ class TeamServiceShould(unittest.TestCase):
         team_update = TeamUpdate(name="Updated Team")
         logo = MagicMock(spec=UploadFile)
 
-        result = update_team(self.db, self.team_id, team_update, logo, self.director_user)
+        result = update_team(
+            self.db, self.team_id, team_update, logo, self.director_user
+        )
 
         self.db.commit.assert_called_once()
         self.db.refresh.assert_called_once()
@@ -262,7 +267,7 @@ class TeamServiceShould(unittest.TestCase):
         existing_team = Team(
             id=uuid4(),
             name="Existing Team",
-            tournament_id=uuid4()  # Already in a tournament
+            tournament_id=uuid4(),  # Already in a tournament
         )
 
         mock_query = MagicMock()
@@ -276,7 +281,9 @@ class TeamServiceShould(unittest.TestCase):
             )
 
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("already participates in another tournament", context.exception.detail)
+        self.assertIn(
+            "already participates in another tournament", context.exception.detail
+        )
 
     def test_leave_top_teams_from_robin_round(self):
         """Test leave_top_teams_from_robin_round successful execution."""
@@ -291,7 +298,7 @@ class TeamServiceShould(unittest.TestCase):
             team2_score=14,
             winner_team_id=team1.id,
             tournament=self.tournament,
-            tournament_id=self.tournament_id
+            tournament_id=self.tournament_id,
         )
         match2 = Match(
             team1=team1,
@@ -300,7 +307,7 @@ class TeamServiceShould(unittest.TestCase):
             team2_score=10,
             winner_team_id=team1.id,
             tournament=self.tournament,
-            tournament_id=self.tournament_id
+            tournament_id=self.tournament_id,
         )
         match3 = Match(
             team1=team2,
@@ -309,7 +316,7 @@ class TeamServiceShould(unittest.TestCase):
             team2_score=12,
             winner_team_id=team2.id,
             tournament=self.tournament,
-            tournament_id=self.tournament_id
+            tournament_id=self.tournament_id,
         )
 
         self.tournament.teams = [team1, team2, team3]
@@ -417,20 +424,14 @@ class TeamServiceShould(unittest.TestCase):
 
     def test_create_teams_lst_existing_team_no_tournament(self):
         """Test creating teams list with existing team not in tournament."""
-        existing_team = Team(
-            id=uuid4(),
-            name="Existing Team",
-            tournament_id=None
-        )
+        existing_team = Team(id=uuid4(), name="Existing Team", tournament_id=None)
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = existing_team
         self.db.query.return_value = mock_query
 
-        create_teams_lst_for_tournament(
-            self.db, ["Existing Team"], self.tournament_id
-        )
+        create_teams_lst_for_tournament(self.db, ["Existing Team"], self.tournament_id)
 
         self.assertEqual(existing_team.tournament_id, self.tournament_id)
 
@@ -461,11 +462,7 @@ class TeamServiceShould(unittest.TestCase):
 
         self.db.query.side_effect = side_effect
 
-        result = get_teams(
-            self.db,
-            self.pagination,
-            sort_by="desc"
-        )
+        result = get_teams(self.db, self.pagination, sort_by="desc")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Losing Team")
@@ -481,7 +478,6 @@ class TeamServiceShould(unittest.TestCase):
         mock_query.all.return_value = [team]
         self.db.query.return_value = mock_query
 
-
         mock_player_counts = [(team.id, 5)]
         mock_player_query = MagicMock()
         mock_player_query.group_by.return_value.all.return_value = mock_player_counts
@@ -495,10 +491,7 @@ class TeamServiceShould(unittest.TestCase):
 
         self.db.query.side_effect = side_effect
 
-        result = get_teams(
-            self.db,
-            self.pagination
-        )
+        result = get_teams(self.db, self.pagination)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Tournament Team")
@@ -527,32 +520,21 @@ class TeamServiceShould(unittest.TestCase):
 
         self.db.query.side_effect = side_effect
 
-        result = get_teams(
-            self.db,
-            self.pagination,
-            has_space="false"
-        )
+        result = get_teams(self.db, self.pagination, has_space="false")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Full Team")
 
         call_count = 0
 
-        result_with_space = get_teams(
-            self.db,
-            self.pagination,
-            has_space="true"
-        )
+        result_with_space = get_teams(self.db, self.pagination, has_space="true")
 
         self.assertEqual(len(result_with_space), 0)
 
     def test_get_teams_with_available_space(self):
         """Test get_teams filtering for teams with
         available space (less than 10 players)."""
-        team = Team(id=uuid4(),
-                    name="Team With Space",
-                    played_games=5,
-                    won_games=2)
+        team = Team(id=uuid4(), name="Team With Space", played_games=5, won_games=2)
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
@@ -574,22 +556,14 @@ class TeamServiceShould(unittest.TestCase):
 
         self.db.query.side_effect = side_effect
 
-        result = get_teams(
-            self.db,
-            self.pagination,
-            has_space="true"
-        )
+        result = get_teams(self.db, self.pagination, has_space="true")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Team With Space")
 
         call_count = 0
 
-        result_full = get_teams(
-            self.db,
-            self.pagination,
-            has_space="false"
-        )
+        result_full = get_teams(self.db, self.pagination, has_space="false")
 
         self.assertEqual(len(result_full), 0)
 
