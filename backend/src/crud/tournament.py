@@ -39,7 +39,21 @@ def get_tournaments(
     search: str | None = None,
     author_id: UUID | None = None,
 ) -> list[TournamentListResponse]:
+    """
+    Retrieve a list of tournaments based on various filters.
 
+    Args:
+        db (Session): The database session.
+        pagination (PaginationParams): Pagination parameters.
+        period (Literal["past", "present", "future"], optional): The period filter for tournaments.
+        status (Literal["active", "finished"], optional): The status filter for tournaments.
+        tournament_format (TournamentFormat, optional): The format filter for tournaments.
+        search (str, optional): The search filter for tournament titles.
+        author_id (UUID, optional): The author filter for tournaments.
+
+    Returns:
+        list[TournamentListResponse]: A list of tournament responses.
+    """
     query = db.query(Tournament)
 
     filters = []
@@ -65,7 +79,16 @@ def get_tournaments(
     ]
 
 
-def _get_period_filter(period: Literal["past", "present", "future"] | None):
+def _get_period_filter(period: Literal["past", "present", "future"] | None) -> list:
+    """
+    Generate a filter for tournaments based on the specified period.
+
+    Args:
+        period (Literal["past", "present", "future"], optional): The period filter for tournaments.
+
+    Returns:
+        list: A list of SQLAlchemy filter conditions.
+    """
     if not period:
         return []
 
@@ -93,7 +116,17 @@ def _get_period_filter(period: Literal["past", "present", "future"] | None):
         ]
 
 
-def _get_status_filter(status: Literal["active", "finished"] | None):
+def _get_status_filter(status: Literal["active", "finished"] | None) -> list:
+    """
+    Generate a filter for tournaments based on the specified status.
+
+    Args:
+        status (Literal["active", "finished"], optional):
+        The status filter for tournaments.
+
+    Returns:
+        list: A list of SQLAlchemy filter conditions.
+    """
     if not status:
         return []
 
@@ -103,21 +136,49 @@ def _get_status_filter(status: Literal["active", "finished"] | None):
         return [Tournament.current_stage == Stage.FINISHED]
 
 
-def _get_format_filter(tournament_format: TournamentFormat | None):
+def _get_format_filter(tournament_format: TournamentFormat | None) -> list:
+    """
+    Generate a filter for tournaments based on the specified format.
+
+    Args:
+        tournament_format (TournamentFormat, optional):
+        The format filter for tournaments.
+
+    Returns:
+        list: A list of SQLAlchemy filter conditions.
+    """
     if not tournament_format:
         return []
 
     return [Tournament.tournament_format == tournament_format]
 
 
-def _get_search_filter(search: str | None):
+def _get_search_filter(search: str | None) -> list:
+    """
+    Generate a filter for tournaments based on the search query.
+
+    Args:
+        search (str, optional): The search filter for tournament titles.
+
+    Returns:
+        list: A list of SQLAlchemy filter conditions.
+    """
     if not search:
         return []
 
     return [Tournament.title.ilike(f"%{search}%")]
 
 
-def _get_author_filter(author_id: UUID | None):
+def _get_author_filter(author_id: UUID | None) -> list:
+    """
+    Generate a filter for tournaments based on the author's ID.
+
+    Args:
+        author_id (UUID, optional): The author's ID filter for tournaments.
+
+    Returns:
+        list: A list of SQLAlchemy filter conditions.
+    """
     if not author_id:
         return []
 
@@ -125,7 +186,16 @@ def _get_author_filter(author_id: UUID | None):
 
 
 def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
+    """
+    Retrieve a tournament by its ID and gather its participants.
 
+    Args:
+        db (Session): The database session.
+        tournament_id (UUID): The ID of the tournament to retrieve.
+
+    Returns:
+        TournamentListResponse: The detailed response of the tournament.
+    """
     db_tournament = v.tournament_exists(db, tournament_id)
 
     participants = []
@@ -141,7 +211,17 @@ def get_tournament(db: Session, tournament_id: UUID) -> TournamentListResponse:
 def create_tournament(
     db: Session, tournament: TournamentCreate, current_user: UserResponse
 ) -> TournamentDetailResponse:
+    """
+    Create a new tournament and validate the provided data.
 
+    Args:
+        db (Session): The database session.
+        tournament (TournamentCreate): The tournament data to create.
+        current_user (UserResponse): The current user creating the tournament.
+
+    Returns:
+        TournamentDetailResponse: The detailed response of the created tournament.
+    """
     try:
         # Creating a new tournament
         db.begin_nested()
@@ -207,7 +287,19 @@ def create_tournament(
 def _get_tournament_current_stage(
     tournament_format: str, number_of_teams: int
 ) -> Stage:
+    """
+    Determine the current stage of a tournament based on its format and number of teams.
 
+    Args:
+        tournament_format (str): The format of the tournament.
+        number_of_teams (int): The number of teams in the tournament.
+
+    Returns:
+        Stage: The current stage of the tournament.
+
+    Raises:
+        HTTPException: If the number of teams is invalid for the given tournament format.
+    """
     if tournament_format == TournamentFormat.SINGLE_ELIMINATION:
         if number_of_teams not in c.SINGLE_ELIMINATION_TEAMS:
             raise HTTPException(
@@ -244,7 +336,19 @@ def _calculate_tournament_end_date(
     current_stage: Stage,
     total_teams: int,
 ) -> datetime:
+    """
+    Calculate the end date of a tournament based on its start date,
+    format, current stage, and total number of teams.
 
+    Args:
+        start_date (datetime): The start date of the tournament.
+        tournament_format (TournamentFormat): The format of the tournament.
+        current_stage (Stage): The current stage of the tournament.
+        total_teams (int): The total number of teams in the tournament.
+
+    Returns:
+        datetime: The calculated end date of the tournament.
+    """
     if tournament_format == TournamentFormat.ROUND_ROBIN:
         total_matches = total_teams * (total_teams - 1) // 2
         required_days = math.ceil((total_matches - 1) / c.MAX_MATCHES_PER_DAY) + 1
@@ -262,7 +366,21 @@ def update_tournament(
     tournament: TournamentUpdate,
     current_user: UserResponse,
 ) -> TournamentDetailResponse:
+    """
+    Update an existing tournament with the provided data.
 
+    Args:
+        db (Session): The database session.
+        tournament_id (UUID): The ID of the tournament to update.
+        tournament (TournamentUpdate): The updated tournament data.
+        current_user (UserResponse): The current user performing the update.
+
+    Returns:
+        TournamentDetailResponse: The detailed response of the updated tournament.
+
+    Raises:
+        HTTPException: If any validation fails.
+    """
     try:
         db.begin_nested()
 
