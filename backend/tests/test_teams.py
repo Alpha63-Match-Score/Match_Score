@@ -442,7 +442,6 @@ class TeamServiceShould(unittest.TestCase):
     def test_get_teams_with_lost_matches(self):
         """Test get_teams with a team that has lost matches."""
         team1 = Team(id=uuid4(), name="Losing Team", played_games=5, won_games=2)
-        winner_team = Team(id=uuid4(), name="Winning Team")
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
@@ -488,13 +487,6 @@ class TeamServiceShould(unittest.TestCase):
         mock_query.all.return_value = [team]
         self.db.query.return_value = mock_query
 
-        mock_match = Match(
-            id=uuid4(),
-            team1=team,
-            team2=Team(id=uuid4(), name="Opponent"),
-            tournament=finished_tournament,
-            tournament_id=finished_tournament.id
-        )
 
         mock_player_counts = [(team.id, 5)]
         mock_player_query = MagicMock()
@@ -561,8 +553,12 @@ class TeamServiceShould(unittest.TestCase):
         self.assertEqual(len(result_with_space), 0)
 
     def test_get_teams_with_available_space(self):
-        """Test get_teams filtering for teams with available space (less than 10 players)."""
-        team = Team(id=uuid4(), name="Team With Space", played_games=5, won_games=2)
+        """Test get_teams filtering for teams with
+        available space (less than 10 players)."""
+        team = Team(id=uuid4(),
+                    name="Team With Space",
+                    played_games=5,
+                    won_games=2)
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
@@ -605,7 +601,8 @@ class TeamServiceShould(unittest.TestCase):
 
     @patch("src.utils.validators.team_exists")
     def test_tournaments_played_when_match_finished(self, mock_team_exists):
-        """Test counting tournaments played when a match's tournament stage is finished."""
+        """Test counting tournaments played when a
+        match's tournament stage is finished."""
         mock_team_exists.return_value = self.team
 
         finished_tournament = Tournament(
