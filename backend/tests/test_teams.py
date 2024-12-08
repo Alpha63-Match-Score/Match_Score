@@ -476,12 +476,6 @@ class TeamServiceShould(unittest.TestCase):
         """Test get_teams for teams that participated in finished tournaments."""
         team = Team(id=uuid4(), name="Tournament Team", played_games=5, won_games=2)
 
-        finished_tournament = Tournament(
-            id=uuid4(),
-            title="Finished Tournament",
-            current_stage=Stage.FINISHED
-        )
-
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = [team]
