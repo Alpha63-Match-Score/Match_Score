@@ -4,12 +4,11 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
-
-from src.models import PrizeCut, Tournament
 from src.crud.prize_cut import (
     create_prize_cuts_for_tournament,
     delete_prize_cuts_for_tournament,
 )
+from src.models import PrizeCut, Tournament
 
 
 class PrizeCutServiceShould(unittest.TestCase):
@@ -22,12 +21,13 @@ class PrizeCutServiceShould(unittest.TestCase):
             title="Test Tournament",
             prize_pool=10000,
             start_date=datetime.now(),
-            end_date=datetime.now()
+            end_date=datetime.now(),
         )
 
     def test_create_prize_cut_success(self):
         """Test creating a single prize cut successfully."""
         from src.crud.prize_cut import _create_prize_cut
+
         # Arrange
         place = 1
         prize_amount = 7000
@@ -55,11 +55,9 @@ class PrizeCutServiceShould(unittest.TestCase):
         # Assert
         self.assertEqual(self.db.add.call_count, 2)
 
-
         call_args_list = self.db.add.call_args_list
         first_prize = call_args_list[0][0][0]
         second_prize = call_args_list[1][0][0]
-
 
         self.assertEqual(first_prize.place, 1)
         self.assertEqual(first_prize.prize_cut, expected_first_place)

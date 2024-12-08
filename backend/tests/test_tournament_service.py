@@ -1,29 +1,32 @@
-import unittest
 from datetime import datetime, timedelta, timezone
+import unittest
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
-
 from src.crud.tournament import (
-    get_tournaments,
-    get_tournament,
-    create_tournament,
-    update_tournament,
-    _get_period_filter,
-    _get_status_filter,
-    _get_format_filter,
-    _get_search_filter,
+    _calculate_tournament_end_date,
     _get_author_filter,
+    _get_format_filter,
+    _get_period_filter,
+    _get_search_filter,
+    _get_status_filter,
     _get_tournament_current_stage,
-    _calculate_tournament_end_date
+    create_tournament,
+    get_tournament,
+    get_tournaments,
+    update_tournament,
 )
-from src.models import Tournament, Team, User, Match, PrizeCut
-from src.models.enums import Role, Stage, TournamentFormat, MatchFormat
+from src.models import Match, Team, Tournament, User
+from src.models.enums import MatchFormat, Role, Stage, TournamentFormat
 from src.schemas.tournament import TournamentCreate, TournamentUpdate
 from src.utils.pagination import PaginationParams
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+)
 
 
 class TournamentServiceShould(unittest.TestCase):
@@ -37,19 +40,13 @@ class TournamentServiceShould(unittest.TestCase):
         self.tournament_id = uuid4()
 
         self.current_user = User(
-            id=self.user_id,
-            email="user@example.com",
-            role=Role.USER
+            id=self.user_id, email="user@example.com", role=Role.USER
         )
         self.admin_user = User(
-            id=self.admin_id,
-            email="admin@example.com",
-            role=Role.ADMIN
+            id=self.admin_id, email="admin@example.com", role=Role.ADMIN
         )
         self.director_user = User(
-            id=self.director_id,
-            email="director@example.com",
-            role=Role.DIRECTOR
+            id=self.director_id, email="director@example.com", role=Role.DIRECTOR
         )
 
         self.team1 = Team(
@@ -58,7 +55,7 @@ class TournamentServiceShould(unittest.TestCase):
             logo="logo1.png",
             played_games=5,
             won_games=3,
-            tournament_id=self.tournament_id
+            tournament_id=self.tournament_id,
         )
 
         self.team2 = Team(
@@ -67,7 +64,7 @@ class TournamentServiceShould(unittest.TestCase):
             logo="logo2.png",
             played_games=5,
             won_games=2,
-            tournament_id=self.tournament_id
+            tournament_id=self.tournament_id,
         )
 
         self.tournament = Tournament(
@@ -82,7 +79,7 @@ class TournamentServiceShould(unittest.TestCase):
             director=self.director_user,
             teams=[self.team1, self.team2],
             matches=[],
-            prize_cuts=[]
+            prize_cuts=[],
         )
 
         self.pagination = PaginationParams(offset=0, limit=10)
@@ -104,7 +101,7 @@ class TournamentServiceShould(unittest.TestCase):
             status="active",
             tournament_format=TournamentFormat.SINGLE_ELIMINATION,
             search="Test",
-            author_id=self.director_id
+            author_id=self.director_id,
         )
 
         self.assertEqual(len(result), 1)
@@ -122,10 +119,7 @@ class TournamentServiceShould(unittest.TestCase):
         mock_query.all.return_value = [self.tournament]
         self.db.query.return_value = mock_query
 
-        result = get_tournaments(
-            db=self.db,
-            pagination=self.pagination
-        )
+        result = get_tournaments(db=self.db, pagination=self.pagination)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].id, self.tournament_id)
@@ -133,7 +127,9 @@ class TournamentServiceShould(unittest.TestCase):
 
     def test_get_tournament_success(self):
         """Test get_tournament successfully retrieves a tournament."""
-        self.db.query.return_value.filter.return_value.first.return_value = self.tournament
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.tournament
+        )
 
         result = get_tournament(self.db, self.tournament_id)
 
@@ -155,10 +151,7 @@ class TournamentServiceShould(unittest.TestCase):
     @patch("src.crud.tournament.crud_team.create_teams_lst_for_tournament")
     @patch("src.crud.tournament.crud_prize_cut.create_prize_cuts_for_tournament")
     def test_create_tournament_success(
-            self,
-            mock_create_prize_cuts,
-            mock_create_teams,
-            mock_generate_matches
+        self, mock_create_prize_cuts, mock_create_teams, mock_generate_matches
     ):
         """Test create_tournament successfully creates a tournament."""
         tournament_create = TournamentCreate(
@@ -166,7 +159,7 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_format=TournamentFormat.SINGLE_ELIMINATION,
             start_date=datetime.now(timezone.utc) + timedelta(days=2),
             prize_pool=1000,
-            team_names=["Team 1", "Team 2", "Team 3", "Team 4"]
+            team_names=["Team 1", "Team 2", "Team 3", "Team 4"],
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = None
@@ -184,9 +177,7 @@ class TournamentServiceShould(unittest.TestCase):
         mock_generate_matches.return_value = None
 
         result = create_tournament(
-            db=self.db,
-            tournament=tournament_create,
-            current_user=self.director_user
+            db=self.db, tournament=tournament_create, current_user=self.director_user
         )
 
         self.assertEqual(result.title, "New Tournament")
@@ -203,20 +194,19 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_format=TournamentFormat.SINGLE_ELIMINATION,
             start_date=datetime.now(timezone.utc) + timedelta(days=2),
             prize_pool=1000,
-            team_names=["Team 1", "Team 1", "Team 2", "Team 3"]
+            team_names=["Team 1", "Team 1", "Team 2", "Team 3"],
         )
 
         with self.assertRaises(HTTPException) as context:
             create_tournament(
                 db=self.db,
                 tournament=tournament_create,
-                current_user=self.director_user
+                current_user=self.director_user,
             )
 
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            context.exception.detail,
-            "There is a duplicate team in the tournament list"
+            context.exception.detail, "There is a duplicate team in the tournament list"
         )
 
     def test_create_tournament_existing_title(self):
@@ -226,22 +216,23 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_format=TournamentFormat.SINGLE_ELIMINATION,
             start_date=datetime.now(timezone.utc) + timedelta(days=2),
             prize_pool=1000,
-            team_names=["Team 1", "Team 2", "Team 3", "Team 4"]
+            team_names=["Team 1", "Team 2", "Team 3", "Team 4"],
         )
 
-        self.db.query.return_value.filter.return_value.first.return_value = self.tournament
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.tournament
+        )
 
         with self.assertRaises(HTTPException) as context:
             create_tournament(
                 db=self.db,
                 tournament=tournament_create,
-                current_user=self.director_user
+                current_user=self.director_user,
             )
 
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            context.exception.detail,
-            "Tournament with this title already exists"
+            context.exception.detail, "Tournament with this title already exists"
         )
 
     def test_create_tournament_invalid_start_date(self):
@@ -251,7 +242,7 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_format=TournamentFormat.SINGLE_ELIMINATION,
             start_date=datetime.now(timezone.utc) - timedelta(days=1),
             prize_pool=1000,
-            team_names=["Team 1", "Team 2", "Team 3", "Team 4"]
+            team_names=["Team 1", "Team 2", "Team 3", "Team 4"],
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = None
@@ -260,13 +251,12 @@ class TournamentServiceShould(unittest.TestCase):
             create_tournament(
                 db=self.db,
                 tournament=tournament_create,
-                current_user=self.director_user
+                current_user=self.director_user,
             )
 
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            context.exception.detail,
-            "Start date must be at least 1 day in the future"
+            context.exception.detail, "Start date must be at least 1 day in the future"
         )
 
     def test_update_tournament_success(self):
@@ -274,7 +264,7 @@ class TournamentServiceShould(unittest.TestCase):
         tournament_update = TournamentUpdate(
             title="Updated Tournament",
             end_date=datetime.now(timezone.utc) + timedelta(days=7),
-            prize_pool=2000
+            prize_pool=2000,
         )
 
         self.tournament.teams = []
@@ -293,8 +283,14 @@ class TournamentServiceShould(unittest.TestCase):
         self.db.begin_nested.return_value.__enter__.return_value = None
         self.db.begin_nested.return_value.__exit__.return_value = None
 
-        with patch("src.crud.tournament.crud_prize_cut.delete_prize_cuts_for_tournament") as mock_delete_cuts, \
-                patch("src.crud.tournament.crud_prize_cut.create_prize_cuts_for_tournament") as mock_create_cuts:
+        with (
+            patch(
+                "src.crud.tournament.crud_prize_cut.delete_prize_cuts_for_tournament"
+            ) as mock_delete_cuts,
+            patch(
+                "src.crud.tournament.crud_prize_cut.create_prize_cuts_for_tournament"
+            ) as mock_create_cuts,
+        ):
             mock_delete_cuts.return_value = None
             mock_create_cuts.return_value = None
 
@@ -302,7 +298,7 @@ class TournamentServiceShould(unittest.TestCase):
                 db=self.db,
                 tournament_id=self.tournament_id,
                 tournament=tournament_update,
-                current_user=self.director_user
+                current_user=self.director_user,
             )
 
         self.assertEqual(result.title, "Updated Tournament")
@@ -318,16 +314,14 @@ class TournamentServiceShould(unittest.TestCase):
 
     def test_update_tournament_not_authorized(self):
         """Test update_tournament fails when user is not authorized."""
-        tournament_update = TournamentUpdate(
-            title="Updated Tournament"
-        )
+        tournament_update = TournamentUpdate(title="Updated Tournament")
 
         with self.assertRaises(HTTPException) as context:
             update_tournament(
                 db=self.db,
                 tournament_id=self.tournament_id,
                 tournament=tournament_update,
-                current_user=self.current_user
+                current_user=self.current_user,
             )
 
         self.assertEqual(context.exception.status_code, HTTP_403_FORBIDDEN)
@@ -372,44 +366,34 @@ class TournamentServiceShould(unittest.TestCase):
         filters = _get_author_filter(self.director_id)
         self.assertEqual(len(filters), 1)
 
-
     def test_get_tournament_current_stage_round_robin(self):
         """Test _get_tournament_current_stage for round robin format."""
-        stage = _get_tournament_current_stage(
-            TournamentFormat.ROUND_ROBIN.value,
-            4
-        )
+        stage = _get_tournament_current_stage(TournamentFormat.ROUND_ROBIN.value, 4)
         self.assertEqual(stage, Stage.GROUP_STAGE)
 
     def test_get_tournament_current_stage_one_off(self):
         """Test _get_tournament_current_stage for one off match format."""
-        stage = _get_tournament_current_stage(
-            TournamentFormat.ONE_OFF_MATCH.value,
-            2
-        )
+        stage = _get_tournament_current_stage(TournamentFormat.ONE_OFF_MATCH.value, 2)
         self.assertEqual(stage, Stage.FINAL)
 
     def test_get_tournament_current_stage_invalid_teams(self):
         """Test _get_tournament_current_stage with invalid number of teams."""
         with self.assertRaises(HTTPException) as context:
-            _get_tournament_current_stage(
-                TournamentFormat.SINGLE_ELIMINATION.value,
-                3
-            )
+            _get_tournament_current_stage(TournamentFormat.SINGLE_ELIMINATION.value, 3)
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
             context.exception.detail,
-            "Invalid number of teams for single "
-                    "elimination - must be 4, 8 or 16"
+            "Invalid number of teams for single " "elimination - must be 4, 8 or 16",
         )
 
     def test_validate_tournament_title_length(self):
         """Test validation for tournament title length when updating."""
-        from src.schemas.tournament import TournamentUpdate
-        from src.crud.tournament import update_tournament
-        from fastapi import HTTPException
-        from starlette.status import HTTP_400_BAD_REQUEST
         from unittest.mock import patch
+
+        from fastapi import HTTPException
+        from src.crud.tournament import update_tournament
+        from src.schemas.tournament import TournamentUpdate
+        from starlette.status import HTTP_400_BAD_REQUEST
 
         self.tournament.director_id = self.director_user.id
 
@@ -418,15 +402,17 @@ class TournamentServiceShould(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = self.tournament
         self.db.query.return_value = mock_query
 
-        invalid_update = TournamentUpdate.model_construct(title="", end_date=None, prize_pool=None)
+        invalid_update = TournamentUpdate.model_construct(
+            title="", end_date=None, prize_pool=None
+        )
 
-        with patch("src.schemas.tournament.TournamentUpdate.model_validate", return_value=invalid_update):
+        with patch(
+            "src.schemas.tournament.TournamentUpdate.model_validate",
+            return_value=invalid_update,
+        ):
             with self.assertRaises(HTTPException) as context:
                 update_tournament(
-                    self.db,
-                    self.tournament_id,
-                    invalid_update,
-                    self.director_user
+                    self.db, self.tournament_id, invalid_update, self.director_user
                 )
 
             self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
@@ -441,10 +427,7 @@ class TournamentServiceShould(unittest.TestCase):
         total_teams = 4
 
         result = _calculate_tournament_end_date(
-            start_date,
-            format,
-            current_stage,
-            total_teams
+            start_date, format, current_stage, total_teams
         )
 
         expected_end = start_date + timedelta(days=3)
@@ -456,51 +439,42 @@ class TournamentServiceShould(unittest.TestCase):
         self.assertEqual(result.second, expected_end.second)
 
         # Очакваме 4-ти декември (1-ви + 3 дни)
-        self.assertEqual(result.strftime('%Y-%m-%d'), '2024-12-04')
-
+        self.assertEqual(result.strftime("%Y-%m-%d"), "2024-12-04")
 
     def test_get_tournament_current_stage_invalid_one_off_teams(self):
         """Test _get_tournament_current_stage fails with
         invalid number of teams for one off match."""
         with self.assertRaises(HTTPException) as context:
-            _get_tournament_current_stage(
-                TournamentFormat.ONE_OFF_MATCH.value,
-                3
-            )
+            _get_tournament_current_stage(TournamentFormat.ONE_OFF_MATCH.value, 3)
 
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
             context.exception.detail,
-            "Invalid number of teams for one off match - must be 2"
+            "Invalid number of teams for one off match - must be 2",
         )
 
     def test_get_tournament_current_stage_invalid_round_robin_teams(self):
         """Test _get_tournament_current_stage fails with
         invalid number of teams for round robin."""
         with self.assertRaises(HTTPException) as context:
-            _get_tournament_current_stage(
-                TournamentFormat.ROUND_ROBIN.value,
-                3
-            )
+            _get_tournament_current_stage(TournamentFormat.ROUND_ROBIN.value, 3)
 
         self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(
             context.exception.detail,
-            "Invalid number of teams for round robin - must be 4 or 5"
+            "Invalid number of teams for round robin - must be 4 or 5",
         )
 
     def test_get_tournament_current_stage_single_elimination(self):
         """Test _get_tournament_current_stage returns correct stages
         for different number of teams in single elimination."""
         stage = _get_tournament_current_stage(
-            TournamentFormat.SINGLE_ELIMINATION.value,
-            4
+            TournamentFormat.SINGLE_ELIMINATION.value, 4
         )
         self.assertEqual(stage, Stage.SEMI_FINAL)
 
         stage = _get_tournament_current_stage(
-            TournamentFormat.SINGLE_ELIMINATION.value,
-            8
+            TournamentFormat.SINGLE_ELIMINATION.value, 8
         )
         self.assertEqual(stage, Stage.QUARTER_FINAL)
 
@@ -512,14 +486,13 @@ class TournamentServiceShould(unittest.TestCase):
         for num in invalid_numbers:
             with self.assertRaises(HTTPException) as context:
                 _get_tournament_current_stage(
-                    TournamentFormat.SINGLE_ELIMINATION.value,
-                    num
+                    TournamentFormat.SINGLE_ELIMINATION.value, num
                 )
 
             self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
             self.assertEqual(
                 context.exception.detail,
-                "Invalid number of teams for single elimination - must be 4, 8 or 16"
+                "Invalid number of teams for single elimination - must be 4, 8 or 16",
             )
 
     def test_get_tournament_with_teams(self):
@@ -537,7 +510,7 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_id=self.tournament_id,
             tournament=self.tournament,
             team1_score=0,
-            team2_score=0
+            team2_score=0,
         )
 
         team3_id = uuid4()
@@ -555,7 +528,7 @@ class TournamentServiceShould(unittest.TestCase):
             tournament_id=self.tournament_id,
             tournament=self.tournament,
             team1_score=0,
-            team2_score=0
+            team2_score=0,
         )
 
         self.tournament.matches = [match1, match2]
@@ -570,7 +543,4 @@ class TournamentServiceShould(unittest.TestCase):
 
         self.assertEqual(len(result.teams), 2)
         team_names = {team.name for team in result.teams}
-        self.assertEqual(
-            team_names,
-            {"Team 1", "Team 2"}
-        )
+        self.assertEqual(team_names, {"Team 1", "Team 2"})

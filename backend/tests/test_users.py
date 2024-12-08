@@ -4,7 +4,12 @@ from uuid import uuid4
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from src.crud.user import create_user, get_by_id, update_email, convert_db_to_user_response
+from src.crud.user import (
+    convert_db_to_user_response,
+    create_user,
+    get_by_id,
+    update_email,
+)
 from src.models.enums import Role
 from src.models.user import User
 from src.schemas.user import UserCreate
@@ -24,9 +29,10 @@ class UserServiceShould(unittest.TestCase):
     @patch("src.crud.user.user_email_exists")
     @patch("src.crud.user.send_email_notification")
     def test_create_user_success(
-            self, mock_send_email_notification,
-            mock_user_email_exists,
-            mock_get_password_hash
+        self,
+        mock_send_email_notification,
+        mock_user_email_exists,
+        mock_get_password_hash,
     ):
         """Test user creation succeeds with valid data."""
         mock_user_email_exists.side_effect = lambda db, email: None
@@ -54,7 +60,7 @@ class UserServiceShould(unittest.TestCase):
     @patch("src.utils.notifications.send_email_notification")
     @patch("src.utils.validators.user_email_exists")
     def test_create_user_email_exists(
-            self, mock_user_email_exists, mock_send_email_notification
+        self, mock_user_email_exists, mock_send_email_notification
     ):
         """Test user creation fails when email already exists."""
         mock_user_email_exists.side_effect = HTTPException(
@@ -71,10 +77,11 @@ class UserServiceShould(unittest.TestCase):
 
         mock_send_email_notification.assert_not_called()
 
-
     def test_get_user_by_id_success(self):
         """Test retrieving a user by ID succeeds."""
-        self.db.query.return_value.filter.return_value.first.return_value = self.current_user
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.current_user
+        )
 
         retrieved_user = get_by_id(db=self.db, user_id=self.user_id)
 
@@ -91,17 +98,18 @@ class UserServiceShould(unittest.TestCase):
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(context.exception.detail, "User not found.")
 
-
     @patch("src.crud.user.user_email_exists")
     @patch("src.crud.user.send_email_notification")
-    def test_update_email_success(self,
-                                  mock_send_email_notification,
-                                  mock_user_email_exists):
+    def test_update_email_success(
+        self, mock_send_email_notification, mock_user_email_exists
+    ):
         """Test updating user email succeeds."""
         mock_user_email_exists.return_value = None
 
         updated_email = "updated_email@example.com"
-        self.db.query.return_value.filter.return_value.first.return_value = self.current_user
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.current_user
+        )
         self.db.commit = MagicMock()
         self.db.refresh = MagicMock()
 
@@ -115,18 +123,16 @@ class UserServiceShould(unittest.TestCase):
             email="test_user@example.com",
             subject="Email Updated",
             message=f"Your email has been changed from "
-                    f"test_user@example.com to {updated_email}",
+            f"test_user@example.com to {updated_email}",
         )
         mock_send_email_notification.assert_any_call(
             email=updated_email,
             subject="Email Updated",
             message=f"Your email has been changed from "
-                    f"test_user@example.com to {updated_email}",
+            f"test_user@example.com to {updated_email}",
         )
 
-
         self.assertEqual(response["message"], "Email updated successfully.")
-
 
     @patch("src.utils.validators.user_email_exists")
     def test_update_email_conflict(self, mock_user_email_exists):
@@ -139,21 +145,16 @@ class UserServiceShould(unittest.TestCase):
             update_email(
                 db=self.db,
                 email="conflicting_email@example.com",
-                current_user=self.current_user
+                current_user=self.current_user,
             )
 
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(context.exception.detail, "Email already exists")
 
-
     def test_convert_db_to_user_response(self):
         """Test converting database User model to UserResponse schema."""
         # Arrange
-        test_user = User(
-            id=self.user_id,
-            email="test_user@example.com",
-            role=Role.USER
-        )
+        test_user = User(id=self.user_id, email="test_user@example.com", role=Role.USER)
 
         # Act
         user_response = convert_db_to_user_response(test_user)

@@ -6,15 +6,14 @@ from uuid import uuid4
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_404_NOT_FOUND
-
 from src.crud.request import (
     check_request_status,
     check_valid_request,
     get_all,
+    get_current_user_request,
     send_director_request,
     send_link_to_player_request,
-    update_request, get_current_user_request,
+    update_request,
 )
 from src.models import Request, User
 from src.models.enums import RequestStatus, RequestType, Role
@@ -40,7 +39,7 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.utils.validators.user_role_is_admin")
     @patch("src.models.Request")
     def test_get_all_requests_success(
-            self, mock_request_model, mock_user_role_is_admin
+        self, mock_request_model, mock_user_role_is_admin
     ):
         """Test get_all requests successfully retrieves requests for admin."""
         mock_user_role_is_admin.return_value = None
@@ -104,7 +103,7 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.utils.validators.user_role_is_user")
     @patch("src.crud.request.check_valid_request")
     def test_send_director_request_success(
-            self, mock_check_valid_request, mock_user_role_is_user
+        self, mock_check_valid_request, mock_user_role_is_user
     ):
         """Test send_director_request successfully creates a director request."""
         mock_user_role_is_user.return_value = None
@@ -197,8 +196,8 @@ class RequestServiceShould(unittest.TestCase):
         self.assertIsNotNone(response.request_date)
         self.assertIsNone(response.response_date)
 
-
     from unittest.mock import patch
+
     from fastapi import HTTPException, status
     from src.crud.request import send_link_to_player_request
 
@@ -206,26 +205,26 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.player_exists")
     @patch("src.crud.request.user_role_is_user")
     def test_send_link_to_player_request_player_not_exist(
-            self,
-            mock_user_role,
-            mock_player_exists,
-            mock_player_already_linked
+        self, mock_user_role, mock_player_exists, mock_player_already_linked
     ):
 
         mock_user_role.side_effect = lambda x: None
         mock_player_exists.side_effect = HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Player not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Player not found"
         )
 
         with self.assertRaises(HTTPException) as context:
-            send_link_to_player_request(self.db, self.current_user, "nonexistent_player")
+            send_link_to_player_request(
+                self.db, self.current_user, "nonexistent_player"
+            )
 
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(context.exception.detail, "Player not found")
 
         mock_user_role.assert_called_once_with(self.current_user)
-        mock_player_exists.assert_called_once_with(self.db, username="nonexistent_player")
+        mock_player_exists.assert_called_once_with(
+            self.db, username="nonexistent_player"
+        )
         mock_player_already_linked.assert_not_called()
 
     @patch("src.crud.request.send_email_notification")
@@ -234,12 +233,12 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.request_exists")
     @patch("src.utils.validators.user_role_is_admin")
     def test_update_request_accept_director(
-            self,
-            mock_user_role_is_admin,
-            mock_request_exists,
-            mock_user_exists,
-            mock_check_request_status,
-            mock_send_email_notification,
+        self,
+        mock_user_role_is_admin,
+        mock_request_exists,
+        mock_user_exists,
+        mock_check_request_status,
+        mock_send_email_notification,
     ):
         """Test update_request accepts a director promotion request."""
         # Mock the validators and dependencies
@@ -284,11 +283,11 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.user_exists")
     @patch("src.crud.request.check_request_status")
     def test_update_request_already_responded(
-            self,
-            mock_check_request_status,
-            mock_user_exists,
-            mock_request_exists,
-            mock_user_role_is_admin,
+        self,
+        mock_check_request_status,
+        mock_user_exists,
+        mock_request_exists,
+        mock_user_role_is_admin,
     ):
         """Test update_request raises exception when request has already
         been responded to."""
@@ -369,7 +368,6 @@ class RequestServiceShould(unittest.TestCase):
         except HTTPException:
             self.fail("check_request_status raised HTTPException unexpectedly!")
 
-
     def test_get_all_filter_by_admin(self):
         """Test get_all with filter_by_admin=True
         returns only requests by current admin."""
@@ -396,7 +394,7 @@ class RequestServiceShould(unittest.TestCase):
                 db=self.db,
                 current_user=self.admin_user,
                 pagination=self.pagination,
-                filter_by_admin=True
+                filter_by_admin=True,
             )
 
         self.db.query.assert_called_with(Request)
@@ -429,7 +427,7 @@ class RequestServiceShould(unittest.TestCase):
                 pagination=self.pagination,
                 sort_by="asc",
                 status=RequestStatus.ACCEPTED,
-                request_type=RequestType.LINK_USER_TO_PLAYER
+                request_type=RequestType.LINK_USER_TO_PLAYER,
             )
 
         self.assertEqual(len(result), 1)
@@ -447,9 +445,7 @@ class RequestServiceShould(unittest.TestCase):
 
         with patch("src.utils.validators.user_role_is_admin", return_value=None):
             result = get_all(
-                db=self.db,
-                current_user=self.admin_user,
-                pagination=self.pagination
+                db=self.db, current_user=self.admin_user, pagination=self.pagination
             )
 
         self.assertEqual(result, [])
@@ -462,7 +458,7 @@ class RequestServiceShould(unittest.TestCase):
             request_type=RequestType.LINK_USER_TO_PLAYER,
             status=RequestStatus.PENDING,
             request_date=datetime.now(),
-            response_date=None
+            response_date=None,
         )
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
@@ -471,7 +467,9 @@ class RequestServiceShould(unittest.TestCase):
         mock_query.limit.return_value = [mock_request]
         self.db.query.return_value = mock_query
 
-        result = get_current_user_request(db=self.db, current_user=self.current_user, pagination=self.pagination)
+        result = get_current_user_request(
+            db=self.db, current_user=self.current_user, pagination=self.pagination
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].request_type, RequestType.LINK_USER_TO_PLAYER)
         self.assertIsNotNone(result[0].request_date)
@@ -485,7 +483,9 @@ class RequestServiceShould(unittest.TestCase):
         mock_query.limit.return_value = []
         self.db.query.return_value = mock_query
 
-        result = get_current_user_request(db=self.db, current_user=self.current_user, pagination=self.pagination)
+        result = get_current_user_request(
+            db=self.db, current_user=self.current_user, pagination=self.pagination
+        )
         self.assertEqual(result, [])
 
     @patch("src.crud.request.player_exists")
@@ -495,13 +495,13 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.check_request_status")
     @patch("src.crud.request.send_email_notification")
     def test_update_request_link_user_to_player_accepted(
-            self,
-            mock_send_email_notification,
-            mock_check_request_status,
-            mock_user_exists,
-            mock_request_exists,
-            mock_user_role_is_admin,
-            mock_player_exists,
+        self,
+        mock_send_email_notification,
+        mock_check_request_status,
+        mock_user_exists,
+        mock_request_exists,
+        mock_user_role_is_admin,
+        mock_player_exists,
     ):
         """Test update_request accepting link user to player request."""
         mock_user_role_is_admin.return_value = None
@@ -518,7 +518,7 @@ class RequestServiceShould(unittest.TestCase):
             status=RequestStatus.PENDING,
             request_date=datetime.now(),
             response_date=None,
-            username="test_player"
+            username="test_player",
         )
         mock_request_exists.return_value = request
         mock_user_exists.return_value = self.current_user
@@ -544,13 +544,13 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.check_request_status")
     @patch("src.crud.request.send_email_notification")
     def test_update_request_link_user_to_player_rejected(
-            self,
-            mock_send_email_notification,
-            mock_check_request_status,
-            mock_user_exists,
-            mock_request_exists,
-            mock_user_role_is_admin,
-            mock_player_exists,
+        self,
+        mock_send_email_notification,
+        mock_check_request_status,
+        mock_user_exists,
+        mock_request_exists,
+        mock_user_role_is_admin,
+        mock_player_exists,
     ):
         """Test update_request rejecting link user to player request."""
         mock_user_role_is_admin.return_value = None
@@ -567,7 +567,7 @@ class RequestServiceShould(unittest.TestCase):
             status=RequestStatus.PENDING,
             request_date=datetime.now(),
             response_date=None,
-            username="test_player"
+            username="test_player",
         )
         mock_request_exists.return_value = request
         mock_user_exists.return_value = self.current_user
@@ -592,12 +592,12 @@ class RequestServiceShould(unittest.TestCase):
     @patch("src.crud.request.request_exists")
     @patch("src.utils.validators.user_role_is_admin")
     def test_update_request_director_rejected(
-            self,
-            mock_user_role_is_admin,
-            mock_request_exists,
-            mock_user_exists,
-            mock_check_request_status,
-            mock_send_email_notification,
+        self,
+        mock_user_role_is_admin,
+        mock_request_exists,
+        mock_user_exists,
+        mock_check_request_status,
+        mock_send_email_notification,
     ):
         """Test update_request rejects a director request."""
         mock_user_role_is_admin.return_value = None
@@ -641,9 +641,11 @@ class RequestServiceShould(unittest.TestCase):
                 request_date=datetime.now(),
                 response_date=None,
             )
-            with patch("src.crud.request.request_exists", return_value=request), \
-                    patch("src.crud.request.user_exists", return_value=self.current_user), \
-                    patch("src.crud.request.check_request_status", return_value=None):
+            with (
+                patch("src.crud.request.request_exists", return_value=request),
+                patch("src.crud.request.user_exists", return_value=self.current_user),
+                patch("src.crud.request.check_request_status", return_value=None),
+            ):
                 self.db.commit = MagicMock()
                 self.db.refresh = MagicMock()
 
@@ -657,4 +659,3 @@ class RequestServiceShould(unittest.TestCase):
                 self.assertIsNone(response)
                 self.db.commit.assert_not_called()
                 self.db.refresh.assert_not_called()
-

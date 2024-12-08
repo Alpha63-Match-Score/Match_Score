@@ -1,17 +1,17 @@
 from functools import lru_cache
 import os
-from typing import List, Union
 from pathlib import Path
+from typing import List, Union
+
 from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
-
 cwd = os.getcwd()
 possible_env_paths = [
-    Path(cwd) / '.env',
-    Path(cwd).parent / '.env',
-    Path(__file__).parent.parent.parent / '.env',
+    Path(cwd) / ".env",
+    Path(cwd).parent / ".env",
+    Path(__file__).parent.parent.parent / ".env",
 ]
 
 
@@ -20,6 +20,7 @@ for env_path in possible_env_paths:
         env_file = env_path
         load_dotenv(env_path)
         break
+
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
@@ -56,7 +57,7 @@ class Settings(BaseSettings):
         "case_sensitive": True,
         "env_file": str(env_file),
         "env_file_encoding": "utf-8",
-        "extra": "allow"
+        "extra": "allow",
     }
 
 
