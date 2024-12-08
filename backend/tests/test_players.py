@@ -284,7 +284,8 @@ class PlayerServiceShould(unittest.TestCase):
             self.assertEqual(result.current_tournament_title, "Test Tournament")
 
     def test_get_player_by_user_id_not_associated(self):
-        """Test getting a player by user ID when user is not associated with a player."""
+        """Test getting a player by user ID when user
+        is not associated with a player."""
         with patch(
                 "src.utils.validators.user_associated_with_player",
                 side_effect=HTTPException(
