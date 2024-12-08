@@ -370,113 +370,11 @@
     </v-dialog>
 
     <!-- Match Modal -->
-    <v-dialog v-model="showMatchModal" max-width="800px" class="match-dialog">
-      <v-card class="custom-dialog-card">
-        <v-card-title class="headline text-center">
-          {{ selectedMatch?.team1_name }} vs {{ selectedMatch?.team2_name }}
-        </v-card-title>
-        <v-card-text>
-          <div class="match-details-centered">
-            <!-- Add error alert -->
-            <v-alert
-              v-if="scoreUpdateError"
-              type="error"
-              variant="tonal"
-              class="mb-4 error-alert"
-              closable
-              @click:close="scoreUpdateError = ''"
-            >
-              {{ scoreUpdateError }}
-            </v-alert>
-            <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
-            <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
-            <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not finished' }}</div>
-
-            <div class="match-layout">
-              <div class="team-info-left">
-                <div class="avatar-container">
-                  <div class="edit-container" v-if="canEdit" @click="openTeamEdit">
-                    <v-icon
-                      icon="mdi-pencil"
-                      class="edit-icon"
-                    ></v-icon>
-                    <span class="edit-text">Edit Teams</span>
-                  </div>
-                  <v-tooltip location="top">
-                    <template v-slot:activator="{ props }">
-                      <router-link :to="`/teams/${selectedMatch?.team1_id}`" class="team-avatar-link">
-                        <v-avatar class="team-avatar" size="150" v-bind="props">
-                          <v-img v-if="selectedMatch?.team1_logo" :src="selectedMatch.team1_logo" :alt="selectedMatch.team1_name"></v-img>
-                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                        </v-avatar>
-                      </router-link>
-                    </template>
-                    {{ selectedMatch?.team1_name }}
-                  </v-tooltip>
-                </div>
-                <span
-                  class="team-score"
-                  :class="{ 'clickable': canEdit }"
-                  @click="canEdit && handleScoreIncrement('team1')"
-                >
-                  {{ selectedMatch?.team1_score }}
-                </span>
-              </div>
-
-              <div class="score-divider">:</div>
-
-              <div class="team-info-right">
-                <span
-                  class="team-score"
-                  :class="{ 'clickable': canEdit }"
-                  @click="canEdit && handleScoreIncrement('team2')"
-                >
-                  {{ selectedMatch?.team2_score }}
-                </span>
-                <div class="avatar-container">
-                  <v-tooltip location="top">
-                    <template v-slot:activator="{ props }">
-                      <router-link :to="`/teams/${selectedMatch?.team2_id}`" class="team-avatar-link">
-                        <v-avatar class="team-avatar" size="150" v-bind="props">
-                          <v-img v-if="selectedMatch?.team2_logo" :src="selectedMatch.team2_logo" :alt="selectedMatch.team2_name"></v-img>
-                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                        </v-avatar>
-                      </router-link>
-                    </template>
-                    {{ selectedMatch?.team2_name }}
-                  </v-tooltip>
-                </div>
-              </div>
-            </div>
-
-            <div class="match-time">
-              <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-              <span class="time-text">
-                {{ selectedMatch ? format(new Date(selectedMatch.start_time), 'HH:mm, dd MMM yyyy') : '' }}
-              </span>
-              <v-icon
-                v-if="canEdit"
-                icon="mdi-pencil"
-                class="edit-icon ml-2"
-                @click="openTimeEdit"
-              ></v-icon>
-            </div>
-
-            <div v-if="selectedMatch?.winner_id" class="winner">
-              <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
-              <span class="winner-name">
-                {{ selectedMatch.winner_id === selectedMatch.team1_id ? selectedMatch.team1_name : selectedMatch.team2_name }}
-              </span>
-            </div>
-          </div>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="showMatchModal = false">
-            Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <MatchModalDialog
+      v-model="showMatchModal"
+      :match="selectedMatch"
+      :onMatchUpdate="refreshMatch"
+    />
 
     <!-- Time Edit Dialog -->
     <v-dialog v-model="showTimeEdit" max-width="500px">
@@ -594,6 +492,7 @@ import { API_URL } from '@/config'
 import singleEliminationBg from '@/assets/single-elimination.png'
 import roundRobinBg from '@/assets/round-robin.png'
 import oneOffMatchBg from '@/assets/one-off-match.png'
+import MatchModalDialog from "@/components/dialogs/MatchModalDialog.vue";
 
 interface Player {
   id: string
