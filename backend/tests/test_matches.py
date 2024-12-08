@@ -632,7 +632,6 @@ class MatchServiceShould(unittest.TestCase):
         self.db.commit = MagicMock()
         self.db.refresh = MagicMock()
 
-
         with patch("src.crud.match.send_email_notification") as mock_send:
             _validate_and_update_start_time(
                 self.match, match_update, "%B %d, %Y at %H:%M"
