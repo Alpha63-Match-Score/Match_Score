@@ -1081,7 +1081,7 @@ class MatchServiceShould(unittest.TestCase):
         self.tournament.start_date = start_time
         self.tournament.end_date = start_time + timedelta(days=5)
 
-        with patch("src.crud.match.send_email_notification") as mock_send:
+        with patch("src.crud.match.send_email_notification"):
             generate_matches(self.db, self.tournament)
 
             saved_matches = self.db.bulk_save_objects.call_args[0][0]
