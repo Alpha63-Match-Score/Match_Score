@@ -1025,28 +1025,34 @@ class MatchServiceShould(unittest.TestCase):
             mock_mark.assert_called_once_with(self.db, self.match, self.team2_id)
             self.assertEqual(result, self.match.team1)
 
+
     def test_generate_matches_next_day_scheduling(self):
         """Test generate_matches when matches overflow to next day."""
         from src.crud.match import generate_matches
         import src.crud.constants as c
 
-        self.tournament.teams = [self.team1, self.team2]
-        self.tournament.tournament_format = TournamentFormat.SINGLE_ELIMINATION
-        self.tournament.current_stage = Stage.QUARTER_FINAL
+        team3 = Team(id=uuid4(), name="Team 3", players=[])
+        team4 = Team(id=uuid4(), name="Team 4", players=[])
+        self.tournament.teams = [self.team1, self.team2, team3, team4]
 
-        base_date = datetime(2024, 12, 10, c.END_HOUR + 1, 0, tzinfo=timezone.utc)
-        self.tournament.end_date = base_date
+        self.tournament.tournament_format = TournamentFormat.ROUND_ROBIN
+        self.tournament.current_stage = Stage.GROUP_STAGE
 
-        expected_match_date = datetime(2024, 12, 8, 11, 0, tzinfo=timezone.utc)
+        start_time = datetime(2024, 12, 8, c.END_HOUR - 1, 0, tzinfo=timezone.utc)
+        self.tournament.start_date = start_time
+        self.tournament.end_date = start_time + timedelta(days=5)
 
         with patch("src.crud.match.send_email_notification") as mock_send:
             generate_matches(self.db, self.tournament)
 
             saved_matches = self.db.bulk_save_objects.call_args[0][0]
-            first_match = saved_matches[0]
 
-            self.assertEqual(first_match.start_time.hour, 11)
-            self.assertEqual(
-                first_match.start_time.replace(minute=0, second=0, microsecond=0),
-                expected_match_date
-            )
+            next_day_match = None
+            for match in saved_matches:
+                if match.start_time.day > start_time.day:
+                    next_day_match = match
+                    break
+
+            self.assertIsNotNone(next_day_match, "Should have a match scheduled for next day")
+            self.assertEqual(next_day_match.start_time.hour, 11)
+            self.assertEqual(next_day_match.start_time.day, start_time.day + 1)
