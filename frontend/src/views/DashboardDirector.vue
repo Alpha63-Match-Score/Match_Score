@@ -56,6 +56,7 @@
           <LoadMoreButton
             v-if="!isLoadingTournaments && hasMoreTournaments"
             :is-loading="isLoadingMore"
+            button-text="Load More Tournaments"
             @load-more="loadMoreTournaments"
           />
         </div>

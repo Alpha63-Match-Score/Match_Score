@@ -37,6 +37,25 @@ export interface Team {
   name: string
 }
 
+export interface Match {
+  id: string
+  match_format: string
+  start_time: string
+  is_finished: boolean
+  stage: string
+  team1_id: string
+  team2_id: string
+  team1_score: number
+  team2_score: number
+  team1_name: string
+  team2_name: string
+  team1_logo: string | null
+  team2_logo: string | null
+  winner_id: string | null
+  tournament_id: string
+  tournament_title: string
+}
+
 export interface FilterOption {
   text: string
   value: string

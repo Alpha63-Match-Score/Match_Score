@@ -1,7 +1,6 @@
 <template>
   <div class="about-wrapper">
-    <div class="header-image"></div>
-    <div class="header-overlay"></div>
+    <HeaderSection />
 
     <div class="content-wrapper">
       <!-- Welcome Card -->
@@ -142,19 +141,6 @@
   margin-left: -350px;
 }
 
-.header-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background-image: url('@/assets/top-image.png');
-  background-size: cover;
-  background-position: center;
-  z-index: 1;
-  opacity: 0.6;
-}
-
 .match-format-info {
   background: rgba(45, 55, 75, 0.8);
   border-radius: 20px;
@@ -177,20 +163,6 @@
   background: rgba(66, 221, 242, 0.2);
 }
 
-.header-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 400px;
-  background: linear-gradient(
-    to bottom,
-    rgba(23, 28, 38, 0) 0%,
-    rgba(23, 28, 38, 0.8) 20%,
-    rgba(23, 28, 38, 1) 80%
-  );
-  z-index: 2;
-}
 
 .content-wrapper {
   position: relative;
@@ -400,4 +372,5 @@
 </style>
 
 <script setup lang="ts">
+import HeaderSection from "@/components/HeaderSection.vue";
 </script>

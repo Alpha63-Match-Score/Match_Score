@@ -8,7 +8,7 @@
       :disabled="isLoading"
     >
       <v-icon left class="mr-2">mdi-refresh</v-icon>
-      Load More Tournaments
+      {{ buttonText }}
     </v-btn>
   </div>
 </template>
@@ -16,6 +16,7 @@
 <script setup lang="ts">
 defineProps<{
   isLoading: boolean
+  buttonText: string
 }>()
 
 defineEmits(['load-more'])
