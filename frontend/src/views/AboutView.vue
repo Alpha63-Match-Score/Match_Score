@@ -55,29 +55,29 @@
         </div>
 
         <div class="second-row" style="display: flex; gap: 24px;">
-          <!-- Tournament Types -->
+          <!-- Tournament Formats -->
           <div class="tournament-card" style="flex: 1;">
             <h2 class="section-title">
               <i class="mdi mdi-trophy" style="margin-right: 8px;"></i>
-              Tournament Types
+              Tournament Formats
             </h2>
             <div class="tournament-types">
               <div class="tournament-type">
                 <div class="tournament-info">
                   <h3>Single Elimination</h3>
-                  <p>Supports 4 or 8 teams competing through Quarter Finals, Semi Finals and the Grand Final. All matches are MR15 format - first team to 16 rounds wins!</p>
+                  <p>Supports 4 or 8 teams battling their way through Quarter Finals, Semi Finals and the ultimate Grand Final. All matches are MR15 format - first team to 16 rounds wins!</p>
                 </div>
               </div>
               <div class="tournament-type">
                 <div class="tournament-info">
                   <h3>Round Robin</h3>
-                  <p>Perfect for 4-5 teams where everyone plays against each other in MR12 format during the Group Stage, followed by the Grand Finals in MR15!</p>
+                  <p>Perfect for 4 or 5 teams where everyone faces off against each other in action-packed MR12 format matches during the intense Group Stage, followed by an epic Grand Finals clash in MR15!</p>
                 </div>
               </div>
               <div class="tournament-type">
                 <div class="tournament-info">
                   <h3>One Off Match</h3>
-                  <p>Two teams, one epic showdown! The perfect format for an intense head-to-head battle!</p>
+                  <p>The perfect high-stakes format for an intense head-to-head battle where legends are born and only one team emerges victorious! Every round counts!</p>
                 </div>
               </div>
             </div>
@@ -90,6 +90,10 @@
               Tournament Stages
             </h2>
             <div class="stages-grid">
+              <div class="stage-item">
+                <h4>Group Stage <span class="stage-duration">(2 days)</span></h4>
+                <p>A chaotic whisker-to-whisker battle where every kitten faces off against each other!</p>
+              </div>
               <div class="stage-item">
                 <h4>Quarter Finals <span class="stage-duration">(2 days)</span></h4>
                 <p>First major challenge in Single Elimination format!</p>
@@ -117,11 +121,11 @@
           </p>
           <div class="prizes-list">
             <div class="prize-item">
-              <i class="mdi mdi-crown" color="#FED854FF"></i>
+              <i class="mdi mdi-trophy" color="#FED854FF"></i>
               <span>1st Place: Golden Fish Bowl Trophy</span>
             </div>
             <div class="prize-item">
-              <i class="mdi mdi-medal" color="#C0C0C0"></i>
+              <i class="mdi mdi-trophy" color="#C0C0C0"></i>
               <span>2nd Place: Silver Milk Saucer</span>
             </div>
           </div>
@@ -183,7 +187,7 @@
     to bottom,
     rgba(23, 28, 38, 0) 0%,
     rgba(23, 28, 38, 0.8) 20%,
-    rgba(23, 28, 38, 1) 40%
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }
@@ -200,8 +204,7 @@
 .info-card,
 .tournament-card,
 .prizes-card,
-.stages-info,
-.match-format-info {
+.stages-info {
   background: rgba(45, 55, 75, 0.8);
   border-radius: 20px;
   border: 2px solid #42DDF2FF;
@@ -217,7 +220,8 @@
   grid-column: 1 / 2;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* За равномерно разпределение на съдържанието */
+  justify-content: space-between;
+  align-items: center;
 }
 
 .tournament-info-container {
@@ -395,3 +399,5 @@
 }
 </style>
 
+<script setup lang="ts">
+</script>

@@ -66,11 +66,12 @@
         <v-row v-else justify="center">
           <v-col v-for="match in matches" :key="match.id" cols="12" md="6" class="match-column">
             <v-card class="match-card" @click="openMatchDialog(match)">
-              <div class="match-background"></div>
-              <div class="match-content">
-                <div class="tournament-tag">{{ match.tournament_title }}</div>
-                <div class="tournament-format">
-                  {{ getTournamentFormat(match.tournament_id) }}
+              <div class="match-card-content match-list-card">
+                <div class="tournament-header-section">
+                  <h3 class="match-card-tournament-title">{{ match.tournament_title }}</h3>
+                  <div class="tournament-format">
+                    {{ getTournamentFormat(match.tournament_id).toUpperCase() }}
+                  </div>
                 </div>
                 <v-card-text>
                   <div class="match-layout">
@@ -108,13 +109,13 @@
                   <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
                   <span class="time-text">{{ format(new Date(match.start_time), 'HH:mm, dd MMM yyyy') }}</span>
                 </v-card-actions>
-              </div>
+                </div>
             </v-card>
           </v-col>
         </v-row>
 
         <!-- Match Modal -->
-        <v-dialog v-model="showMatchModal" max-width="800px">
+        <v-dialog v-model="showMatchModal" max-width="800px" class="match-dialog">
           <v-card class="custom-dialog-card">
             <v-card-title class="headline text-center">
               {{ selectedMatch?.team1_name }} vs {{ selectedMatch?.team2_name }}
@@ -123,46 +124,59 @@
               <div class="match-details-centered">
                 <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
                 <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
-                <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Ongoing' }}</div>
+                <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not finished' }}</div>
+
                 <div class="match-layout">
                   <div class="team-info-left">
                     <v-tooltip location="top">
                       <template v-slot:activator="{ props }">
-                        <v-avatar class="team-avatar" size="150" v-bind="props">
-                          <v-img v-if="selectedMatch?.team1_logo" :src="selectedMatch.team1_logo" :alt="selectedMatch.team1_name"></v-img>
-                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                        </v-avatar>
+                        <router-link :to="`/teams/${selectedMatch?.team1_id}`" class="team-avatar-link">
+                          <v-avatar class="team-avatar" size="150" v-bind="props">
+                            <v-img v-if="selectedMatch?.team1_logo" :src="selectedMatch.team1_logo" :alt="selectedMatch.team1_name"></v-img>
+                            <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                          </v-avatar>
+                        </router-link>
                       </template>
-                      {{ selectedMatch.team1_name }}
+                      {{ selectedMatch?.team1_name }}
                     </v-tooltip>
                     <span class="team-score">{{ selectedMatch?.team1_score }}</span>
                   </div>
                   <div class="score-divider">:</div>
+
                   <div class="team-info-right">
                     <span class="team-score">{{ selectedMatch?.team2_score }}</span>
                     <v-tooltip location="top">
                       <template v-slot:activator="{ props }">
-                        <v-avatar class="team-avatar" size="150" v-bind="props">
-                          <v-img v-if="selectedMatch?.team2_logo" :src="selectedMatch.team2_logo" :alt="selectedMatch.team2_name"></v-img>
-                          <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
-                        </v-avatar>
+                        <router-link :to="`/teams/${selectedMatch?.team2_id}`" class="team-avatar-link">
+                          <v-avatar class="team-avatar" size="150" v-bind="props">
+                            <v-img v-if="selectedMatch?.team2_logo" :src="selectedMatch.team2_logo" :alt="selectedMatch.team2_name"></v-img>
+                            <v-icon v-else icon="mdi-account" color="#42DDF2FF" size="40"></v-icon>
+                          </v-avatar>
+                        </router-link>
                       </template>
-                      {{ selectedMatch.team2_name }}
+                      {{ selectedMatch?.team2_name }}
                     </v-tooltip>
                   </div>
                 </div>
+
                 <div class="match-time">
                   <v-icon icon="mdi-clock-outline" class="mr-2 neon-text"></v-icon>
-                  <span class="time-text">{{ format(new Date(selectedMatch?.start_time), 'HH:mm, dd MMM yyyy') }}</span>
+                  <span class="time-text">
+                    {{ selectedMatch ? format(new Date(selectedMatch.start_time), 'HH:mm, dd MMM yyyy') : '' }}
+                  </span>
                 </div>
                 <div v-if="selectedMatch?.winner_id" class="winner">
                   <v-icon icon="mdi-crown" color="#fed854" size="24"></v-icon>
-                  <span class="winner-name">{{ selectedMatch.winner_id === selectedMatch.team1_id ? selectedMatch.team1_name : selectedMatch.team2_name }}</span>
+                  <span class="winner-name">
+                    {{ selectedMatch.winner_id === selectedMatch.team1_id ? selectedMatch.team1_name : selectedMatch.team2_name }}
+                  </span>
                 </div>
               </div>
             </v-card-text>
             <v-card-actions>
-              <v-btn color="primary" text @click="showMatchModal = false">Close</v-btn>
+              <v-btn @click="showMatchModal = false">
+                Close
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -301,7 +315,6 @@ const fetchTeams = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    console.log('Received teams data:', data)
 
     const teamsData = Array.isArray(data) ? data : (data.results || [])
 
@@ -309,7 +322,6 @@ const fetchTeams = async () => {
       text: team.name,
       value: team.name
     }))
-    console.log('Processed teams for dropdown:', teams.value)
   } catch (e) {
     console.error('Error fetching teams:', e)
   }
@@ -342,6 +354,14 @@ onMounted(() => {
   fetchMatches()
   fetchTournaments()
   fetchTeams()
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/matches') {
+      matches.value = event.detail.results
+      console.log('Received search results:', matches.value)
+      isLoadingMatches.value = false
+      matchesError.value = null
+    }
+  }) as EventListener)
 })
 
 watch([selectedStage, selectedIsFinished, selectedTeam], () => {
@@ -350,7 +370,14 @@ watch([selectedStage, selectedIsFinished, selectedTeam], () => {
 })
 
 onUnmounted(() => {
-  // Clean up if necessary
+  window.addEventListener('search-results', ((event: CustomEvent) => {
+    if (event.detail.route === '/matches') {
+      matches.value = event.detail.results
+      console.log('Received search results:', matches.value)
+      isLoadingMatches.value = false
+      matchesError.value = null
+    }
+  }) as EventListener)
 })
 </script>
 
@@ -383,7 +410,7 @@ onUnmounted(() => {
     to bottom,
     rgba(23, 28, 38, 0) 0%,
     rgba(23, 28, 38, 0.8) 25%,
-    rgba(23, 28, 38, 1) 50%
+    rgba(23, 28, 38, 1) 80%
   );
   z-index: 2;
 }
@@ -406,11 +433,13 @@ onUnmounted(() => {
   justify-content: flex-start;
 }
 
+
 .match-card {
+  height: 300px;
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(45, 55, 75, 0.8);
+  background: rgba(45, 55, 75, 0.4);
   backdrop-filter: blur(10px);
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
@@ -420,60 +449,52 @@ onUnmounted(() => {
 }
 
 .match-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(8, 117, 176, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px rgba(8, 117, 176, 0.4);
 }
 
-.match-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-position: center;
-  background-size: cover;
-  opacity: 0.1;
-  z-index: 1;
-}
-
-.match-content {
+.match-card-content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+  height: 100%;
   padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
-  width: auto;
 }
 
-.match-details-centered {
-  text-align: center;
+.tournament-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100px;
 }
 
-.tournament-title, .tournament-stage, .is-finished {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin: 10px 0;
+.match-card-tournament-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+  font-family: Orbitron, sans-serif;
+  max-width: 250px;
 }
 
 .match-layout {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
   gap: 20px;
   padding: 0 10px;
 }
 
-.team-info-left, .team-info-right {
+.match-card .team-info-left, .team-info-right {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
 }
 
-.team-avatar {
+.match-card .team-avatar {
   min-width: 60px;
   min-height: 60px;
   border: 2px solid #42ddf2;
@@ -481,7 +502,7 @@ onUnmounted(() => {
   transition: transform 0.2s ease;
 }
 
-.team-score {
+.match-card .team-score {
   font-size: 2rem;
   font-weight: bold;
   color: #fed854;
@@ -525,12 +546,6 @@ onUnmounted(() => {
   margin-left: 10px;
 }
 
-.team-info-left, .team-info-right {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Centers content horizontally */
-  flex: 1; /* Ensures equal width */
-}
 
 .team-info-left .team-score {
   margin-left: auto; /* Push the score inward */
@@ -541,6 +556,8 @@ onUnmounted(() => {
   margin-right: auto; /* Push the score inward */
   margin-left: 10px; /* Fine-tune spacing if needed */
 }
+
+
 
 .team-avatar {
   min-width: 60px;
@@ -578,26 +595,6 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.tournament-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.tournament-tag {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: auto; /* Adjust width */
-  background: rgba(45, 55, 75, 0);
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  color: #42DDF2FF;
-  border: 1px solid rgba(0, 255, 157, 0);
-  font-weight: bold;
-  text-align: center;
-}
 
 .tournament-format {
   display: inline-block !important; /* Adjust width based on content */
@@ -656,6 +653,12 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+.match-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
+
+
+
 .custom-dialog-card {
   width: 600px;
   margin: 0 auto;
@@ -664,69 +667,114 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
   border: 2px solid #42DDF2FF;
   box-shadow: 0 0 15px rgba(8, 87, 144, 0.3);
+  padding: 10px;
 }
 
-.v-dialog .v-card-title {
-  text-align: center;
-  color: #42DDF2FF;
-  font-size: 1.5rem;
-  font-weight: bold;
-  font-family: Orbitron, sans-serif;
-}
-
-.reset-filter-wrapper {
-  position: absolute;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  margin-top: 70px;
-}
-
-.filter-button-space {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 30px;
-  position: relative;
-  z-index: 4;
-}
-
-.reset-filter-wrapper {
-  position: absolute;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  margin-top: 70px;
-}
-
-.filter-button-space {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 30px;
-  position: relative;
-  z-index: 4;
-}
-
-.reset-filter-btn {
-  background: rgba(45, 55, 75, 0.4);
-  color: rgba(255, 255, 255, 0.7) !important;
-  border-color: #D0D0D0 !important;
-  border-width: 2px !important;
+.custom-dialog-card .v-btn {
+  background: rgba(17, 78, 112, 0.56) !important;
+  color: #42DDF2FF !important;
+  border: 2px solid #42DDF2FF !important;
   border-radius: 50px;
+  min-width: 120px;
+  font-weight: bold;
+  letter-spacing: 1px;
   transition: all 0.2s ease;
-  padding: 8px 16px !important;
-  font-size: 0.9rem !important;
-  display: inline-flex;
-  align-items: center;
-  margin-top: -50px;
 }
+
+.team-avatar-link {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.team-avatar-link:hover {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.custom-dialog-card .v-btn:hover {
+  background: rgba(66, 221, 242, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.custom-dialog-card .match-details-centered {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.match-details-centered .team-avatar:hover {
+  transform: none;
+  cursor: pointer;
+}
+
+.match-details-centered .team-avatar {
+  border: 3px solid rgba(66, 221, 242, 0);
+  background: rgba(8, 87, 144, 0.2);
+  transition: none;
+  cursor: default;
+}
+
+.custom-dialog-card .tournament-title {
+  color: #42DDF2FF;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-top: -30px;
+  align-self: center;
+}
+
+.custom-dialog-card .tournament-stage {
+  color: #FED854FF;
+  font-size: 1.2rem;
+}
+
+.custom-dialog-card .is-finished {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.custom-dialog-card .match-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  margin: 24px 0;
+}
+
+.custom-dialog-card .team-info-left, .team-info-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.custom-dialog-card .score-divider {
+  margin: 0 20px;
+  font-size: 2.5rem;
+  color: #FED854FF;
+  text-shadow: 0 0 10px rgba(238, 173, 60, 0.5);
+  align-self: center;
+  padding-bottom: 10px;
+}
+
+.custom-dialog-card .winner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.custom-dialog-card .winner-name {
+  color: #FED854FF;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+
+:deep(.v-card-title) {
+  color: #42DDF2FF !important;
+}
+
 
 .reset-filter-btn .mdi-filter-remove-outline {
   margin-right: 8px;

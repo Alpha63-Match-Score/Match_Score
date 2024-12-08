@@ -31,25 +31,27 @@ def get_all_matches(
     team_name: str | None = None,
 ) -> list[MatchResponse]:
 
-    if team_name:
-        v.team_exists(db, team_name=team_name)
-
-    query = (
-        db.query(Match)
-        .join(Team, or_(Match.team1_id == Team.id, Match.team2_id == Team.id))
-        .order_by(Match.start_time.desc())
-    )
+    query = db.query(Match).order_by(Match.start_time.desc())
 
     filters = []
     if tournament_title:
-        db_tournament = v.tournament_exists(db, tournament_title=tournament_title)
-        filters.append(Match.tournament_id == db_tournament.id)
+        filters.append(Tournament.title.ilike(f"%{tournament_title}%"))
+        db_tournament = db.query(Tournament).filter(Tournament.title.ilike(f"%{tournament_title}%")).all()
+        tournament_ids = [t.id for t in db_tournament]
+        filters.append(Match.tournament_id.in_(tournament_ids))
     if stage is not None:
         filters.append(Match.stage == stage)
     if is_finished is not None:
         filters.append(Match.is_finished == is_finished)
     if team_name:
-        filters.append(or_(Team.name == team_name))
+        v.team_exists(db, team_name=team_name)
+        query = query.join(Team, or_(
+            Match.team1_id == Team.id,
+            Match.team2_id == Team.id
+        )).filter(or_(
+            Team.name == team_name,  # Check team1
+            Team.name == team_name  # Check team2
+        )).distinct()  # Add distinct to avoid duplicates
 
     if filters:
         query = query.filter(*filters)

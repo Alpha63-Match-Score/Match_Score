@@ -370,7 +370,7 @@
     </v-dialog>
 
     <!-- Match Modal -->
-    <v-dialog v-model="showMatchModal" max-width="800px">
+    <v-dialog v-model="showMatchModal" max-width="800px" class="match-dialog">
       <v-card class="custom-dialog-card">
         <v-card-title class="headline text-center">
           {{ selectedMatch?.team1_name }} vs {{ selectedMatch?.team2_name }}
@@ -390,7 +390,7 @@
             </v-alert>
             <div class="tournament-title">{{ selectedMatch?.tournament_title }}</div>
             <div class="tournament-stage">{{ selectedMatch?.stage }}</div>
-            <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not Finished' }}</div>
+            <div class="is-finished">{{ selectedMatch?.is_finished ? 'Finished' : 'Not finished' }}</div>
 
             <div class="match-layout">
               <div class="team-info-left">
@@ -472,7 +472,6 @@
         </v-card-text>
         <v-card-actions>
           <v-btn @click="showMatchModal = false">
-            <v-icon left class="mr-2">mdi-close</v-icon>
             Close
           </v-btn>
         </v-card-actions>
@@ -1643,6 +1642,11 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+.match-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
+
+
 .custom-dialog-card {
   width: 600px;
   margin: 0 auto;
@@ -1674,7 +1678,6 @@ onMounted(async () => {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .tournament-title {
