@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from src.crud.user import create_user, get_by_id, update_email
+from src.crud.user import create_user, get_by_id, update_email, convert_db_to_user_response
 from src.models.enums import Role
 from src.models.user import User
 from src.schemas.user import UserCreate
@@ -91,6 +91,7 @@ class UserServiceShould(unittest.TestCase):
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(context.exception.detail, "User not found.")
 
+
     @patch("src.crud.user.user_email_exists")
     @patch("src.crud.user.send_email_notification")
     def test_update_email_success(self,
@@ -124,6 +125,7 @@ class UserServiceShould(unittest.TestCase):
 
         self.assertEqual(response["message"], "Email updated successfully.")
 
+
     @patch("src.utils.validators.user_email_exists")
     def test_update_email_conflict(self, mock_user_email_exists):
         """Test updating user email fails when the new email already exists."""
@@ -140,3 +142,21 @@ class UserServiceShould(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(context.exception.detail, "Email already exists")
+
+
+    def test_convert_db_to_user_response(self):
+        """Test converting database User model to UserResponse schema."""
+        # Arrange
+        test_user = User(
+            id=self.user_id,
+            email="test_user@example.com",
+            role=Role.USER
+        )
+
+        # Act
+        user_response = convert_db_to_user_response(test_user)
+
+        # Assert
+        self.assertEqual(str(user_response.id), self.user_id)
+        self.assertEqual(user_response.email, "test_user@example.com")
+        self.assertEqual(user_response.role, Role.USER)
