@@ -144,10 +144,9 @@ def send_director_request(db: Session, current_user: User) -> ResponseRequest:
     )
 
 
-def send_link_to_player_request(db: Session,
-                                current_user: User,
-                                username: str
-                                ) -> ResponseRequest:
+def send_link_to_player_request(
+    db: Session, current_user: User, username: str
+) -> ResponseRequest:
     """
     Send a request to link the current user to a player.
 
@@ -238,10 +237,9 @@ def update_request(
         return get_director_requests(db, current_user, status, request)
 
 
-def get_director_requests(db, admin: User,
-                          status: str,
-                          request: Request
-                          ) -> ResponseRequest:
+def get_director_requests(
+    db, admin: User, status: str, request: Request
+) -> ResponseRequest:
     """
     Handle a request to promote a user to director.
 
@@ -274,7 +272,9 @@ def get_director_requests(db, admin: User,
         return reject_director_request(db, admin, request)
 
 
-def accept_director_request(db, admin: User, user: User, request: Request) -> ResponseRequest:
+def accept_director_request(
+    db, admin: User, user: User, request: Request
+) -> ResponseRequest:
     """
     Accept a request to promote a user to director.
 

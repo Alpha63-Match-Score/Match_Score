@@ -226,11 +226,9 @@ def _get_pairs_single_elimination(db_tournament: Tournament) -> tuple:
     return team_pairs, first_match_datetime
 
 
-def update_match(db: Session,
-                 match_id: UUID,
-                 match: MatchUpdate,
-                 current_user
-                 ) -> MatchResponse:
+def update_match(
+    db: Session, match_id: UUID, match: MatchUpdate, current_user
+) -> MatchResponse:
     """
     Update a match's details.
 
@@ -277,10 +275,7 @@ def update_match(db: Session,
         raise e
 
 
-def _validate_match_update(db: Session,
-                           match_id: UUID,
-                           current_user
-                           ) -> Type[Match]:
+def _validate_match_update(db: Session, match_id: UUID, current_user) -> Type[Match]:
     """
     Validate the match update request.
 
@@ -301,10 +296,7 @@ def _validate_match_update(db: Session,
     return db_match
 
 
-def _validate_and_update_start_time(db_match,
-                                    match,
-                                    time_format
-                                    ) -> None:
+def _validate_and_update_start_time(db_match, match, time_format) -> None:
     """
     Validate and update the match start time.
 
@@ -336,13 +328,9 @@ def _validate_and_update_start_time(db_match,
         )
 
 
-def _update_team_and_notify_players(db,
-                                    db_match,
-                                    team_id,
-                                    opponent_team,
-                                    time_format,
-                                    is_team1=True
-                                    ) -> None:
+def _update_team_and_notify_players(
+    db, db_match, team_id, opponent_team, time_format, is_team1=True
+) -> None:
     """
     Update the team and notify players.
 
@@ -378,11 +366,12 @@ def _update_team_and_notify_players(db,
                 )
 
 
-def update_match_score(db: Session,
-                       match_id: UUID,
-                       team_to_upvote_score: Literal["team1", "team2"],
-                       current_user,
-                       ) -> MatchResponse:
+def update_match_score(
+    db: Session,
+    match_id: UUID,
+    team_to_upvote_score: Literal["team1", "team2"],
+    current_user,
+) -> MatchResponse:
     """
     Update the score of a match.
 
@@ -427,10 +416,9 @@ def update_match_score(db: Session,
         raise e
 
 
-def _validate_match_score_update(db: Session,
-                                 match_id: UUID,
-                                 current_user
-                                 ) -> Type[Match]:
+def _validate_match_score_update(
+    db: Session, match_id: UUID, current_user
+) -> Type[Match]:
     """
     Validate the match score update request.
 
@@ -455,9 +443,9 @@ def _validate_match_score_update(db: Session,
     return db_match
 
 
-def _update_score(db_match: Type[Match],
-                  team_to_upvote: Literal["team1", "team2"]
-                  ) -> None:
+def _update_score(
+    db_match: Type[Match], team_to_upvote: Literal["team1", "team2"]
+) -> None:
     """
     Update the score of a team in a match.
 
@@ -471,10 +459,7 @@ def _update_score(db_match: Type[Match],
         db_match.team2_score += 1
 
 
-def _handle_finished_match(db: Session,
-                           db_match: Match,
-                           losing_team: Team
-                           ) -> None:
+def _handle_finished_match(db: Session, db_match: Match, losing_team: Team) -> None:
     """
     Handle the actions to be taken when a match is finished.
 
@@ -556,9 +541,7 @@ def _match_team_prizes(db: Session, db_match: Match) -> None:
         db.refresh(prize.team)
 
 
-def _check_for_winner_for_mr15(db: Session,
-                               db_match: Match | Type[Match]
-                               ) -> Team:
+def _check_for_winner_for_mr15(db: Session, db_match: Match | Type[Match]) -> Team:
     """
     Check for the winner in a match with MR15 format.
 
@@ -600,9 +583,7 @@ def _check_for_winner_for_mr15(db: Session,
     db.refresh(db_match)
 
 
-def _check_for_winner_for_mr12(db: Session,
-                               db_match: Match | Type[Match]
-                               ) -> Team:
+def _check_for_winner_for_mr12(db: Session, db_match: Match | Type[Match]) -> Team:
     """
     Check for the winner in a match with MR12 format.
 
@@ -644,10 +625,7 @@ def _check_for_winner_for_mr12(db: Session,
     db.refresh(db_match)
 
 
-def _mark_match_as_finished(db: Session,
-                            db_match: Match,
-                            winner_team_id: UUID
-                            ) -> None:
+def _mark_match_as_finished(db: Session, db_match: Match, winner_team_id: UUID) -> None:
     """
     Mark a match as finished and update the teams' and players' statistics.
 

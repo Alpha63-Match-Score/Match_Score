@@ -116,4 +116,3 @@ def update_tournament(
     return tournament_crud.update_tournament(
         db, tournament_id, tournament, current_user
     )
-

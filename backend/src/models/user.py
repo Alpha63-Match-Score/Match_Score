@@ -25,7 +25,6 @@ class User(Base, BaseMixin):
     role = Column(Enum(Role), default=Role.USER, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
-
     requests_user = relationship(
         "Request", back_populates="user", foreign_keys="[Request.user_id]"
     )
