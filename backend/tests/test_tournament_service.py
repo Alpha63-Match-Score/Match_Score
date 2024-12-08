@@ -396,6 +396,12 @@ class TournamentServiceShould(unittest.TestCase):
                 TournamentFormat.SINGLE_ELIMINATION.value,
                 3
             )
+        self.assertEqual(context.exception.status_code, HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            context.exception.detail,
+            "Invalid number of teams for single "
+                    "elimination - must be 4, 8 or 16"
+        )
 
     def test_validate_tournament_title_length(self):
         """Test validation for tournament title length when updating."""

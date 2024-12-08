@@ -998,9 +998,11 @@ class MatchServiceShould(unittest.TestCase):
 
         self.tournament.teams = [self.team1, self.team2]
 
-        self.tournament.start_date = datetime.now(timezone.utc).replace(hour=c.END_HOUR + 1)
+        self.tournament.start_date = (datetime.now(timezone.utc).
+                                      replace(hour=c.END_HOUR + 1))
 
-        mock_player = MagicMock(user_id=uuid4(), user=MagicMock(email="test@example.com"))
+        mock_player = MagicMock(user_id=uuid4(),
+                                user=MagicMock(email="test@example.com"))
         self.team1.players = [mock_player]
         self.team2.players = [mock_player]
 
@@ -1009,7 +1011,13 @@ class MatchServiceShould(unittest.TestCase):
 
         with patch("src.crud.match.send_email_notification") as mock_send:
             generate_matches(self.db, self.tournament)
+
             mock_send.assert_called()
+
+            matches = self.db.query(Match).all()
+            for match in matches:
+                self.assertEqual(match.start_time.hour, c.START_HOUR)
+                self.assertTrue(match.start_time.date() > self.tournament.start_date.date())
 
     def test_generate_matches_with_player_notifications(self):
         """Test generate_matches with players having user_ids for notifications."""
