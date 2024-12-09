@@ -100,6 +100,27 @@ const showDialog = computed({
   align-items: center;
   padding: 24px;
   gap: 2px;
+   max-height: 80vh;
+  overflow-y: auto;
+}
+
+.request-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.request-dialog-content::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px;
+}
+
+.request-dialog-content::-webkit-scrollbar-thumb {
+  background: #42DDF2FF;
+  border-radius: 20px;
+}
+
+.request-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #42DDF2FF;
+  opacity: 0.8;
 }
 
 .request-stats-grid {
