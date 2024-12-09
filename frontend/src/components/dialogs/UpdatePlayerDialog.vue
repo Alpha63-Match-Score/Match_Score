@@ -121,9 +121,11 @@
               </v-autocomplete>
             </template>
 
-            <div v-else class="text-center mt-4">
-              This player is linked to a user and cannot be updated.
-            </div>
+            <v-card-text>
+              <div v-if="selectedPlayer?.user_email" class="text-center linked-player-message">
+                This player is linked to a user and cannot be updated.
+              </div>
+            </v-card-text>
           </div>
         </v-card-text>
 
@@ -544,6 +546,7 @@ onMounted(async () => {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
+  border-radius: 35px !important;
 }
 
 .dialog-content {
@@ -607,6 +610,13 @@ onMounted(async () => {
 :deep(.v-label) {
   color: rgba(255, 255, 255, 0.7) !important;
 }
+
+.linked-player-message {
+  color: white !important;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
 
 :deep(.v-messages) {
   min-height: 14px;
@@ -733,6 +743,8 @@ onMounted(async () => {
   scrollbar-width: thin;
   scrollbar-color: rgba(66, 221, 242, 0.5) transparent;
 }
+
+
 
 :deep(.v-overlay__content::-webkit-scrollbar) {
   width: 8px;
