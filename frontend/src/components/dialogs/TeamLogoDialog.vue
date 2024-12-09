@@ -1,31 +1,37 @@
 <template>
   <v-dialog v-model="showLogoEdit" max-width="500px" class="edit-dialog">
-  <v-card>
-    <v-card-title class="dialog-title">Update Team Logo</v-card-title>
-    <v-card-text>
-      <v-alert
-        v-if="logoError"
-        type="error"
-        variant="tonal"
-        class="mb-4"
-      >
-        {{ logoError }}
-      </v-alert>
-      <v-file-input
-        v-model="logoFile"
-        label="Choose logo"
-        accept="image/*"
-        variant="outlined"
-        prepend-icon="mdi-camera"
-      ></v-file-input>
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn color="error" @click="showLogoEdit = false">Cancel</v-btn>
-      <v-btn color="primary" @click="updateLogo">Save</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+    <v-card>
+      <v-card-title class="dialog-title">Update Team Logo</v-card-title>
+      <v-card-text>
+        <v-text-field
+          v-if="logoError"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          :messages="logoError"
+        ></v-text-field>
+        <v-file-input
+          v-model="logoFile"
+          label="Choose logo"
+          accept="image/*"
+          variant="outlined"
+          prepend-icon="mdi-camera"
+          :error-messages="fileError"
+        ></v-file-input>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn class="cancel-btn" @click="handleClose">Cancel</v-btn>
+        <v-btn
+          class="submit-btn"
+          :disabled="!logoFile"
+          @click="updateLogo"
+        >
+          Save
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -33,31 +39,41 @@ import { ref, watch, computed } from 'vue'
 import { API_URL } from '@/config'
 import { useAuthStore } from '@/stores/auth'
 
-// Props
 interface Props {
-  modelValue: boolean  // за v-model
+  modelValue: boolean
   teamId: string
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits(['update:modelValue', 'logoUpdated'])
 
-// State
 const logoFile = ref<File | null>(null)
 const logoError = ref('')
+const fileError = ref('')
 const authStore = useAuthStore()
 
-// Computed за v-model binding
 const showLogoEdit = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
 
-// Methods
+
+const handleClose = () => {
+  logoFile.value = null
+  logoError.value = ''
+  fileError.value = ''
+  showLogoEdit.value = false
+}
+
 const updateLogo = async () => {
-  if (!logoFile.value) return
+  if (!logoFile.value) {
+    fileError.value = 'Please select a logo image'
+    return
+  }
+
   try {
     logoError.value = ''
+    fileError.value = ''
     const formData = new FormData()
     formData.append('logo', logoFile.value)
 
@@ -77,19 +93,19 @@ const updateLogo = async () => {
       throw new Error(error)
     }
 
-    showLogoEdit.value = false
     emit('logoUpdated')
+    handleClose()
   } catch (e) {
     console.error('Error updating team logo:', e)
     logoError.value = (e as Error).message || 'Failed to update team logo'
   }
 }
 
-// Reset file input when dialog closes
 watch(() => props.modelValue, (newValue) => {
   if (!newValue) {
     logoFile.value = null
     logoError.value = ''
+    fileError.value = ''
   }
 })
 </script>
@@ -172,5 +188,22 @@ watch(() => props.modelValue, (newValue) => {
   &__prepend {
     color: #fed854 !important;
   }
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline),
+:deep(.v-field--error .v-label),
+:deep(.v-field--error input::placeholder) {
+  border-color: #fed854 !important;
+  color: #fed854 !important;
 }
 </style>
