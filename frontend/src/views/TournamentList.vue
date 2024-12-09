@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import type { Tournament, FilterValues } from '@/types/types'
+import type { Tournament, FilterValuesTournament } from '@/types/types'
 import { API_URL } from '@/config'
 import FilterBar from '@/components/TournamentFilterBar.vue';
 import HeaderSection from '@/components/HeaderSection.vue';
@@ -58,8 +58,22 @@ const selectedPeriod = ref<string | null>(null);
 const selectedStatus = ref<string | null>(null);
 const selectedFormat = ref<string | null>(null);
 
-const handleFiltersChange = async (filters: FilterValues) => {
+const currentSearch = ref<string>('');
+const currentFilters = ref<FilterValuesTournament>({
+  period: null,
+  status: null,
+  format: null
+});
+
+const getSearchFromURL = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('search') || '';
+};
+
+const handleFiltersChange = async (filters: FilterValuesTournament) => {
   try {
+    currentSearch.value = '';
+    currentFilters.value = filters;
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
     currentLimit.value = 10;
@@ -107,19 +121,44 @@ const fetchTournaments = async (loadMore = false) => {
       isLoadingMore.value = true;
     } else {
       isLoadingTournaments.value = true;
-      isFiltered.value = false; // Reset filter state when loading initial tournaments
+      isFiltered.value = false;
     }
     tournamentsError.value = null;
 
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
+    const params = new URLSearchParams();
+    params.append('offset', '0');
+    params.append('limit', currentLimit.value.toString());
+
+
+    const searchTerm = getSearchFromURL();
+    if (searchTerm) {
+      params.append('search', searchTerm);
+      console.log('Adding search term to request:', searchTerm);
+    }
+
+    if (currentFilters.value.period) {
+      params.append('period', currentFilters.value.period);
+    }
+    if (currentFilters.value.status) {
+      params.append('status', currentFilters.value.status);
+    }
+    if (currentFilters.value.format) {
+      params.append('tournament_format', currentFilters.value.format);
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/?${params}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
     const results = Array.isArray(data) ? data : (data.results || []);
 
-    tournaments.value = results;
-    hasMoreTournaments.value = results.length === currentLimit.value;
+    if (loadMore) {
+      tournaments.value = [...tournaments.value, ...results];
+    } else {
+      tournaments.value = results;
+    }
+    hasMoreTournaments.value = results.length === 10;
 
   } catch (e) {
     console.error('Error fetching tournaments:', e);

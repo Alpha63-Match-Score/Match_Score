@@ -97,7 +97,7 @@ import AddTournamentDialog from "@/components/dialogs/AddTournamentDialog.vue";
 import AddTeamDialog from "@/components/dialogs/AddTeamDialog.vue";
 import UpdatePlayerDialog from "@/components/dialogs/UpdatePlayerDialog.vue";
 import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
-import type { Tournament, Player, FilterValues } from '@/types/types'
+import type { Tournament, Player, FilterValuesTournament } from '@/types/types'
 import LoadMoreButton from "@/components/LoadMoreButton.vue";
 import HeaderSection from "@/components/HeaderSection.vue";
 
@@ -166,7 +166,7 @@ const handlePlayerUpdated = (updatedPlayer: Player) => {
   successMessage.value = `Player ${updatedPlayer.username} was successfully updated!`
 }
 
-const handleFiltersChange = async (filters: FilterValues) => {
+const handleFiltersChange = async (filters: FilterValuesTournament) => {
   try {
     isLoadingTournaments.value = true;
     tournamentsError.value = null;

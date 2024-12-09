@@ -12,12 +12,13 @@
         bg-color="rgba(45, 55, 75, 0.4)"
         color="#42DDF2FF"
         clearable
+        @update:model-value="emitFilterChange"
       ></v-select>
     </v-col>
     <v-col cols="12" md="3">
       <v-select
-        v-model="selectedIsFinished"
-        :items="isFinishedOptions"
+        v-model="selectedStatus"
+        :items="statusOptions"
         item-title="text"
         item-value="value"
         label="Status"
@@ -26,6 +27,7 @@
         bg-color="rgba(45, 55, 75, 0.4)"
         color="#42DDF2FF"
         clearable
+        @update:model-value="emitFilterChange"
       ></v-select>
     </v-col>
     <v-col cols="12" md="3">
@@ -40,48 +42,55 @@
         bg-color="rgba(45, 55, 75, 0.4)"
         color="#42DDF2FF"
         clearable
+        @update:model-value="emitFilterChange"
       ></v-select>
     </v-col>
   </v-row>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineEmits, defineProps } from 'vue'
+import { ref, watch } from 'vue'
 import type { FilterOption } from '@/types/types'
 
 const props = defineProps<{
   teams: FilterOption[]
 }>()
 
-const emit = defineEmits(['update:stage', 'update:status', 'update:team'])
+const emit = defineEmits<{
+  (event: 'filter-change', filters: {
+    stage: string | null
+    status: string | null
+    team: string | null
+  }): void
+}>()
 
 const selectedStage = ref<string | null>(null)
-const selectedIsFinished = ref<string | null>(null)
+const selectedStatus = ref<string | null>(null)
 const selectedTeam = ref<string | null>(null)
-
-watch(selectedStage, (newValue) => {
-  emit('update:stage', newValue)
-})
-
-watch(selectedIsFinished, (newValue) => {
-  emit('update:status', newValue)
-})
-
-watch(selectedTeam, (newValue) => {
-  emit('update:team', newValue)
-})
 
 const stages: FilterOption[] = [
   { text: 'Group Stage', value: 'group stage' },
-  { text: 'Quarter-finals', value: 'quarter finals' },
-  { text: 'Semi-finals', value: 'semi finals' },
-  { text: 'Finals', value: 'finals' }
+  { text: 'Quarter Final', value: 'quarter final' },
+  { text: 'Semi Final', value: 'semi final' },
+  { text: 'Final', value: 'final' }
 ]
 
-const isFinishedOptions: FilterOption[] = [
+const statusOptions: FilterOption[] = [
   { text: 'Active', value: 'active' },
   { text: 'Finished', value: 'finished' }
 ]
+
+const emitFilterChange = () => {
+  emit('filter-change', {
+    stage: selectedStage.value,
+    status: selectedStatus.value,
+    team: selectedTeam.value
+  })
+}
+
+watch([selectedStage, selectedStatus, selectedTeam], () => {
+  emitFilterChange()
+})
 </script>
 
 <style scoped>

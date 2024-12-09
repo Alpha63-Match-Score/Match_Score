@@ -95,9 +95,14 @@ export interface FilterOption {
   value: string
 }
 
-export interface FilterValues {
+export interface FilterValuesTournament {
   period: string | null
   status: string | null
   format: string | null
 }
 
+export interface FilterValuesMatch {
+  stage: string | null
+  status: string | null
+  team: string | null
+}

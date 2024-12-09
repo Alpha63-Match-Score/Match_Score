@@ -429,6 +429,22 @@ const openMatchDialog = (match: Match) => {
   font-weight: 550;
 }
 
+.winner-team {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.winner-team v-avatar {
+  border: 2px solid #42DDF2FF;
+  transition: transform 0.2s;
+  background: transparent !important;
+}
+
+.winner-team:hover {
+  background: transparent !important;
+  transform: scale(1.2);
+}
+
 /* Match Card Styles */
 .matches-grid {
   display: grid;

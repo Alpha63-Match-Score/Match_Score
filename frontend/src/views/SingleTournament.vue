@@ -284,7 +284,14 @@ const handleTitleUpdate = async (newTitle: string) => {
       let errorMessage
       try {
         const errorData = JSON.parse(responseText)
-        errorMessage = errorData.detail || 'Failed to update tournament title'
+        console.log('Error data:', errorData)
+        console.log('Error data type:', typeof errorData)
+
+        if (errorData.detail && Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+          errorMessage = errorData.detail[0].msg
+        } else {
+          errorMessage = errorData.detail || 'Failed to update tournament title'
+        }
       } catch {
         errorMessage = 'Failed to update tournament title'
       }
@@ -316,10 +323,25 @@ const handleEndDateUpdate = async (newEndDate: string) => {
       }
     )
 
+    const responseText = await response.text()
+
     if (!response.ok) {
-      const errorData = await response.json()
-      // Връщаме грешката към диалога като пропърти
-      endDateError.value = errorData.detail || 'Failed to update end date'
+      let errorMessage
+      try {
+        const errorData = JSON.parse(responseText)
+
+        // FastAPI validation error
+        if (errorData.detail && Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+          errorMessage = errorData.detail[0].msg
+        } else {
+          // HTTP error
+          errorMessage = errorData.detail || 'Failed to update end date'
+        }
+      } catch {
+        errorMessage = 'Failed to update end date'
+      }
+
+      endDateError.value = errorMessage
       return
     }
 
@@ -351,11 +373,20 @@ const handlePrizeUpdate = async (newPrizePool: number) => {
       }
     )
 
+    const responseText = await response.text()
+
     if (!response.ok) {
       let errorMessage
       try {
         const errorData = JSON.parse(responseText)
-        errorMessage = errorData.detail || 'Failed to update prize pool'
+
+        // FastAPI validation error
+        if (errorData.detail && Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+          errorMessage = errorData.detail[0].msg
+        } else {
+          // HTTP error
+          errorMessage = errorData.detail || 'Failed to update prize pool'
+        }
       } catch {
         errorMessage = 'Failed to update prize pool'
       }
