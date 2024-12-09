@@ -36,7 +36,6 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",")]
         return v
 
-
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     JWT_EXPIRATION: int
