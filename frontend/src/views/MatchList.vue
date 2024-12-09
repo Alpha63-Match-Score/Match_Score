@@ -7,9 +7,7 @@
         <!-- Filter Fields -->
         <MatchFilterBar
           :teams="teams"
-          v-model:stage="selectedStage"
-          v-model:status="selectedIsFinished"
-          v-model:team="selectedTeam"
+          @filter-change="handleFiltersChange"
         />
 
         <!-- Loading state -->
@@ -62,68 +60,126 @@ import MatchFilterBar from "@/components/MatchFilterBar.vue";
 import MatchCard from "@/components/MatchCard.vue";
 import LoadMoreButton from "@/components/LoadMoreButton.vue";
 import MatchModalDialog from "@/components/dialogs/MatchModalDialog.vue";
-import type { Match, Tournament, Team, FilterOption } from '@/types/types'
+import type { Match, Tournament, Team, FilterOption, FilterValuesMatch } from '@/types/types'
 
 const matches = ref<Match[]>([])
 const tournaments = ref<Tournament[]>([])
 const teams = ref<FilterOption[]>([])
 const isLoadingMatches = ref(false)
 const matchesError = ref<string | null>(null)
-const currentLimit = ref(10)
 const hasMoreMatches = ref(true)
 const isLoadingMore = ref(false)
 const showMatchModal = ref(false)
 const selectedMatch = ref<Match | null>(null)
-const selectedStage = ref<string | null>(null)
-const selectedIsFinished = ref<string | null>(null)
-const selectedTeam = ref<string | null>(null)
+const currentLimit = ref<number>(10)
 
+const currentSearch = ref<string>('')
+const currentFilters = ref<FilterValuesMatch>({
+  stage: null,
+  status: null,
+  team: null
+})
+
+const getSearchFromURL = () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get('search') || ''
+}
+
+const handleFiltersChange = async (filters: FilterValuesMatch) => {
+  try {
+    currentSearch.value = ''
+    currentFilters.value = filters
+    isLoadingMatches.value = true
+    matchesError.value = null
+    currentLimit.value = 10
+
+    const params = new URLSearchParams()
+    params.append('offset', '0')
+    params.append('limit', currentLimit.value.toString())
+
+    if (filters.stage) {
+      params.append('stage', filters.stage)
+    }
+    if (filters.status === 'active') {
+      params.append('is_finished', 'false')
+    }
+    if (filters.status === 'finished') {
+      params.append('is_finished', 'true')
+    }
+    if (filters.team) {
+      params.append('team_name', filters.team)
+    }
+
+    const response = await fetch(`${API_URL}/matches/?${params}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const results = Array.isArray(data) ? data : data.results || []
+    matches.value = results
+    hasMoreMatches.value = results.length === currentLimit.value
+
+  } catch (e) {
+    console.error('Error fetching matches:', e)
+    matchesError.value = 'Failed to load matches. Please try again later.'
+  } finally {
+    isLoadingMatches.value = false
+  }
+}
 
 const fetchMatches = async (loadMore = false) => {
   try {
     if (loadMore) {
-      isLoadingMore.value = true;
+      isLoadingMore.value = true
     } else {
-      isLoadingMatches.value = true;
-      matchesError.value = null;
+      isLoadingMatches.value = true
+    }
+    matchesError.value = null
+
+    const params = new URLSearchParams()
+    const offset = loadMore ? matches.value.length : 0
+    params.append('offset', offset.toString())
+    params.append('limit', '10')
+
+    const searchTerm = getSearchFromURL()
+    if (searchTerm) {
+      params.append('search', searchTerm)
     }
 
-    const params = new URLSearchParams();
-    // Изчисляваме offset спрямо текущия брой мачове
-    const offset = loadMore ? matches.value.length : 0;
-    params.append('offset', offset.toString());
-    params.append('limit', '10'); // Фиксиран лимит от 10 вместо currentLimit
+    if (currentFilters.value.stage) {
+      params.append('stage', currentFilters.value.stage)
+    }
+    if (currentFilters.value.status === 'active') {
+      params.append('is_finished', 'false')
+    }
+    if (currentFilters.value.status === 'finished') {
+      params.append('is_finished', 'true')
+    }
+    if (currentFilters.value.team) {
+      params.append('team_name', currentFilters.value.team)
+    }
 
-    // Добавяме филтрите
-    if (selectedStage.value) params.append('stage', selectedStage.value);
-    if (selectedIsFinished.value === 'active') params.append('is_finished', 'false');
-    if (selectedIsFinished.value === 'finished') params.append('is_finished', 'true');
-    if (selectedTeam.value) params.append('team_name', selectedTeam.value);
-
-    const response = await fetch(`${API_URL}/matches/?${params}`);
+    const response = await fetch(`${API_URL}/matches/?${params}`)
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-    const data = await response.json();
-    const results = Array.isArray(data) ? data : (data.results || []);
+    const data = await response.json()
+    const results = Array.isArray(data) ? data : (data.results || [])
 
     if (loadMore) {
-      // Добавяме новите резултати към съществуващите
-      matches.value = [...matches.value, ...results];
+      matches.value = [...matches.value, ...results]
     } else {
-      // При първоначално зареждане или промяна на филтри презаписваме изцяло
-      matches.value = results;
+      matches.value = results
     }
-
-    // Има още за зареждане ако броят на върнатите резултати е равен на лимита
-    hasMoreMatches.value = results.length === 10;
+    hasMoreMatches.value = results.length === 10
 
   } catch (e) {
-    console.error('Error fetching matches:', e);
-    matchesError.value = 'Failed to load matches. Please try again later.';
+    console.error('Error fetching matches:', e)
+    matchesError.value = 'Failed to load matches. Please try again later.'
   } finally {
-    isLoadingMatches.value = false;
-    isLoadingMore.value = false;
+    isLoadingMatches.value = false
+    isLoadingMore.value = false
   }
 }
 
@@ -214,10 +270,6 @@ onMounted(() => {
       matchesError.value = null
     }
   }) as EventListener)
-})
-
-watch([selectedStage, selectedIsFinished, selectedTeam], () => {
-  fetchMatches();
 })
 
 onUnmounted(() => {

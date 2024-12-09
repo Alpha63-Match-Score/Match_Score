@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import type { Tournament, FilterValues } from '@/types/types'
+import type { Tournament, FilterValuesTournament } from '@/types/types'
 import { API_URL } from '@/config'
 import FilterBar from '@/components/TournamentFilterBar.vue';
 import HeaderSection from '@/components/HeaderSection.vue';
@@ -59,7 +59,7 @@ const selectedStatus = ref<string | null>(null);
 const selectedFormat = ref<string | null>(null);
 
 const currentSearch = ref<string>('');
-const currentFilters = ref<FilterValues>({
+const currentFilters = ref<FilterValuesTournament>({
   period: null,
   status: null,
   format: null
@@ -70,7 +70,7 @@ const getSearchFromURL = () => {
   return urlParams.get('search') || '';
 };
 
-const handleFiltersChange = async (filters: FilterValues) => {
+const handleFiltersChange = async (filters: FilterValuesTournament) => {
   try {
     currentSearch.value = '';
     currentFilters.value = filters;
