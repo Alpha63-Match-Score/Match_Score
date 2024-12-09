@@ -12,6 +12,7 @@
             label="Player Username"
             variant="outlined"
             :rules="[rules.required]"
+            :error="!!error"
             class="player-username-input"
           ></v-text-field>
 
@@ -32,6 +33,7 @@
             class="submit-btn"
             @click="handleSubmit"
             :loading="isSubmitting"
+            :disabled="!!error || !username || isSubmitting"
           >
             Submit
           </v-btn>
@@ -123,6 +125,12 @@ const handleSubmit = async () => {
   }
 }
 
+watch(username, (newValue) => {
+  if (newValue && error.value) {
+    error.value = null
+  }
+})
+
 watch(() => props.modelValue, (newVal) => {
   console.log('Dialog visibility changed:', newVal)
 })
@@ -172,6 +180,11 @@ watch(() => props.modelValue, (newVal) => {
   background: #42DDF2FF !important;
   color: #171c26 !important;
   margin-left: 16px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Vuetify overrides */
