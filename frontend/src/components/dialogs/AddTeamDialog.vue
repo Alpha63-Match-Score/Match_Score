@@ -60,7 +60,7 @@
           class="submit-btn"
           @click="submitAddTeam"
           :loading="isSubmitting"
-          :disabled="!teamName"
+          :disabled="!teamName || hasValidationErrors"
         >
           Create Team
         </v-btn>
@@ -91,6 +91,15 @@ const showAddTeamDialog = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
+
+const hasValidationErrors = computed(() => {
+  if (!teamName.value) return true;
+
+  return !rules.team.every(rule => {
+    const result = rule(teamName.value);
+    return typeof result === 'boolean' ? result : false;
+  });
+});
 
 // State
 const isSubmitting = ref(false)
@@ -230,7 +239,7 @@ const submitAddTeam = async () => {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 35px !important;
 }
 
 .dialog-content {
