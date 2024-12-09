@@ -416,7 +416,7 @@ onMounted(async () => {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 35px !important;
 }
 
 .dialog-content {
