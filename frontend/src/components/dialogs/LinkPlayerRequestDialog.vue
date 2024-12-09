@@ -136,6 +136,7 @@ watch(() => props.modelValue, (newVal) => {
   backdrop-filter: blur(10px);
   position: relative;
   z-index: 10001 !important;
+  border-radius: 35px !important;
 }
 
 .dialog-content {
