@@ -14,7 +14,7 @@ possible_env_paths = [
     Path(__file__).parent.parent.parent / ".env",
 ]
 
-
+env_file = None
 for env_path in possible_env_paths:
     if env_path.exists():
         env_file = env_path
@@ -28,11 +28,14 @@ class Settings(BaseSettings):
 
     CORS_ALLOWED_HOSTS: list[str] = ["*"]
 
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() in ["true", "1"]
+
     @field_validator("CORS_ALLOWED_HOSTS", check_fields=False)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         return v
+
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
@@ -60,10 +63,27 @@ class Settings(BaseSettings):
         "extra": "allow",
     }
 
+    @classmethod
+    def from_heroku(cls):
+        return cls(
+            _env_file=None,
+            _env_file_encoding="utf-8",
+        )
+
+    @classmethod
+    def from_env(cls):
+        return cls(
+            _env_file=str(env_file),
+            _env_file_encoding="utf-8",
+        )
+
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings()
+    if env_file is None:
+        return Settings.from_heroku()
+    else:
+        return Settings.from_env()
 
 
 settings = get_settings()
