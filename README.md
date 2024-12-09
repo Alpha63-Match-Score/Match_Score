@@ -1,7 +1,5 @@
-<h1 align="center">🎮 KITTEN STRIKE 🐱</h1>
-
 <p align="center">
-  <img src="path_to_your_logo.png" width="500">
+  <img src="https://i.imgur.com/YUj6dcx.png" width="500">
 </p>
 
 <h3 align="center">Where Feline Reflexes Meet Esports! 🏆</h3>
@@ -30,7 +28,6 @@ Welcome to **Kitten Strike**! 🌟 The most purrfect competitive gaming platform
 - **🌟 Player Profiles**:
   - Showcase your achievements
   - Track your game statistics
-  - Connect with other players
   - Build your reputation in the Kitten Strike universe!
 
 ## 🛠️ Battle Equipment (Tech Stack)
@@ -48,6 +45,14 @@ Welcome to **Kitten Strike**! 🌟 The most purrfect competitive gaming platform
 - HTML5/CSS3 (Our artistic enchantments)
 - Lucide Vue (For purr-fect animations)
 
+## 🗺️ Sacred Scrolls (Database Schema)
+
+<p align="center">
+  <img src="https://i.imgur.com/BvVrz0I.png" width="800" alt="Kitten Strike Database Schema">
+</p>
+
+Behold our ancient scrolls that detail how our kingdom's knowledge is stored! This sacred map shows how all pieces of our realm connect - from the brave warriors (players) to their noble houses (teams) and legendary battles (matches)! 🏰✨
+
 ## 🏁 Quest Starting Guide
 
 ### 📜 Prerequisites
@@ -62,7 +67,7 @@ Before embarking on your journey, ensure you have:
 1. **Summon the Repository**
 ```bash
 git clone [https://github.com/Alpha63-Match-Score/Match_Score.git]
-cd kitten-strike
+cd match_score
 ```
 
 2. **Prepare Your Backend Spells**
@@ -98,13 +103,14 @@ npm install axios lucide-vue-next
 
 1. **Deploy Backend Forces**
 ```bash
+cd backend
 uvicorn main:app --reload
 ```
 
 2. **Deploy Frontend Forces**
 ```bash
 cd frontend
-npm run serve
+npm run dev
 ```
 
 Your battle station will be ready at `http://localhost:8080`
@@ -117,12 +123,6 @@ Your battle station will be ready at `http://localhost:8080`
 - Team Command Center
 - Match Combat Arena
 - Admin War Room
-
-## 🎭 Contact the Guild
-
-Your Name - [your-email@example.com]
-
-Project Headquarters: [https://github.com/yourusername/kitten-strike](https://github.com/yourusername/kitten-strike)
 
 ## ⭐ Hall of Fame
 
