@@ -19,7 +19,9 @@
       />
 
       <!-- Requests Management Section -->
-      <AdminRequestManagement />
+      <AdminRequestManagement
+      :requests="requests"
+      />
 
       <!-- Dialogs -->
       <AddTournamentDialog
@@ -37,6 +39,14 @@
       <UpdatePlayerDialog
         v-model="showUpdatePlayerDialog"
         @player-updated="handlePlayerUpdated"
+      />
+
+      <!-- Load More Button -->
+      <LoadMoreButton
+        v-if="!isLoadingRequests && hasMoreRequests"
+        :is-loading="isLoadingMore"
+        button-text="Load More Requests"
+        @load-more="loadMoreRequests"
       />
 
       <!-- Success Snackbar -->
@@ -60,9 +70,15 @@ import AddTeamDialog from "@/components/dialogs/AddTeamDialog.vue";
 import UpdatePlayerDialog from "@/components/dialogs/UpdatePlayerDialog.vue";
 import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
 import type { Request, Player } from "@/types/types";
+import LoadMoreButton from "@/components/LoadMoreButton.vue";
 
 
 const authStore = useAuthStore();
+
+const isLoadingRequests = ref(false);
+const hasMoreRequests = ref(true);
+const isLoadingMore = ref(false);
+const currentLimit = ref(10);
 
 const requests = ref<Request[]>([])
 const isLoading = ref(true)
@@ -119,6 +135,10 @@ const handlePlayerUpdated = (updatedPlayer: Player) => {
   successMessage.value = `Player ${updatedPlayer.username} was successfully updated!`
 }
 
+const loadMoreRequests = async () => {
+  await fetchRequests(true);
+};
+
 const clearErrors = () => {
   usernameError.value = ''
   firstNameError.value = ''
@@ -143,19 +163,28 @@ const openAddPlayerDialog = async () => {
 
 }
 
-const fetchRequests = async () => {
+const fetchRequests = async (loadMore = false) => {
   try {
-    isLoading.value = true;
+    if (loadMore) {
+      isLoadingMore.value = true;
+    } else {
+      isLoadingRequests.value = true;
+    }
     requestHistoryError.value = null;
 
-    const statusQuery = filterStatus.value && filterStatus.value !== 'All' ? `&status=${filterStatus.value.toLowerCase()}` : '';
+    const statusQuery = filterStatus.value && filterStatus.value !== 'All'
+      ? `&status=${filterStatus.value.toLowerCase()}`
+      : '';
 
-    const response = await fetch(`${API_URL}/requests?offset=0&limit=50${statusQuery}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
+    const response = await fetch(
+      `${API_URL}/requests?offset=${loadMore ? requests.value.length : 0}&limit=${currentLimit.value}${statusQuery}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -164,13 +193,21 @@ const fetchRequests = async () => {
 
     const data = await response.json();
 
-    requests.value = [...data];
+    if (loadMore) {
+      requests.value = [...requests.value, ...data];
+    } else {
+      requests.value = data.slice(0, currentLimit.value);
+    }
+
+    hasMoreRequests.value = data.length === currentLimit.value;
+
   } catch (e) {
     console.error('Error fetching requests:', e);
     requestHistoryError.value =
       e.message || 'Failed to load request history. Please try again later.';
   } finally {
-    isLoading.value = false;
+    isLoadingRequests.value = false;
+    isLoadingMore.value = false;
   }
 };
 
