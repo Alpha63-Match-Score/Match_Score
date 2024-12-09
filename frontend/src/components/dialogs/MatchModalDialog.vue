@@ -288,6 +288,7 @@ const editError = ref('')
 const scoreUpdateError = ref('')
 const isUpdatingTime = ref(false)
 const isUpdatingTeams = ref(false)
+
 const dateRules = [
   (v: string) => {
     const selectedDate = new Date(v)
