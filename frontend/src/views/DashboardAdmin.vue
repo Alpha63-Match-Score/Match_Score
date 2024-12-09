@@ -23,6 +23,7 @@
         v-model:requests="requests"
         :limit="currentLimit"
         :isLoadMore="isLoadingMore"
+        @update:requests="requests = $event"
       />
 
       <!-- Dialogs -->

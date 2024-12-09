@@ -240,11 +240,11 @@ const approveRequest = async (requestId: string) => {
     }
 
     // 2. Get the approved request details
-    const approvedRequest = requests.value.find(r => r.id === requestId);
+    const approvedRequest = props.requests.value.find(r => r.id === requestId);
 
     // 3. If it's a player link request, reject all other pending requests for the same player
     if (approvedRequest && approvedRequest.username) {
-      const otherPendingRequests = requests.value.filter(r =>
+      const otherPendingRequests = props.requests.value.filter(r =>
         r.id !== requestId &&
         r.status === 'pending' &&
         r.username === approvedRequest.username
