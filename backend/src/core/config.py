@@ -58,10 +58,13 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", check_fields=False)
     def normalize_database_url(cls, v: str) -> str:
         """
-        Converts Heroku's `postgres://` URLs to `postgresql://`, which SQLAlchemy expects.
+        Converts Heroku's `postgres://` URLs to `postgresql://`,
+        which SQLAlchemy expects.
         """
         if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
+            return v.replace("postgres://",
+                             "postgresql://",
+                             1)
         return v
 
 
