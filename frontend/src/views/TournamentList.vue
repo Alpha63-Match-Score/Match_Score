@@ -58,8 +58,15 @@ const selectedPeriod = ref<string | null>(null);
 const selectedStatus = ref<string | null>(null);
 const selectedFormat = ref<string | null>(null);
 
+const currentFilters = ref<FilterValues>({
+  period: null,
+  status: null,
+  format: null
+});
+
 const handleFiltersChange = async (filters: FilterValues) => {
   try {
+    currentFilters.value = filters;
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
     currentLimit.value = 10;
@@ -107,11 +114,25 @@ const fetchTournaments = async (loadMore = false) => {
       isLoadingMore.value = true;
     } else {
       isLoadingTournaments.value = true;
-      isFiltered.value = false; // Reset filter state when loading initial tournaments
+      isFiltered.value = false;
     }
     tournamentsError.value = null;
 
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
+    const params = new URLSearchParams();
+    params.append('offset', '0');
+    params.append('limit', currentLimit.value.toString());
+
+    if (currentFilters.value.period) {
+      params.append('period', currentFilters.value.period);
+    }
+    if (currentFilters.value.status) {
+      params.append('status', currentFilters.value.status);
+    }
+    if (currentFilters.value.format) {
+      params.append('tournament_format', currentFilters.value.format);
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/?${params}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
