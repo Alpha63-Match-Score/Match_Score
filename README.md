@@ -118,20 +118,6 @@ Your battle station will be ready at `http://localhost:8080`
 - Match Combat Arena
 - Admin War Room
 
-## 🤝 Join Our Guild
-
-Want to contribute to Kitten Strike? Here's how:
-
-1. Fork the armory
-2. Create your feature branch (`git checkout -b feature/AmazingPower`)
-3. Commit your changes (`git commit -m 'Add some AmazingPower'`)
-4. Push to the branch (`git push origin feature/AmazingPower`)
-5. Open a Pull Request
-
-## 📜 Scroll of License
-
-This project is protected under the MIT License - see the [LICENSE](LICENSE) scroll for details.
-
 ## 🎭 Contact the Guild
 
 Your Name - [your-email@example.com]
