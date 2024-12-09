@@ -1,36 +1,148 @@
-# Match_Score
+<h1 align="center">🎮 KITTEN STRIKE 🐱</h1>
 
-# in PGAdmin => ALTER DATABASE your_database SET timezone TO 'UTC'; # да се уеднаквят таблиците с времето
+<p align="center">
+  <img src="path_to_your_logo.png" width="500">
+</p>
 
-For vue.js installation, global workpackges are required and here are the steps:
+<h3 align="center">Where Feline Reflexes Meet Esports! 🏆</h3>
 
-1. Check if you have those two installed:
-node -v
-npm -v
-2. If not, pip install node -v
-3. Then if you don't have nodejs, install it as per the steps below:
+Welcome to **Kitten Strike**! 🌟 The most purrfect competitive gaming platform where tactical kitties clash in epic battles! Imagine Counter-Strike, but instead of regular characters, you've got kittens with tactical vests and laser pointers! Get ready to experience esports where precision is as important as the afternoon nap, and strategy is more delicious than a bowl of tuna! 🐟
 
-https://nodejs.org/
- 
-На сайта ще видите два варианта за сваляне:
-LTS (Long Term Support) - препоръчителната стабилна версия за повечето потребители
-Current - най-новата версия с всички нови функции
-Изберете LTS версията (зеленият бутон в ляво) - тя е по-стабилна и препоръчителна за разработка
-След като файлът се изтегли (ще бъде .msi файл за Windows), кликнете двойно върху него за да стартирате инсталацията
-В инсталационния процес:
-Натиснете "Next"
-Приемете лицензионното споразумение
-Изберете инсталационна директория (може да оставите по подразбиране)
-При компонентите за инсталация оставете всичко маркирано по подразбиране
-Натиснете "Next" и "Install"
-След като инсталацията приключи, отворете нов Command Prompt (cmd) или PowerShell и проверете дали инсталацията е успешна с:
+## ⚔️ Epic Features
 
-npm -v
+- **🏆 Multiple Tournament Formats**:
+  - Single Elimination (The ultimate test of nine lives!)
+  - Round Robin (Everyone gets to play with everyone's yarn!)
+  - One-Off Matches (Quick paw-to-paw combat!)
 
-4. Then run => npm install -g @vue/cli
+- **👥 Team Management**:
+  - Build your dream team of tactical kittens
+  - Customize team profiles and logos
+  - Track performance and statistics
+  - Monitor your team's purr-formance! 📊
 
-check if installed => vue --version
+- **🎯 Live Match Action**:
+  - Real-time scoring system
+  - Match statistics tracking
+  - Live tournament brackets
+  - Instant notifications for important events
 
-5. For Cat Animations => npm install axios lucide-vue-next
+- **🌟 Player Profiles**:
+  - Showcase your achievements
+  - Track your game statistics
+  - Connect with other players
+  - Build your reputation in the Kitten Strike universe!
 
-6. ![Database Diagram](https://i.imgur.com/BvVrz0I.png)
+## 🛠️ Battle Equipment (Tech Stack)
+
+### 🏰 Backend Fortress
+- Python (The serpent that powers our kingdom)
+- FastAPI (For lightning-fast reflexes)
+- PostgreSQL (Our magical scroll storage)
+- JWT (For secure passage through our realms)
+- AWS S3 (Our infinite item storage)
+
+### ⚔️ Frontend Arsenal
+- Vue.js 3 (Our mighty weapon of choice)
+- TypeScript (For type-safe spells)
+- HTML5/CSS3 (Our artistic enchantments)
+- Lucide Vue (For purr-fect animations)
+
+## 🏁 Quest Starting Guide
+
+### 📜 Prerequisites
+Before embarking on your journey, ensure you have:
+- Python 3.8+ (Your magical prowess)
+- Node.js LTS (Your crafting abilities)
+- PostgreSQL (Your scroll repository)
+- AWS Account (Your cloud kingdom access)
+
+### 🎯 Quick Start
+
+1. **Summon the Repository**
+```bash
+git clone [https://github.com/Alpha63-Match-Score/Match_Score.git]
+cd kitten-strike
+```
+
+2. **Prepare Your Backend Spells**
+```bash
+# Create your magical environment
+python -m venv venv
+
+# Activate your powers
+source venv/bin/activate  # For Unix Warriors
+.\venv\Scripts\activate   # For Windows Warriors
+
+# Gather your supplies
+pip install -r requirements.txt
+
+# Configure your battle plans
+cp env_template .env
+# Edit .env with your sacred configurations
+```
+
+3. **Forge Your Frontend Weapons**
+```bash
+# Enter the forge
+cd frontend
+
+# Craft your tools
+npm install
+
+# Summon additional powers
+npm install axios lucide-vue-next
+```
+
+## 🎮 Launch the Battle
+
+1. **Deploy Backend Forces**
+```bash
+uvicorn main:app --reload
+```
+
+2. **Deploy Frontend Forces**
+```bash
+cd frontend
+npm run serve
+```
+
+Your battle station will be ready at `http://localhost:8080`
+
+## 📸 Battle Scenes
+[Coming soon: Epic screenshots of our battlegrounds!]
+
+- Home Base Operations
+- Tournament Battlefields
+- Team Command Center
+- Match Combat Arena
+- Admin War Room
+
+## 🤝 Join Our Guild
+
+Want to contribute to Kitten Strike? Here's how:
+
+1. Fork the armory
+2. Create your feature branch (`git checkout -b feature/AmazingPower`)
+3. Commit your changes (`git commit -m 'Add some AmazingPower'`)
+4. Push to the branch (`git push origin feature/AmazingPower`)
+5. Open a Pull Request
+
+## 📜 Scroll of License
+
+This project is protected under the MIT License - see the [LICENSE](LICENSE) scroll for details.
+
+## 🎭 Contact the Guild
+
+Your Name - [your-email@example.com]
+
+Project Headquarters: [https://github.com/yourusername/kitten-strike](https://github.com/yourusername/kitten-strike)
+
+## ⭐ Hall of Fame
+
+- Special thanks to all our brave contributors
+- Shoutout to our beta testers
+- And to all the cats who inspired us! 😺
+
+---
+<p align="center">Crafted with 💖 and 🐱 by the Kitten Strike Team</p>
