@@ -3,21 +3,12 @@
     :modelValue="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
     max-width="500px"
+    class="prize-dialog"
   >
     <v-card class="dialog-card">
       <div class="dialog-content">
         <v-card-title class="dialog-title">Edit Prize Pool</v-card-title>
         <v-card-text>
-          <v-alert
-            v-if="prizeError"
-            type="error"
-            variant="tonal"
-            class="mb-4 error-alert"
-            closable
-            @click:close="prizeError = ''"
-          >
-            {{ prizeError }}
-          </v-alert>
           <v-text-field
             v-model="editedPrizePool"
             label="Prize Pool (Kitty Kibbles)"
@@ -103,6 +94,11 @@ const updatePrizePool = () => {
   border-radius: 12px;
 }
 
+.prize-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
+
+
 .dialog-content {
   padding: 24px;
 }
@@ -132,21 +128,6 @@ const updatePrizePool = () => {
   background: #42DDF2FF !important;
   color: #171c26 !important;
   margin-left: 16px;
-}
-
-/* Error Alert */
-.error-alert {
-  width: 100%;
-  margin: 0 auto;
-  background-color: rgba(255, 215, 0, 0.12) !important;
-  color: #ffd700 !important;
-  border-color: #ffd700 !important;
-  border-radius: 8px;
-}
-
-.error-alert :deep(.v-alert__close-button),
-.error-alert :deep(.v-alert__prepend) {
-  color: #ffd700 !important;
 }
 
 /* Vuetify Field Overrides */

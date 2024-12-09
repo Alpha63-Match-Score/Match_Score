@@ -3,21 +3,12 @@
     :modelValue="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
     max-width="500px"
+    class="title-dialog"
   >
     <v-card class="dialog-card">
       <div class="dialog-content">
         <v-card-title class="dialog-title">Edit Tournament Title</v-card-title>
         <v-card-text>
-          <v-alert
-            v-if="titleError"
-            type="error"
-            variant="tonal"
-            class="mb-4 error-alert"
-            closable
-            @click:close="titleError = ''"
-          >
-            {{ titleError }}
-          </v-alert>
           <v-text-field
             v-model="editedTitle"
             label="Tournament Title"
@@ -92,6 +83,9 @@ const updateTitle = () => {
   backdrop-filter: blur(10px);
   border-radius: 12px;
 }
+.title-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
 
 .dialog-content {
   padding: 24px;
@@ -122,21 +116,6 @@ const updateTitle = () => {
   background: #42DDF2FF !important;
   color: #171c26 !important;
   margin-left: 16px;
-}
-
-/* Error Alert Styles */
-.error-alert {
-  width: 100%;
-  margin: 0 auto;
-  background-color: rgba(255, 215, 0, 0.12) !important;
-  color: #ffd700 !important;
-  border-color: #ffd700 !important;
-  border-radius: 8px;
-}
-
-.error-alert :deep(.v-alert__close-button),
-.error-alert :deep(.v-alert__prepend) {
-  color: #ffd700 !important;
 }
 
 /* Vuetify Field Overrides */
