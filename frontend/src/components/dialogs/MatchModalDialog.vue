@@ -1,23 +1,11 @@
 <template>
-  <v-dialog v-model="showDialog" max-width="800px" class="match-dialog">
+  <v-dialog v-model="showDialog" max-width="800px" height="550" class="match-dialog">
     <v-card class="custom-dialog-card">
       <v-card-title class="headline text-center">
         {{ match?.team1_name }} vs {{ match?.team2_name }}
       </v-card-title>
       <v-card-text>
         <div class="match-details-centered">
-          <!-- Error Alert -->
-          <v-alert
-            v-if="scoreUpdateError"
-            type="error"
-            variant="tonal"
-            class="mb-4 error-alert"
-            closable
-            @click:close="scoreUpdateError = ''"
-          >
-            {{ scoreUpdateError }}
-          </v-alert>
-
           <div class="tournament-title">{{ match?.tournament_title }}</div>
           <div class="tournament-stage">{{ match?.stage }}</div>
           <div class="is-finished">{{ match?.is_finished ? 'Finished' : 'Not finished' }}</div>
@@ -98,16 +86,37 @@
         </div>
       </v-card-text>
       <v-card-actions>
+          <!-- Score Error Alert -->
+          <v-alert
+            v-if="scoreUpdateError"
+            type="error"
+            variant="tonal"
+            class="mb-4 error-alert"
+            closable
+            @click:close="scoreUpdateError = ''"
+          >
+            {{ scoreUpdateError }}
+          </v-alert>
         <v-btn @click="closeDialog">Close</v-btn>
       </v-card-actions>
     </v-card>
 
     <!-- Time Edit Dialog -->
-    <v-dialog v-model="showTimeEdit" max-width="500px">
+    <v-dialog v-model="showTimeEdit" max-width="500px" class="time-edit-dialog">
       <v-card class="edit-dialog">
         <div class="dialog-content">
           <v-card-title class="dialog-title">Edit Match Time</v-card-title>
           <v-card-text>
+          <v-alert
+            v-if="editError"
+            type="error"
+            variant="tonal"
+            class="mb-4 error-alert"
+            closable
+            @click:close="editError = ''"
+          >
+            {{ editError }}
+          </v-alert>
             <v-text-field
               v-model="editedStartTime"
               label="Match Time"
@@ -143,7 +152,7 @@
     </v-dialog>
 
      <!-- Team Edit Dialog -->
-    <v-dialog v-model="showTeamEdit" max-width="500px">
+    <v-dialog v-model="showTeamEdit" max-width="500px" class="team-edit-dialog">
       <v-card class="dialog-card">
         <div class="dialog-content">
           <v-card-title class="dialog-title">Edit Teams</v-card-title>
@@ -349,18 +358,18 @@ const closeDialog = () => {
   showDialog.value = false
 }
 
-const extractErrorMessage = async (response: Response) => {
+const extractErrorMessage = async (response: Response): Promise<string> => {
   try {
-    const responseClone = response.clone()
-    const text = await responseClone.text()
-    const data = JSON.parse(text)
+    const responseText = await response.text()
+    const errorData = JSON.parse(responseText)
 
-    if (data.detail && Array.isArray(data.detail) && data.detail.length > 0) {
-      return data.detail[0].msg
+    // FastAPI validation error
+    if (errorData.detail && Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+      return errorData.detail[0].msg
     }
-
-    if (data.detail && typeof data.detail === 'string') {
-      return data.detail
+    // HTTP error
+    if (errorData.detail) {
+      return errorData.detail
     }
 
     return 'An error occurred'
@@ -369,7 +378,6 @@ const extractErrorMessage = async (response: Response) => {
     return 'An error occurred'
   }
 }
-
 
 // Match score update
 const handleScoreIncrement = async (team: 'team1' | 'team2') => {
@@ -388,8 +396,7 @@ const handleScoreIncrement = async (team: 'team1' | 'team2') => {
     )
 
     if (!response.ok) {
-      const error = await extractErrorMessage(response)
-      scoreUpdateError.value = error
+      scoreUpdateError.value = await extractErrorMessage(response)
       return
     }
 
@@ -411,34 +418,36 @@ const updateTime = async () => {
     editError.value = ''
     isUpdatingTime.value = true
 
-    const formattedDate = new Date(editedStartTime.value).toISOString()
+    const selectedDate = new Date(editedStartTime.value)
+    selectedDate.setHours(selectedDate.getHours() + 2)
+    const formattedDate = selectedDate.toISOString()
 
     const response = await fetch(
-      `${API_URL}/matches/${props.match.id}?start_date=${encodeURIComponent(formattedDate)}`,
+      `${API_URL}/matches/${props.match.id}?start_time=${encodeURIComponent(formattedDate)}`,
       {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${authStore.token}`
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
         }
       }
     )
 
     if (!response.ok) {
-      const fullText = await response.text()
-      console.log('Full server response:', fullText)
-
-      try {
-        const errorData = JSON.parse(fullText)
-        editError.value = errorData.detail || 'Failed to update match time'
-      } catch {
-        editError.value = fullText || 'Failed to update match time'
-      }
+      editError.value = await extractErrorMessage(response)
       return
+    }
+
+    const updatedMatch = await response.json()
+
+    if (props.match) {
+      Object.assign(props.match, updatedMatch)
     }
 
     if (props.onMatchUpdate) {
       await props.onMatchUpdate()
     }
+
     showTimeEdit.value = false
   } catch (e) {
     console.error('Full error:', e)
@@ -472,7 +481,7 @@ const openTeamEdit = async () => {
     loadingTeams.value = true
     editError.value = ''
 
-    const response = await fetch(`${API_URL}/teams/?is_available=true`)
+    const response = await fetch(`${API_URL}/teams/?is_available=true&offset=0&limit=100`)
     if (!response.ok) throw new Error('Failed to load teams')
     const data = await response.json()
     availableTeams.value = data
@@ -747,6 +756,13 @@ const updateTeams = async () => {
   backdrop-filter: blur(10px);
 }
 
+.time-edit-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
+
+.team-edit-dialog :deep(.v-card) {
+  border-radius: 35px !important;
+}
 :deep(.v-card-title) {
   color: #42DDF2FF !important;
 }
@@ -875,6 +891,15 @@ const updateTeams = async () => {
   margin-bottom: 16px;
 }
 
+:deep(.custom-time-field .v-field__input::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+  opacity: 0.5;
+}
+
+:deep(.custom-time-field .v-field__input::-webkit-calendar-picker-indicator:hover) {
+  opacity: 0.8;
+  cursor: pointer;
+}
 
 :deep(.custom-time-field .v-field__input input),
 :deep(.custom-time-field.v-field--error .v-field__input input) {
