@@ -108,7 +108,7 @@
             class="submit-btn"
             @click="submitAddPlayer"
             :loading="isSubmitting"
-            :disabled="!canSubmitPlayer"
+            :disabled="!canSubmitPlayer || hasValidationErrors "
           >
             Create Player
           </v-btn>
@@ -138,6 +138,31 @@ const showAddPlayerDialog = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
+
+const hasValidationErrors = computed(() => {
+
+  const usernameErrors = !rules.username.every(rule => {
+    const result = rule(addPlayerUsername.value);
+    return typeof result === 'boolean' ? result : false;
+  });
+
+  const firstNameErrors = !rules.firstName.every(rule => {
+    const result = rule(addPlayerFirstName.value);
+    return typeof result === 'boolean' ? result : false;
+  });
+
+  const lastNameErrors = !rules.lastName.every(rule => {
+    const result = rule(addPlayerLastName.value);
+    return typeof result === 'boolean' ? result : false;
+  });
+
+  const countryErrors = !rules.country.every(rule => {
+    const result = rule(addPlayerCountry.value);
+    return typeof result === 'boolean' ? result : false;
+  });
+
+  return usernameErrors || firstNameErrors || lastNameErrors || countryErrors;
+});
 
 
 // State
@@ -361,7 +386,7 @@ onMounted(() => {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 35px !important;
 }
 
 .dialog-content {
@@ -497,5 +522,30 @@ onMounted(() => {
 
 :deep(.v-label) {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.v-overlay__content) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(66, 221, 242, 0.5) transparent;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar-thumb) {
+  background-color: #42DDF2FF;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+:deep(.v-overlay__content::-webkit-scrollbar-thumb:hover) {
+  background-color: #42DDF2FF;
+  opacity: 0.8;
 }
 </style>
