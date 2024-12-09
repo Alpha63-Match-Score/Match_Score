@@ -16,6 +16,7 @@
             :error="!!titleError"
             :error-messages="titleError"
           ></v-text-field>
+
         </v-card-text>
         <v-card-actions class="dialog-actions">
           <v-spacer></v-spacer>
@@ -81,7 +82,6 @@ const updateTitle = () => {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
-  border-radius: 12px;
 }
 .title-dialog :deep(.v-card) {
   border-radius: 35px !important;

@@ -275,21 +275,56 @@ onMounted(() => {
   fetchTeams()
   window.addEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/matches') {
-      matches.value = event.detail.results
-      console.log('Received search results:', matches.value)
-      isLoadingMatches.value = false
-      matchesError.value = null
+      const searchResults = event.detail.results.filter(result => {
+        let matches = true;
+
+        if (currentFilters.value.stage) {
+          matches = matches && result.stage === currentFilters.value.stage;
+        }
+        if (currentFilters.value.status === 'active') {
+          matches = matches && !result.is_finished;
+        }
+        if (currentFilters.value.status === 'finished') {
+          matches = matches && result.is_finished;
+        }
+        if (currentFilters.value.team) {
+          matches = matches && (result.team1_name === currentFilters.value.team ||
+                              result.team2_name === currentFilters.value.team);
+        }
+
+        return matches;
+      });
+
+      matches.value = searchResults;
+      isLoadingMatches.value = false;
+      matchesError.value = null;
     }
   }) as EventListener)
 })
 
 onUnmounted(() => {
-  window.addEventListener('search-results', ((event: CustomEvent) => {
+  window.removeEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/matches') {
-      matches.value = event.detail.results
-      console.log('Received search results:', matches.value)
-      isLoadingMatches.value = false
-      matchesError.value = null
+      const searchResults = event.detail.results.filter(result => {
+        let matches = true;
+        if (currentFilters.value.stage) {
+          matches = matches && result.stage === currentFilters.value.stage;
+        }
+        if (currentFilters.value.status === 'active') {
+          matches = matches && !result.is_finished;
+        }
+        if (currentFilters.value.status === 'finished') {
+          matches = matches && result.is_finished;
+        }
+        if (currentFilters.value.team) {
+          matches = matches && (result.team1_name === currentFilters.value.team ||
+                              result.team2_name === currentFilters.value.team);
+        }
+        return matches;
+      });
+      matches.value = searchResults;
+      isLoadingMatches.value = false;
+      matchesError.value = null;
     }
   }) as EventListener)
 })

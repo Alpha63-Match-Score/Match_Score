@@ -142,6 +142,7 @@ const handlePlayerClick = (playerId: string) => {
   background: rgba(8, 87, 144, 0.1);
   transition: transform 0.2s;
   cursor: pointer;
+  align-self: center;
 }
 
 .player-avatar:hover {

@@ -133,7 +133,6 @@ import PlayerModal from "@/components/dialogs/PlayerModalDialog.vue";
 const authStore = useAuthStore()
 
 // State
-const requests = ref<Request[]>([])
 const isLoading = ref(true)
 const requestHistoryError = ref<string | null>(null)
 const actionsError = ref<string | null>(null)
@@ -147,6 +146,16 @@ const successMessage = ref('')
 const isLoadingPlayer = ref(false)
 const selectedPlayer = ref<Player | null>(null)
 const showPlayerModal = ref(false)
+
+const props = defineProps<{
+  requests: Request[]
+  limit?: number
+  isLoadMore: boolean
+}>()
+
+// Emits
+const emit = defineEmits(['player-click', 'update:requests'])
+
 
 // Helper functions
 const formatDate = (date: string): string => {
@@ -176,14 +185,20 @@ const fetchRequests = async () => {
     isLoading.value = true;
     requestHistoryError.value = null;
 
-    const statusQuery = filterStatus.value && filterStatus.value !== 'All' ? `&status=${filterStatus.value.toLowerCase()}` : '';
+    const statusQuery = filterStatus.value && filterStatus.value !== 'All'
+      ? `&status=${filterStatus.value.toLowerCase()}`
+      : '';
 
-    const response = await fetch(`${API_URL}/requests?offset=0&limit=50${statusQuery}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
+    const offset = props.isLoadMore ? props.requests.length : 0;
+
+    const response = await fetch(
+      `${API_URL}/requests?offset=${offset}&limit=${props.limit || 5}${statusQuery}`,
+      {
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -192,11 +207,15 @@ const fetchRequests = async () => {
 
     const data = await response.json();
 
-    requests.value = [...data];
+    if (props.isLoadMore) {
+      emit('update:requests', [...props.requests, ...data]);
+    } else {
+      emit('update:requests', data);
+    }
+
   } catch (e) {
     console.error('Error fetching requests:', e);
-    requestHistoryError.value =
-      e.message || 'Failed to load request history. Please try again later.';
+    requestHistoryError.value = 'Failed to load request history. Please try again later.';
   } finally {
     isLoading.value = false;
   }
@@ -207,7 +226,6 @@ const approveRequest = async (requestId: string) => {
     isApprovingRequest.value[requestId] = true;
     isSubmitting.value = true;
 
-    // 1. First approve the selected request
     const response = await fetch(`${API_URL}/requests/${requestId}?status=accepted`, {
       method: 'PUT',
       headers: {
@@ -221,11 +239,11 @@ const approveRequest = async (requestId: string) => {
     }
 
     // 2. Get the approved request details
-    const approvedRequest = requests.value.find(r => r.id === requestId);
+    const approvedRequest = props.requests.find(r => r.id === requestId);
 
-    // 3. If it's a player link request, reject all other pending requests for the same player
+    // 3. If it's a player link request, reject all other pending requests
     if (approvedRequest && approvedRequest.username) {
-      const otherPendingRequests = requests.value.filter(r =>
+      const otherPendingRequests = props.requests.filter(r =>
         r.id !== requestId &&
         r.status === 'pending' &&
         r.username === approvedRequest.username
@@ -245,7 +263,7 @@ const approveRequest = async (requestId: string) => {
     successMessage.value = 'Request approved successfully.';
     showSuccessAlert.value = true;
 
-    // 4. Refresh the requests list
+    // Обновяваме списъка на заявките чрез родителския компонент
     await fetchRequests();
 
   } catch (e) {
@@ -262,7 +280,6 @@ const rejectRequest = async (requestId: string) => {
     isRejectingRequest.value[requestId] = true;
     isSubmitting.value = true;
 
-
     const response = await fetch(`${API_URL}/requests/${requestId}?status=rejected`, {
       method: 'PUT',
       headers: {
@@ -276,11 +293,11 @@ const rejectRequest = async (requestId: string) => {
       throw new Error(errorData.detail?.[0]?.msg || 'Failed to reject request');
     }
 
-    isRejectingRequest.value[requestId] = false;
-
     successMessage.value = 'Request rejected successfully.';
     showSuccessAlert.value = true;
-    fetchRequests();
+
+    await fetchRequests();
+
   } catch (e) {
     console.error('Error rejecting request:', e);
     actionsError.value = e.message || 'Failed to reject request. Please try again.';
@@ -309,8 +326,6 @@ const handlePlayerClick = async (username: string) => {
   }
 };
 
-// Emits
-const emit = defineEmits(['player-click'])
 
 // Lifecycle
 onMounted(() => {

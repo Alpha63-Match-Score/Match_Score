@@ -9,7 +9,6 @@
           <router-link
             :to="`/events/${match?.tournament_id}`"
             class="tournament-title tournament-link"
-            style="text-decoration: none"
           >
             {{ match?.tournament_title }}
           </router-link>
@@ -289,6 +288,7 @@ const editError = ref('')
 const scoreUpdateError = ref('')
 const isUpdatingTime = ref(false)
 const isUpdatingTeams = ref(false)
+
 const dateRules = [
   (v: string) => {
     const selectedDate = new Date(v)

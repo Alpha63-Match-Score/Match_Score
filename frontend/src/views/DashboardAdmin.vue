@@ -20,7 +20,10 @@
 
       <!-- Requests Management Section -->
       <AdminRequestManagement
-      :requests="requests"
+        v-model:requests="requests"
+        :limit="currentLimit"
+        :isLoadMore="isLoadingMore"
+        @update:requests="requests = $event"
       />
 
       <!-- Dialogs -->
@@ -78,7 +81,7 @@ const authStore = useAuthStore();
 const isLoadingRequests = ref(false);
 const hasMoreRequests = ref(true);
 const isLoadingMore = ref(false);
-const currentLimit = ref(10);
+const currentLimit = ref(5);
 
 const requests = ref<Request[]>([])
 const isLoading = ref(true)
@@ -196,7 +199,7 @@ const fetchRequests = async (loadMore = false) => {
     if (loadMore) {
       requests.value = [...requests.value, ...data];
     } else {
-      requests.value = data.slice(0, currentLimit.value);
+      requests.value = data;
     }
 
     hasMoreRequests.value = data.length === currentLimit.value;

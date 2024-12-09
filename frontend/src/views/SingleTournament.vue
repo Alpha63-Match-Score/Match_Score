@@ -67,7 +67,7 @@
     <MatchModalDialog
       v-model="showMatchModal"
       :match="selectedMatch"
-      :director_id="tournament?.director_id"
+      :tournamentDirectorId="tournament?.director_id"
       :onMatchUpdate="refreshMatch"
     />
   </div>

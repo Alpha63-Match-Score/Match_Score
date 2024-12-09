@@ -469,7 +469,7 @@ def team_has_five_players(team: Type[Team]) -> None:
     Raises:
         HTTPException: If the team does not have 5 players.
     """
-    if len(team.players) != 5:
+    if len(team.players) < 5:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=f"Team '{team.name}' must have 5 players",

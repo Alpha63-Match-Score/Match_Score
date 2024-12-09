@@ -8,7 +8,7 @@
 
       <!-- Avatar/Logo -->
       <v-list-item
-        prepend-avatar="/src/assets/logo2.png"
+        prepend-icon="mdi-cat"
         title="Kitten Strike"
       ></v-list-item>
 

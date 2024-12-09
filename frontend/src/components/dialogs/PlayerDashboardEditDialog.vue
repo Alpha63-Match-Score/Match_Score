@@ -1,93 +1,92 @@
 <template>
-  <v-dialog v-model="showEditDialog" max-width="500">
+  <v-dialog
+    v-model="showEditDialog"
+    max-width="400px"
+    class="dialog-radius"
+  >
   <v-card class="edit-dialog">
-    <v-card-title>{{ editDialogTitle }}</v-card-title>
-    <v-card-text>
-      <v-alert
-        v-if="editError"
-        type="error"
-        variant="tonal"
-        class="mb-4"
-      >
-        {{ editError }}
-      </v-alert>
+    <div class="edit-dialog-content">
+      <v-card-title class="dialog-title">{{ editDialogTitle }}</v-card-title>
+      <v-card-text>
 
-      <!-- Name Edit -->
-      <div v-if="props.editField === 'name'" class="d-flex gap-2">
+        <!-- Name Edit -->
+        <div v-if="props.editField === 'name'" class="d-flex gap-2">
+          <v-text-field
+            :model-value="props.editFirstName"
+            @update:model-value="updateFirstName"
+            label="First Name"
+            variant="outlined"
+            :rules="rules.firstName"
+            :error-messages="firstNameError"
+          ></v-text-field>
+
+          <v-text-field
+            :model-value="props.editLastName"
+            @update:model-value="updateLastName"
+            label="Last Name"
+            variant="outlined"
+            :rules="rules.lastName"
+            :error-messages="lastNameError"
+          ></v-text-field>
+        </div>
+
+        <!-- Country Edit -->
         <v-text-field
-          :model-value="props.editFirstName"
-          @update:model-value="updateFirstName"
-          label="First Name"
-          variant="outlined"
-          :rules="rules.firstName"
-          :error-messages="firstNameError"
-        ></v-text-field>
-        <v-text-field
-          :model-value="props.editLastName"
-          @update:model-value="updateLastName"
-          label="Last Name"
-          variant="outlined"
-          :rules="rules.lastName"
-          :error-messages="lastNameError"
-        ></v-text-field>
-      </div>
-
-      <!-- Country Edit -->
-      <v-text-field
-        v-if="props.editField === 'country'"
-        :model-value="props.editValue"
-        @update:model-value="updateValue"
-        label="Country"
-        variant="outlined"
-        :rules="rules.country"
-        :error-messages="countryError"
-      ></v-text-field>
-
-      <!-- Team Edit -->
-      <div v-if="props.editField === 'team'">
-        <v-select
+          v-if="props.editField === 'country'"
           :model-value="props.editValue"
           @update:model-value="updateValue"
-          :items="teams"
-          item-title="name"
-          item-value="name"
-          label="Select Team"
+          label="Country"
           variant="outlined"
-          :loading="isLoadingTeams"
-          clearable
-          :menu-props="{ contentClass: 'teams-menu' }"
-        >
-          <template v-slot:item="{ props, item }">
-            <v-list-item
-              v-bind="props"
-              :title="item.raw.name"
-              class="team-list-item"
-            >
-            </v-list-item>
-          </template>
-        </v-select>
-        <div v-if="teamsError" class="text-caption error-text mt-2">
-          {{ teamsError }}
+          :rules="rules.country"
+          :error-messages="countryError"
+        ></v-text-field>
+
+        <!-- Team Edit -->
+        <div v-if="props.editField === 'team'">
+          <v-select
+            :model-value="props.editValue"
+            @update:model-value="updateValue"
+            :items="teams"
+            item-title="name"
+            item-value="name"
+            label="Select Team"
+            variant="outlined"
+            :loading="isLoadingTeams"
+            clearable
+            :menu-props="{ contentClass: 'teams-menu' }"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item
+                v-bind="props"
+                :title="item.raw.name"
+                class="team-list-item"
+              >
+              </v-list-item>
+            </template>
+          </v-select>
+          <div v-if="teamsError" class="text-caption error-text mt-2">
+            {{ teamsError }}
+          </div>
         </div>
-      </div>
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn
-        class="cancel-btn"
-        @click="closeEditDialog"
-      >
-        Cancel
-      </v-btn>
-      <v-btn
-        class="submit-btn"
-        @click="saveEdit"
-        :loading="isSaving"
-        :disabled="!hasValidChanges"
-      >
-        Save
-      </v-btn>
-    </v-card-actions>
+      </v-card-text>
+      <v-card-actions class="dialog-actions">
+        <v-spacer></v-spacer>
+        <v-btn
+          class="cancel-btn"
+          @click="closeEditDialog"
+        >
+          Cancel
+        </v-btn>
+        <v-btn
+          class="submit-btn"
+          @click="saveEdit"
+          :loading="isSaving"
+          :disabled="!hasValidChanges"
+        >
+          Save
+        </v-btn>
+      </v-card-actions>
+    </div>
   </v-card>
 </v-dialog>
 </template>
@@ -353,6 +352,30 @@ watch(() => props.modelValue, (newValue) => {
   backdrop-filter: blur(10px);
 }
 
+.dialog-radius :deep(.v-card) {
+  border-radius: 35px !important;
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-title {
+  color: #42ddf2;
+  font-size: 1.4rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.dialog-actions {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -20px;
+}
+
 /* Buttons */
 .cancel-btn, .submit-btn {
   border-radius: 50px !important;
@@ -387,39 +410,24 @@ watch(() => props.modelValue, (newValue) => {
   background: rgba(66, 221, 242, 0.5) !important;
 }
 
-/* Vuetify deep overrides */
-:deep(.v-card-title) {
-  color: #42DDF2FF !important;
-  font-size: 1.4rem;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(66, 221, 242, 0.2);
-}
-
-:deep(.v-card-text) {
-  padding: 24px;
-}
-
-:deep(.v-card-actions) {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(66, 221, 242, 0.2);
-}
-
 /* Input fields */
 :deep(.v-field) {
-  border-color: rgba(66, 221, 242, 0.3) !important;
+  background: rgba(45, 55, 75, 0.8) !important;
 }
 
-:deep(.v-field:hover),
-:deep(.v-field.v-field--focused) {
-  border-color: #42ddf2 !important;
-}
-
-:deep(.v-text-field) {
-  margin-top: 24px;
+:deep(.v-field__input),
+:deep(.v-input input) {
+  color: white !important;
 }
 
 :deep(.v-label) {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 :deep(.v-field__outline) {
