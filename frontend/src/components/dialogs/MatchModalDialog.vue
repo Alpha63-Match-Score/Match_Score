@@ -6,7 +6,13 @@
       </v-card-title>
       <v-card-text>
         <div class="match-details-centered">
-          <div class="tournament-title">{{ match?.tournament_title }}</div>
+          <router-link
+            :to="`/events/${match?.tournament_id}`"
+            class="tournament-title tournament-link"
+            style="text-decoration: none"
+          >
+            {{ match?.tournament_title }}
+          </router-link>
           <div class="tournament-stage">{{ match?.stage }}</div>
           <div class="is-finished">{{ match?.is_finished ? 'Finished' : 'Not finished' }}</div>
 
@@ -644,6 +650,17 @@ const updateTeams = async () => {
   font-weight: bold;
   margin-top: -30px;
   align-self: center;
+  transition: all 0.2s ease;
+}
+
+:deep(.tournament-link) {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+:deep(.tournament-link:hover) {
+  text-decoration: none;
+  background: transparent !important;
 }
 
 .tournament-stage {
