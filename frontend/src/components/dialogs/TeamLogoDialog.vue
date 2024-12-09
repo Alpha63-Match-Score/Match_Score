@@ -103,7 +103,7 @@ watch(() => props.modelValue, (newValue) => {
   max-width: 400px;
   align-self: center;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 35px;
 }
 
 .dialog-title {
