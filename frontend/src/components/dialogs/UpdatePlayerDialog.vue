@@ -744,25 +744,6 @@ onMounted(async () => {
   scrollbar-color: rgba(66, 221, 242, 0.5) transparent;
 }
 
-
-
-:deep(.v-overlay__content::-webkit-scrollbar) {
-  width: 8px;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-thumb) {
-  background-color: rgba(66, 221, 242, 0.5);
-  border-radius: 4px;
-}
-
-:deep(.v-overlay__content::-webkit-scrollbar-thumb:hover) {
-  background-color: rgba(66, 221, 242, 0.7);
-}
-
 .custom-autocomplete :deep(.v-field__input) {
   color: rgb(255, 255, 255) !important;
 }
