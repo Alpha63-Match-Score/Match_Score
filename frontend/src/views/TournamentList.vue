@@ -71,8 +71,9 @@ const getSearchFromURL = () => {
 };
 
 const handleFiltersChange = async (filters: FilterValuesTournament) => {
+  console.log('handleFiltersChange called with filters:', filters);
+  console.log('Current search term:', getSearchFromURL());
   try {
-    currentSearch.value = '';
     currentFilters.value = filters;
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
@@ -81,6 +82,11 @@ const handleFiltersChange = async (filters: FilterValuesTournament) => {
     const params = new URLSearchParams();
     params.append('offset', '0');
     params.append('limit', currentLimit.value.toString());
+
+    const searchTerm = getSearchFromURL();
+    if (searchTerm) {
+      params.append('search', searchTerm);
+    }
 
     if (filters.period) {
       params.append('period', filters.period);
@@ -116,6 +122,9 @@ const handleFiltersChange = async (filters: FilterValuesTournament) => {
 };
 
 const fetchTournaments = async (loadMore = false) => {
+  console.log('fetchTournaments called, loadMore:', loadMore);
+  console.log('Current filters:', currentFilters.value);
+  console.log('Current search:', getSearchFromURL());
   try {
     if (loadMore) {
       isLoadingMore.value = true;
@@ -178,10 +187,16 @@ onMounted(() => {
   fetchTournaments()
   window.addEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/events') {
-      // Update tournaments data with search results
-      tournaments.value = event.detail.results
-      isLoadingTournaments.value = false
-      tournamentsError.value = null
+      const searchResults = event.detail.results.filter(result => {
+        if (currentFilters.value.format) {
+          return result.tournament_format === currentFilters.value.format;
+        }
+        return true;
+      });
+
+      tournaments.value = searchResults;
+      isLoadingTournaments.value = false;
+      tournamentsError.value = null;
     }
   }) as EventListener)
 })

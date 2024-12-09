@@ -133,13 +133,12 @@ const handlePlayerClick = (playerId: string) => {
   showPlayerModal.value = true
 }
 
-
 onMounted(() => {
   fetchTeams();
   window.addEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/teams') {
+      // Add any filtering logic here if you add filters later
       teams.value = event.detail.results;
-      console.log('Received search results:', teams.value);
       isLoadingTeams.value = false;
       teamsError.value = null;
       hasMoreTeams.value = event.detail.results.length === 9;
@@ -151,9 +150,9 @@ onUnmounted(() => {
   window.removeEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/teams') {
       teams.value = event.detail.results;
-      console.log('Received search results:', teams.value);
       isLoadingTeams.value = false;
       teamsError.value = null;
+      hasMoreTeams.value = event.detail.results.length === 9;
     }
   }) as EventListener);
 });
