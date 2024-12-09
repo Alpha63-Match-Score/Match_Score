@@ -1,47 +1,59 @@
 <template>
   <v-dialog v-model="showAvatarDialog" max-width="500">
-    <v-card class="edit-dialog">
-      <v-card-title>Update Avatar</v-card-title>
-      <v-card-text>
-        <v-alert
-          v-if="avatarError"
-          type="error"
-          variant="tonal"
-          class="mb-4"
-        >
-          {{ avatarError }}
-        </v-alert>
+    <v-card class="dialog-card">
+      <div class="dialog-content">
+        <v-card-title class="dialog-title">
+          <span>Update Avatar</span>
+        </v-card-title>
 
-        <v-file-input
-          v-model="avatarFile"
-          accept="image/*"
-          label="Choose avatar"
-          prepend-icon="mdi-camera"
-          variant="outlined"
-          @change="handleAvatarPreview"
-        ></v-file-input>
+        <v-card-text>
+          <div class="file-upload-section">
+            <v-avatar size="120" class="preview-avatar">
+              <v-img
+                v-if="avatarPreview"
+                :src="avatarPreview"
+                alt="Player avatar"
+              ></v-img>
+              <v-icon
+                v-else
+                icon="mdi-shield"
+                color="#42DDF2FF"
+                size="48"
+              ></v-icon>
+            </v-avatar>
 
-        <div v-if="avatarPreview" class="avatar-preview">
-          <img :src="avatarPreview" alt="Avatar preview" />
+          <v-file-input
+            v-model="avatarFile"
+            label="Player Avatar"
+            variant="outlined"
+            accept="image/*"
+            :show-size="true"
+            prepend-icon="mdi-camera"
+            class="upload-input"
+            @change="handleAvatarPreview"
+            @click:clear="clearAvatar"
+            hide-details
+          ></v-file-input>
         </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+          class="cancel-btn"
+          @click="closeDialog"
+        >
+          Cancel
+        </v-btn>
         <v-btn
-        class="cancel-btn"
-        @click="closeDialog"
-      >
-        Cancel
-      </v-btn>
-      <v-btn
-        class="submit-btn"
-        @click="uploadAvatar"
-        :loading="isUploading"
-        :disabled="!avatarFile"
-      >
-        Upload
-      </v-btn>
-      </v-card-actions>
+          class="submit-btn"
+          @click="uploadAvatar"
+          :loading="isUploading"
+          :disabled="!avatarFile"
+        >
+          Upload
+        </v-btn>
+        </v-card-actions>
+      </div>
     </v-card>
   </v-dialog>
 </template>
@@ -73,15 +85,35 @@ const showAvatarDialog = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
-const handleAvatarPreview = (file: File) => {
-  if (!file) return
+const handleAvatarPreview = (event: Event | File[] | File) => {
+  let file: File | null = null;
 
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    avatarPreview.value = e.target?.result as string
+  if (Array.isArray(event)) {
+    file = event[0];
+  } else if (event instanceof File) {
+    file = event;
+  } else if (event?.target instanceof HTMLInputElement && event.target.files) {
+    file = event.target.files[0];
   }
-  reader.readAsDataURL(file)
-}
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatarPreview.value = e.target.result as string;
+    };
+    reader.readAsDataURL(file);
+    avatarFile.value = file;
+  } else {
+    avatarPreview.value = null;
+    avatarFile.value = null;
+  }
+};
+
+const clearAvatar = () => {
+  avatarFile.value = null;
+  avatarPreview.value = null;
+};
+
 
 const closeDialog = () => {
   showAvatarDialog.value = false
@@ -129,27 +161,49 @@ const uploadAvatar = async () => {
 
 <style scoped>
 /* Dialog base styles */
-.edit-dialog, .dialog-card {
+.dialog-card {
   background: rgba(45, 55, 75, 0.95) !important;
   border: 2px solid #42DDF2FF;
   backdrop-filter: blur(10px);
+  border-radius: 35px !important;
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-title {
+  color: #42ddf2;
+  font-size: 1.4rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
 }
 
 /* Avatar preview */
-.avatar-preview {
-  margin-top: 16px;
-  text-align: center;
+.file-upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
-.avatar-preview img {
-  max-width: 200px;
-  border-radius: 50%;
+.preview-avatar {
   border: 2px solid #42DDF2FF;
+  background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+  margin-top: -20px;
 }
 
-/* Common layout */
-.dialog-content {
-  padding: 24px;
+.preview-avatar .v-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-input {
+  width: 100%;
 }
 
 .dialog-actions {
@@ -210,20 +264,9 @@ const uploadAvatar = async () => {
 }
 
 /* Deep selectors for Vuetify components */
-:deep(.v-card-title) {
-  color: #42DDF2FF !important;
-  font-size: 1.4rem;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(66, 221, 242, 0.2);
-}
 
 :deep(.v-card-text) {
   padding: 24px;
-}
-
-:deep(.v-card-actions) {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(66, 221, 242, 0.2);
 }
 
 :deep(.v-text-field) {
