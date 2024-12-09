@@ -42,10 +42,15 @@
           </div>
 
           <div class="info-row">
-            <div class="team">
-              <v-icon icon="mdi-account-group" class="info-icon"></v-icon>
-              {{ player?.team_name }}
-            </div>
+            <router-link
+              :to="`/teams/${player?.team_id}`"
+              class="link"
+            >
+              <div class="team">
+                <v-icon icon="mdi-account-group" class="info-icon"></v-icon>
+                {{ player?.team_name }}
+              </div>
+            </router-link>
             <v-icon
               icon="mdi-pencil"
               class="edit-icon"
@@ -74,11 +79,16 @@
 
         <!-- Tournament Section -->
         <div v-if="player?.current_tournament_title" class="tournament-container">
-          <div class="tournament-header">Current tournament</div>
-          <div class="tournament-name">
-            <v-icon icon="mdi-trophy" class="tournament-icon"></v-icon>
-            {{ player.current_tournament_title }}
-          </div>
+          <router-link
+            :to="`/events/${player?.current_tournament_id}`"
+            class="link"
+          >
+            <div class="tournament-header">Current tournament</div>
+            <div class="tournament-name">
+              <v-icon icon="mdi-trophy" class="tournament-icon"></v-icon>
+              {{ player.current_tournament_title }}
+            </div>
+          </router-link>
         </div>
       </div>
     </div>
@@ -125,57 +135,6 @@ const openAvatarUpload = () => {
 const openEdit = (field: string) => {
   console.log('PlayerCard: Emitting edit event with field:', field)
   emit('edit', field)
-}
-
-const fetchTeams = async () => {
-  try {
-    isLoadingTeams.value = true
-    teamsError.value = ''
-
-    const response = await fetch(`${API_URL}/teams`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.token}`
-      }
-    })
-
-    if (!response.ok) {
-      const errorMessage = await extractErrorMessage(response)
-      throw new Error(errorMessage)
-    }
-
-    const data = await response.json()
-    teams.value = data.map(team => ({
-      name: team.name,
-    }))
-  } catch (e) {
-    console.error('Error fetching teams:', e)
-    teamsError.value = e.message || 'Failed to load teams'
-  } finally {
-    isLoadingTeams.value = false
-  }
-}
-
-const extractErrorMessage = async (response: Response) => {
-  try {
-    const responseClone = response.clone()
-    const text = await responseClone.text()
-    const data = JSON.parse(text)
-
-    // За FastAPI validation errors
-    if (data.detail && Array.isArray(data.detail) && data.detail.length > 0) {
-      return data.detail[0].msg
-    }
-
-    // За HTTP exceptions
-    if (data.detail && typeof data.detail === 'string') {
-      return data.detail
-    }
-
-    return 'An error occurred'
-  } catch (e) {
-    console.error('Error extracting message:', e)
-    return 'An error occurred'
-  }
 }
 
 </script>
@@ -293,11 +252,28 @@ const extractErrorMessage = async (response: Response) => {
   gap: 24px;
 }
 
-.stats-container, .tournament-container {
+.stats-container {
   background: rgba(45, 55, 75, 0.5);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(66, 221, 242, 0.3);
+}
+
+.tournament-container {
+  background: rgba(45, 55, 75, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(66, 221, 242, 0.3);
+}
+
+:deep(.link) {
+  text-decoration: none;
+  background: transparent !important;
+}
+
+:deep(.link:hover) {
+  text-decoration: none;
+  background: transparent !important;
 }
 
 .stats-header, .tournament-header {

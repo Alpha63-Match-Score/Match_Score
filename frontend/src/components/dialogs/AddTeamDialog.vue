@@ -267,10 +267,7 @@ const submitAddTeam = async () => {
   border: 2px solid #42DDF2FF;
   background: rgba(8, 87, 144, 0.1);
   transition: transform 0.2s;
-}
-
-.preview-avatar:hover {
-  transform: scale(1.05);
+  margin-top: -20px;
 }
 
 .preview-avatar .v-img {
