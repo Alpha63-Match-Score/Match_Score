@@ -32,9 +32,32 @@ export interface Player {
   current_tournament_title: string | null;
 }
 
+export interface PrizeCut {
+  id: string
+  tournament_name: string
+  prize_cut: number
+  place: number
+}
+
 export interface Team {
   id: string
   name: string
+}
+
+export interface TeamStats {
+  tournaments_played: number
+  tournaments_won: number
+  tournament_win_loss_ratio: {
+    ratio: string
+  }
+  matches_played: number
+  matches_won: number
+  match_win_loss_ratio: {
+    ratio: string
+  }
+  most_often_played_opponent: string
+  best_opponent: string
+  worst_opponent: string
 }
 
 export interface Match {
