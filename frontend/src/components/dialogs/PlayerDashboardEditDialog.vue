@@ -266,16 +266,20 @@ const saveEdit = async () => {
 const hasValidChanges = computed(() => {
   if (!props.player) return false;
 
+  if (firstNameError.value || lastNameError.value || countryError.value || teamsError.value || editError.value) {
+    return false;
+  }
+
   switch (props.editField) {
     case 'name':
       return (props.editFirstName !== props.player.first_name ||
               props.editLastName !== props.player.last_name) &&
-              !firstNameError.value &&
-              !lastNameError.value;
+              rules.firstName.every(rule => rule(props.editFirstName) === true) &&
+              rules.lastName.every(rule => rule(props.editLastName) === true);
 
     case 'country':
       return props.editValue !== props.player.country &&
-             !countryError.value;
+             rules.country.every(rule => rule(props.editValue) === true);
 
     case 'team':
       return props.editValue !== props.player.team_name;
@@ -342,6 +346,28 @@ watch(() => props.modelValue, (newValue) => {
     fetchTeams();
   }
 });
+
+
+watch(() => props.editFirstName, (newValue) => {
+  if (newValue && firstNameError.value) {
+    firstNameError.value = ''
+  }
+})
+
+watch(() => props.editLastName, (newValue) => {
+  if (newValue && lastNameError.value) {
+    lastNameError.value = ''
+  }
+})
+
+watch(() => props.editValue, (newValue) => {
+  if (props.editField === 'country' && countryError.value) {
+    countryError.value = ''
+  }
+  if (props.editField === 'team' && teamsError.value) {
+    teamsError.value = ''
+  }
+})
 </script>
 
 <style scoped>
