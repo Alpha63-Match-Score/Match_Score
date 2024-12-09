@@ -62,11 +62,8 @@ class Settings(BaseSettings):
         which SQLAlchemy expects.
         """
         if v.startswith("postgres://"):
-            return v.replace("postgres://",
-                             "postgresql://",
-                             1)
+            return v.replace("postgres://", "postgresql://", 1)
         return v
-
 
     model_config = {
         "case_sensitive": True,
