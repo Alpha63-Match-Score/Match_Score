@@ -33,17 +33,17 @@ Welcome to **Kitten Strike**! 🌟 The most purrfect competitive gaming platform
 ## 🛠️ Battle Equipment (Tech Stack)
 
 ### 🏰 Backend Fortress
-- Python (The serpent that powers our kingdom)
-- FastAPI (For lightning-fast reflexes)
-- PostgreSQL (Our magical scroll storage)
-- JWT (For secure passage through our realms)
-- AWS S3 (Our infinite item storage)
+- Python 
+- FastAPI 
+- PostgreSQL 
+- JWT 
+- AWS S3 
 
 ### ⚔️ Frontend Arsenal
-- Vue.js 3 (Our mighty weapon of choice)
-- TypeScript (For type-safe spells)
-- HTML5/CSS3 (Our artistic enchantments)
-- Lucide Vue (For purr-fect animations)
+- Vue.js 3 
+- TypeScript 
+- HTML5/CSS3 
+- Lucide Vue 
 
 ## 🗺️ Sacred Scrolls (Database Schema)
 
