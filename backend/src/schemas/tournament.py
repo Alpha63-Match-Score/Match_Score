@@ -26,10 +26,10 @@ class TournamentListResponse(BaseConfig):
     end_date: datetime
     current_stage: Stage
     number_of_teams: int | None = None
+    director_id: UUID
 
 
 class TournamentDetailResponse(TournamentListResponse):
-    director_id: UUID
     matches_of_current_stage: list[MatchResponse]
     teams: list[TeamListResponse]
     prizes: list["PrizeCutResponse"]
