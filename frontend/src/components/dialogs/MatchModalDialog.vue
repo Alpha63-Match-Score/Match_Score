@@ -306,9 +306,12 @@ const dateRules = [
 
 // Computed
 const canEdit = computed(() => {
-  return authStore.isAuthenticated &&
-    (authStore.userRole === 'admin' || props.tournamentDirectorId === authStore.userId)
-})
+  console.log('director_id:', props.tournamentDirectorId)
+  console.log('user_id:', authStore.userId)
+  return authStore.isAuthenticated && (
+    authStore.userRole === 'admin' ||
+    props.tournamentDirectorId === authStore.userId
+  )})
 
 const hasTimeChanges = computed(() => {
   if (!props.match || !editedStartTime.value) return false

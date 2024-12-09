@@ -6,6 +6,7 @@ export interface Tournament {
   end_date: string
   current_stage: string
   number_of_teams: number
+  director_id: string
 }
 
 export interface Request {
