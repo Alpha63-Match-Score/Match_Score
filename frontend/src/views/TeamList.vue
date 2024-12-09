@@ -64,28 +64,51 @@ const selectedPlayer = ref<Player | null>(null)
 const isLoadingPlayer = ref(false)
 const playerError = ref<string | null>(null)
 
-const fetchTeams = async () => {
+const fetchTeams = async (loadMore = false) => {
   try {
-    isLoadingTeams.value = true
-    teamsError.value = null
-    const response = await fetch(`${API_URL}/teams/?sort_by=desc&offset=0&limit=${currentLimit.value}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    if (loadMore) {
+      isLoadingMore.value = true;
+    } else {
+      isLoadingTeams.value = true;
+      teamsError.value = null;
     }
-    const data = await response.json()
-    teams.value = Array.isArray(data) ? data : (data.results || [])
-    hasMoreTeams.value = teams.value.length === currentLimit.value
+
+    const params = new URLSearchParams();
+    const offset = loadMore ? teams.value.length : 0;
+    params.append('offset', offset.toString());
+    params.append('limit', '9'); // Фиксиран лимит от 9 за отбори
+    params.append('sort_by', 'desc');
+
+    const response = await fetch(`${API_URL}/teams/?${params}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const results = Array.isArray(data) ? data : (data.results || []);
+
+    if (loadMore) {
+      // Добавяме новите отбори към съществуващите
+      teams.value = [...teams.value, ...results];
+    } else {
+      // При първоначално зареждане презаписваме изцяло
+      teams.value = results;
+    }
+
+    // Има още за зареждане ако броят на върнатите резултати е равен на лимита
+    hasMoreTeams.value = results.length === 9;
+
   } catch (e) {
-    console.error('Error fetching teams:', e)
-    teamsError.value = 'Failed to load teams. Please try again later.'
+    console.error('Error fetching teams:', e);
+    teamsError.value = 'Failed to load teams. Please try again later.';
   } finally {
-    isLoadingTeams.value = false
+    isLoadingTeams.value = false;
+    isLoadingMore.value = false;
   }
 }
 
 const loadMoreTeams = async () => {
-  currentLimit.value += 9
-  await fetchTeams()
+  await fetchTeams(true);
 }
 
 const fetchPlayer = async (playerId: string) => {
@@ -110,28 +133,30 @@ const handlePlayerClick = (playerId: string) => {
   showPlayerModal.value = true
 }
 
+
 onMounted(() => {
-  fetchTeams()
+  fetchTeams();
   window.addEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/teams') {
-      teams.value = event.detail.results
-      console.log('Received search results:', teams.value)
-      isLoadingTeams.value = false
-      teamsError.value = null
+      teams.value = event.detail.results;
+      console.log('Received search results:', teams.value);
+      isLoadingTeams.value = false;
+      teamsError.value = null;
+      hasMoreTeams.value = event.detail.results.length === 9;
     }
-  }) as EventListener)
-})
+  }) as EventListener);
+});
 
 onUnmounted(() => {
-  window.addEventListener('search-results', ((event: CustomEvent) => {
+  window.removeEventListener('search-results', ((event: CustomEvent) => {
     if (event.detail.route === '/teams') {
-      teams.value = event.detail.results
-      console.log('Received search results:', teams.value)
-      isLoadingTeams.value = false
-      teamsError.value = null
+      teams.value = event.detail.results;
+      console.log('Received search results:', teams.value);
+      isLoadingTeams.value = false;
+      teamsError.value = null;
     }
-  }) as EventListener)
-})
+  }) as EventListener);
+});
 </script>
 
 <style scoped>

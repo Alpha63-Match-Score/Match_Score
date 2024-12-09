@@ -79,34 +79,58 @@ const selectedIsFinished = ref<string | null>(null)
 const selectedTeam = ref<string | null>(null)
 
 
-const fetchMatches = async () => {
+const fetchMatches = async (loadMore = false) => {
   try {
-    isLoadingMatches.value = true
-    matchesError.value = null
-
-
-    const params = new URLSearchParams()
-    if (selectedStage.value) params.append('stage', selectedStage.value)
-    if (selectedIsFinished.value === 'active') params.append('is_finished', 'false')
-    if (selectedIsFinished.value === 'finished') params.append('is_finished', 'true')
-    if (selectedTeam.value) params.append('team_name', selectedTeam.value)
-    params.append('offset', '0')
-    params.append('limit', currentLimit.value.toString())
-
-    const response = await fetch(`${API_URL}/matches/?${params}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    if (loadMore) {
+      isLoadingMore.value = true;
+    } else {
+      isLoadingMatches.value = true;
+      matchesError.value = null;
     }
-    const data = await response.json()
-    matches.value = Array.isArray(data) ? data : (data.results || [])
-    hasMoreMatches.value = matches.value.length === currentLimit.value
+
+    const params = new URLSearchParams();
+    // Изчисляваме offset спрямо текущия брой мачове
+    const offset = loadMore ? matches.value.length : 0;
+    params.append('offset', offset.toString());
+    params.append('limit', '10'); // Фиксиран лимит от 10 вместо currentLimit
+
+    // Добавяме филтрите
+    if (selectedStage.value) params.append('stage', selectedStage.value);
+    if (selectedIsFinished.value === 'active') params.append('is_finished', 'false');
+    if (selectedIsFinished.value === 'finished') params.append('is_finished', 'true');
+    if (selectedTeam.value) params.append('team_name', selectedTeam.value);
+
+    const response = await fetch(`${API_URL}/matches/?${params}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    const results = Array.isArray(data) ? data : (data.results || []);
+
+    if (loadMore) {
+      // Добавяме новите резултати към съществуващите
+      matches.value = [...matches.value, ...results];
+    } else {
+      // При първоначално зареждане или промяна на филтри презаписваме изцяло
+      matches.value = results;
+    }
+
+    // Има още за зареждане ако броят на върнатите резултати е равен на лимита
+    hasMoreMatches.value = results.length === 10;
+
   } catch (e) {
-    console.error('Error fetching matches:', e)
-    matchesError.value = 'Failed to load matches. Please try again later.'
+    console.error('Error fetching matches:', e);
+    matchesError.value = 'Failed to load matches. Please try again later.';
   } finally {
-    isLoadingMatches.value = false
+    isLoadingMatches.value = false;
+    isLoadingMore.value = false;
   }
 }
+
+const loadMoreMatches = async () => {
+  await fetchMatches(true);
+}
+
 
 const fetchTournaments = async () => {
   try {
@@ -160,11 +184,6 @@ const fetchTeams = async () => {
   }
 }
 
-const loadMoreMatches = async () => {
-  currentLimit.value += 10
-  await fetchMatches()
-}
-
 const openMatchDialog = async (match: Match) => {
   try {
     const response = await fetch(`${API_URL}/matches/${match.id}`)
@@ -198,8 +217,7 @@ onMounted(() => {
 })
 
 watch([selectedStage, selectedIsFinished, selectedTeam], () => {
-  currentLimit.value = 10 // Reset to initial limit when filters change
-  fetchMatches()
+  fetchMatches();
 })
 
 onUnmounted(() => {

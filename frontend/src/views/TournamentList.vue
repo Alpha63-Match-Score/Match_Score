@@ -58,14 +58,21 @@ const selectedPeriod = ref<string | null>(null);
 const selectedStatus = ref<string | null>(null);
 const selectedFormat = ref<string | null>(null);
 
+const currentSearch = ref<string>('');
 const currentFilters = ref<FilterValues>({
   period: null,
   status: null,
   format: null
 });
 
+const getSearchFromURL = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('search') || '';
+};
+
 const handleFiltersChange = async (filters: FilterValues) => {
   try {
+    currentSearch.value = '';
     currentFilters.value = filters;
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
@@ -122,6 +129,13 @@ const fetchTournaments = async (loadMore = false) => {
     params.append('offset', '0');
     params.append('limit', currentLimit.value.toString());
 
+
+    const searchTerm = getSearchFromURL();
+    if (searchTerm) {
+      params.append('search', searchTerm);
+      console.log('Adding search term to request:', searchTerm);
+    }
+
     if (currentFilters.value.period) {
       params.append('period', currentFilters.value.period);
     }
@@ -139,8 +153,12 @@ const fetchTournaments = async (loadMore = false) => {
     const data = await response.json();
     const results = Array.isArray(data) ? data : (data.results || []);
 
-    tournaments.value = results;
-    hasMoreTournaments.value = results.length === currentLimit.value;
+    if (loadMore) {
+      tournaments.value = [...tournaments.value, ...results];
+    } else {
+      tournaments.value = results;
+    }
+    hasMoreTournaments.value = results.length === 10;
 
   } catch (e) {
     console.error('Error fetching tournaments:', e);
