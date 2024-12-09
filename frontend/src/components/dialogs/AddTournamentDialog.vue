@@ -570,4 +570,16 @@ onMounted(async () => {
 :deep(.v-field--focused) {
   color: #42DDF2FF !important;
 }
+
+/* Date Input Field Specific Styles */
+:deep(.v-field__input::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+  opacity: 0.5;
+  font-size: 1.5em;
+}
+
+:deep(.v-field__input::-webkit-calendar-picker-indicator:hover) {
+  opacity: 0.8;
+  cursor: pointer;
+}
 </style>

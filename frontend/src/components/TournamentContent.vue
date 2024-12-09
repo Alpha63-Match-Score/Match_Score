@@ -32,7 +32,7 @@
                     class="winner-team"
                     v-bind="props"
                   >
-                    <v-avatar size="50">
+                    <v-avatar size="50" class="prize-avatar">
                       <v-img
                         v-if="prize.team_logo"
                         :src="prize.team_logo"
@@ -374,6 +374,19 @@ const openMatchDialog = (match: Match) => {
 }
 
 /* Prizes Section */
+.prize-avatar {
+  min-width: 55px;
+  min-height: 55px;
+  border: 2px solid #42ddf2;
+  background: rgba(8, 87, 144, 0.1);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.prize-avatar:hover {
+  transform: scale(1);
+}
+
 .prizes-list {
   display: flex;
   flex-direction: column;

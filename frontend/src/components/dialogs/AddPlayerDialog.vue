@@ -424,10 +424,6 @@ onMounted(() => {
   transition: transform 0.2s;
 }
 
-.preview-avatar:hover {
-  transform: scale(1.05);
-}
-
 .upload-input {
   width: 100%;
 }
@@ -547,5 +543,14 @@ onMounted(() => {
 :deep(.v-overlay__content::-webkit-scrollbar-thumb:hover) {
   background-color: #42DDF2FF;
   opacity: 0.8;
+}
+
+/* Add this to your existing styles */
+:deep(.v-file-input .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.7) !important; /* Default state */
+}
+
+:deep(.v-file-input:hover .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.9) !important; /* Hover state */
 }
 </style>

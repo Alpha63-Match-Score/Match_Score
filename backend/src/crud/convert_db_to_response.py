@@ -50,6 +50,7 @@ def convert_db_to_player_list_response(db_player: Type[Player]) -> PlayerListRes
         ),
     )
 
+
 def convert_db_to_player_detail_response(
     db_player: Type[Player], tournament_title: str | None
 ) -> PlayerDetailResponse:

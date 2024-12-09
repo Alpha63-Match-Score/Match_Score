@@ -387,4 +387,13 @@ const submitAddTeam = async () => {
 :deep(.v-field__outline) {
   color: rgba(66, 221, 242, 0.3) !important;
 }
+
+/* Add this to your existing styles */
+:deep(.v-file-input .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.7) !important; /* Default state */
+}
+
+:deep(.v-file-input:hover .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.9) !important; /* Hover state */
+}
 </style>

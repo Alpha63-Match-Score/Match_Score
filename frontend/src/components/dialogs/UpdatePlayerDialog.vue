@@ -575,10 +575,6 @@ onMounted(async () => {
   transition: transform 0.2s;
 }
 
-.preview-avatar:hover {
-  transform: scale(1.05);
-}
-
 .upload-input {
   width: 100%;
 }
@@ -939,6 +935,15 @@ onMounted(async () => {
 :deep(.v-file-input .v-field__input) {
   color: white !important;
   font-size: 0.9rem;
+}
+
+/* Add this to your existing styles */
+:deep(.v-file-input .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.7) !important; /* Default state */
+}
+
+:deep(.v-file-input:hover .v-input__prepend) {
+  color: rgba(255, 255, 255, 0.9) !important; /* Hover state */
 }
 </style>
 

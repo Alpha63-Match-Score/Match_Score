@@ -16,7 +16,7 @@
               ></v-img>
               <v-icon
                 v-else
-                icon="mdi-shield"
+                icon="mdi-account"
                 color="#42DDF2FF"
                 size="48"
               ></v-icon>
