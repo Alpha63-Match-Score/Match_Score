@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.imgur.com/YUj6dcx.png" width="500">
+  <img src="https://i.imgur.com/fwjlOde.png" width="500">
 </p>
 
 <h3 align="center">Where Feline Reflexes Meet Esports! 🏆</h3>
