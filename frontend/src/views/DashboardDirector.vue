@@ -158,9 +158,10 @@ const handleTeamAdded = () => {
   successMessage.value = 'Team added successfully!'
 }
 
-const handleTournamentAdded = () => {
+const handleTournamentAdded = async () => {
   showSuccessAlert.value = true
   successMessage.value = 'Tournament created successfully!'
+  await fetchTournaments()
 }
 
 const handlePlayerAdded = (newPlayer: Player) => {
