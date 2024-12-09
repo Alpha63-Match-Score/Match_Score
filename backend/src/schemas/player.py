@@ -25,7 +25,9 @@ class PlayerListResponse(PlayerBaseResponse):
 
 
 class PlayerDetailResponse(PlayerListResponse):
+    team_id: UUID | None
     current_tournament_title: str | None
+    current_tournament_id: UUID | None
 
 
 class PlayerCreate(BaseConfig):

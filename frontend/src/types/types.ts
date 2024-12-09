@@ -28,9 +28,11 @@ export interface Player {
   country: string;
   user_email: string;
   team_name: string;
+  team_id: string;
   avatar: string | null;
   game_win_ratio: string;
   current_tournament_title: string | null;
+  current_tournament_id: string | null;
 }
 
 export interface PrizeCut {

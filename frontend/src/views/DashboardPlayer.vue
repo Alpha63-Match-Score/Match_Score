@@ -58,7 +58,7 @@ import { useAuthStore } from '@/stores/auth'
 import HeaderSection from "@/components/HeaderSection.vue";
 import DashboardWelcome from "@/components/DashboardWelcome.vue";
 import PlayerCard from "@/components/PlayerCard.vue";
-import EditDialog from "@/components/dialogs/EditDialog.vue";
+import EditDialog from "@/components/dialogs/PlayerDashboardEditDialog.vue";
 import AvatarUploadDialog from "@/components/dialogs/AvatarUploadDialog.vue";
 import RequestHistory from "@/components/RequestHistory.vue";
 import type { Player, Team, Request } from '@/types/types'

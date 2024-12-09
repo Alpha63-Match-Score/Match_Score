@@ -9,7 +9,6 @@
           <router-link
             :to="`/events/${match?.tournament_id}`"
             class="tournament-title tournament-link"
-            style="text-decoration: none"
           >
             {{ match?.tournament_title }}
           </router-link>
