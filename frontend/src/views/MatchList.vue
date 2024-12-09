@@ -35,6 +35,7 @@
         <MatchModalDialog
           v-model="showMatchModal"
           :match="selectedMatch"
+          :tournamentDirectorId="selectedMatch ? getTournamentDirectorId(selectedMatch.tournament_id) : ''"
           :onMatchUpdate="refreshMatch"
         />
 
@@ -190,7 +191,7 @@ const loadMoreMatches = async () => {
 
 const fetchTournaments = async () => {
   try {
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=10`)
+    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=100`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -242,6 +243,7 @@ const fetchTeams = async () => {
 
 const openMatchDialog = async (match: Match) => {
   try {
+    await fetchTournaments()
     const response = await fetch(`${API_URL}/matches/${match.id}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -256,6 +258,15 @@ const openMatchDialog = async (match: Match) => {
 const getTournamentFormat = (tournamentId: string) => {
   const tournament = tournaments.value.find(t => t.id === tournamentId)
   return tournament ? tournament.tournament_format : 'Unknown Format'
+}
+
+const getTournamentDirectorId = (tournamentId: string | undefined) => {
+  if (!tournamentId) return ''
+  console.log('Looking for tournament with ID:', tournamentId)
+  console.log('Available tournaments:', tournaments.value)
+  const tournament = tournaments.value.find(t => t.id === tournamentId)
+  console.log('Full tournament object:', tournament)
+  return tournament?.director_id || ''
 }
 
 onMounted(() => {

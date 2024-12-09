@@ -100,6 +100,7 @@ import AddPlayerDialog from "@/components/dialogs/AddPlayerDialog.vue";
 import type { Tournament, Player, FilterValuesTournament } from '@/types/types'
 import LoadMoreButton from "@/components/LoadMoreButton.vue";
 import HeaderSection from "@/components/HeaderSection.vue";
+import {useAuthStore} from "@/stores/auth";
 
 const tournaments = ref<Tournament[]>([])
 const tournamentsError = ref<string | null>(null)
@@ -113,6 +114,7 @@ const usernameError = ref('')
 const firstNameError = ref('')
 const lastNameError = ref('')
 const countryError = ref('')
+const authStore = useAuthStore()
 
 const clearErrors = () => {
   usernameError.value = ''
@@ -145,15 +147,21 @@ const teamError = ref('')
 const teamLogo = ref<File | null>(null)
 
 const showAddPlayerDialog = ref(false)
+const currentFilters = ref<FilterValuesTournament>({
+  period: null,
+  status: null,
+  format: null
+});
 
 const handleTeamAdded = () => {
   showSuccessAlert.value = true
   successMessage.value = 'Team added successfully!'
 }
 
-const handleTournamentAdded = () => {
+const handleTournamentAdded = async () => {
   showSuccessAlert.value = true
   successMessage.value = 'Tournament created successfully!'
+  await fetchTournaments()
 }
 
 const handlePlayerAdded = (newPlayer: Player) => {
@@ -168,11 +176,13 @@ const handlePlayerUpdated = (updatedPlayer: Player) => {
 
 const handleFiltersChange = async (filters: FilterValuesTournament) => {
   try {
+    currentFilters.value = filters;
     isLoadingTournaments.value = true;
     tournamentsError.value = null;
     currentLimit.value = 10;
 
     const params = new URLSearchParams();
+    params.append('author_id', authStore.userId || '');
     params.append('offset', '0');
     params.append('limit', currentLimit.value.toString());
 
@@ -215,19 +225,38 @@ const fetchTournaments = async (loadMore = false) => {
       isLoadingMore.value = true;
     } else {
       isLoadingTournaments.value = true;
-      isFiltered.value = false; // Reset filter state when loading initial tournaments
+      isFiltered.value = false;
     }
     tournamentsError.value = null;
 
-    const response = await fetch(`${API_URL}/tournaments/?offset=0&limit=${currentLimit.value}`);
+    const params = new URLSearchParams();
+    params.append('author_id', authStore.userId || '');
+    params.append('offset', '0');
+    params.append('limit', currentLimit.value.toString());
+
+    if (currentFilters.value.period) {
+      params.append('period', currentFilters.value.period);
+    }
+    if (currentFilters.value.status) {
+      params.append('status', currentFilters.value.status);
+    }
+    if (currentFilters.value.format) {
+      params.append('tournament_format', currentFilters.value.format);
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/?${params}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
     const results = Array.isArray(data) ? data : (data.results || []);
 
-    tournaments.value = results;
-    hasMoreTournaments.value = results.length === currentLimit.value;
+    if (loadMore) {
+      tournaments.value = [...tournaments.value, ...results];
+    } else {
+      tournaments.value = results;
+    }
+    hasMoreTournaments.value = results.length === 10;
 
   } catch (e) {
     console.error('Error fetching tournaments:', e);

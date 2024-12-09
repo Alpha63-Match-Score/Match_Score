@@ -138,6 +138,7 @@ def convert_db_to_tournament_list_response(
         end_date=db_tournament.end_date,
         current_stage=db_tournament.current_stage,
         number_of_teams=len(db_tournament.teams),
+        director_id=db_tournament.director_id,
     )
 
 
