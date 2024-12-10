@@ -9,10 +9,10 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
+    "heroku-postbuild": "npm run build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "start": "serve -s dist -l $PORT",
-    "heroku-postbuild": "npm run build"
+    "start": "serve -s dist -l $PORT"
   },
     "engines": {
     "node": ">=14.x",
