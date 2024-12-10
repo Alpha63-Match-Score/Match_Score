@@ -1,8 +1,8 @@
 <template>
-  <div class="about-wrapper">
     <HeaderSection />
 
-    <div class="content-wrapper">
+  <div class="content-wrapper">
+    <div class="all-cards">
       <!-- Welcome Card -->
       <div class="welcome-card">
         <div class="welcome-content">
@@ -139,18 +139,21 @@ import HeaderSection from "@/components/HeaderSection.vue";
 </script>
 
 <style scoped>
-.about-wrapper {
-  position: relative;
-  display: flex;
-  margin-left: -350px;
-}
 
 .content-wrapper {
   position: relative;
   z-index: 3;
-  padding: 2rem;
+  padding-top: 100px;
+  flex-direction: column;
+  gap: 20px;
+  width: 100vw;
+  justify-items: center;
+}
+
+.all-cards {
+  display: flex;
+  flex-direction: column;
   max-width: 1000px;
-  margin: 0 auto;
 }
 
 .welcome-card,
