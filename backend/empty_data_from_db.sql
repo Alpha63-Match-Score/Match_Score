@@ -1,4 +1,4 @@
--- Cleanup query that disables constraints, truncates tables, and re-enables constraints
+------------------ locally ------------------
 DO $$
 BEGIN
  -- Disable triggers and constraints
@@ -27,4 +27,14 @@ BEGIN
  EXECUTE 'ALTER TABLE "user" ENABLE TRIGGER ALL';
  EXECUTE 'ALTER TABLE request ENABLE TRIGGER ALL';
  EXECUTE 'ALTER TABLE prizecut ENABLE TRIGGER ALL';
+END $$;
+
+
+
+------------------ public ------------------
+
+DO $$
+BEGIN
+    TRUNCATE TABLE match, tournament, player, team, "user", request, prizecut CASCADE;
+
 END $$;
