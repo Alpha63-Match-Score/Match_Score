@@ -116,7 +116,7 @@ const teamError = ref('')
 const rules = {
   team: [
     (v: string) => !!v || 'Team name is required',
-    (v: string) => v.length >= 3 || 'Team name must be at least 3 characters',
+    (v: string) => v.length >= 5 || 'Team name must be at least 5 characters',
     (v: string) => v.length <= 50 || 'Team name must not exceed 50 characters',
     (v: string) => /^[a-zA-Z0-9\s-]+$/.test(v) || 'Team name can only contain letters, numbers, spaces and dashes'
   ],

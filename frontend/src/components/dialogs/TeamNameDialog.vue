@@ -3,24 +3,25 @@
     <v-card>
       <v-card-title class="dialog-title">Edit Team Name</v-card-title>
       <v-card-text>
-        <v-alert
-          v-if="nameError"
-          type="error"
-          variant="tonal"
-          class="mb-4"
-        >
-          {{ nameError }}
-        </v-alert>
         <v-text-field
           v-model="editedName"
           label="Team Name"
           variant="outlined"
+          :rules="[rules.required, rules.minLength]"
+          :error="!!nameError"
+          :error-messages="nameError"
         ></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="error" @click="showNameEdit = false">Cancel</v-btn>
-        <v-btn color="primary" @click="updateName">Save</v-btn>
+        <v-btn class="cancel-btn" @click="handleClose">Cancel</v-btn>
+        <v-btn
+          class="submit-btn"
+          @click="updateName"
+          :disabled="!isValid || !hasChanges"
+        >
+          Save
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -48,19 +49,54 @@ const editedName = ref(props.currentName)
 const nameError = ref('')
 const authStore = useAuthStore()
 
+// Validation rules
+const rules = {
+  required: (v: string) => !!v?.trim() || 'Team name is required',
+  minLength: (v: string) => {
+    const length = v?.trim().length || 0
+    return length >= 5 || 'Team name must be at least 5 characters'
+  }
+}
+
 // Computed for v-model binding
 const showNameEdit = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
 
+// Computed for validation state
+const isValid = computed(() => {
+  const value = editedName.value?.trim() || ''
+  return rules.required(value) === true && rules.minLength(value) === true
+})
+
+// Computed for changes check
+const hasChanges = computed(() => {
+  return editedName.value?.trim() !== props.currentName?.trim()
+})
+
 // Methods
+const handleClose = () => {
+  editedName.value = props.currentName
+  nameError.value = ''
+  showNameEdit.value = false
+}
+
 const updateName = async () => {
+  const trimmedName = editedName.value?.trim()
+
+  if (!isValid.value) {
+    nameError.value = !trimmedName
+      ? 'Team name is required'
+      : 'Team name must be at least 5 characters'
+    return
+  }
+
   try {
     nameError.value = ''
 
     const response = await fetch(
-      `${API_URL}/teams/${props.teamId}?name=${encodeURIComponent(editedName.value)}`,
+      `${API_URL}/teams/${props.teamId}?name=${encodeURIComponent(trimmedName)}`,
       {
         method: 'PUT',
         headers: {
@@ -74,22 +110,23 @@ const updateName = async () => {
       throw new Error(error)
     }
 
-    // Close dialog and emit success
-    showNameEdit.value = false
-    emit('nameUpdated', editedName.value)
+    emit('nameUpdated', trimmedName)
+    handleClose()
   } catch (e) {
     console.error('Error updating team name:', e)
     nameError.value = (e as Error).message || 'Failed to update team name'
   }
 }
 
-// Reset edited name when dialog opens
+// Reset state when dialog opens
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     editedName.value = props.currentName
+    nameError.value = ''
   }
 })
 </script>
+
 
 <style scoped>
 .edit-dialog :deep(.v-card) {
@@ -163,4 +200,26 @@ watch(() => props.modelValue, (newValue) => {
     transform: translateY(-2px);
   }
 }
+
+/* Error State Styles */
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline),
+:deep(.v-field--error .v-label),
+:deep(.v-field--error input::placeholder),
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+  color: #fed854 !important;
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
 </style>

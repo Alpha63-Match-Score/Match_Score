@@ -505,8 +505,17 @@ const openMatchDialog = (match: Match) => {
 .team-left, .team-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  gap: 20px;
   flex: 1;
+}
+
+.team-left .team-score {
+  margin-left: auto;
+}
+
+.team-right .team-score {
+  margin-right: auto;
 }
 
 /* Team Avatar Styles */
@@ -644,6 +653,8 @@ const openMatchDialog = (match: Match) => {
 :deep(.v-alert__prepend) {
   color: #fed854 !important;
 }
+
+
 
 /* Media Queries */
 @media (max-width: 768px) {

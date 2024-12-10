@@ -7,9 +7,10 @@
           v-if="addPlayerError"
           type="error"
           variant="tonal"
-          class="mb-4"
+          class="mb-4 error-alert"
+          closable
         >
-          {{ addPlayerError }}
+          {{ formatErrorMessage(addPlayerError) }}
         </v-alert>
         <v-autocomplete
           v-model="selectedPlayerId"
@@ -34,8 +35,14 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="error" @click="showAddPlayer = false">Cancel</v-btn>
-        <v-btn color="primary" @click="addPlayer">Add Player</v-btn>
+        <v-btn class="cancel-btn" @click="handleClose">Cancel</v-btn>
+        <v-btn
+          class="submit-btn"
+          :disabled="!selectedPlayerId"
+          @click="addPlayer"
+        >
+          Add Player
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -70,6 +77,13 @@ const showAddPlayer = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
+const formatErrorMessage = (error: string) => {
+  if (error.includes('Team has reached the player limit')) {
+    return 'Team limit reached!'
+  }
+  return error
+}
+
 // Methods
 const fetchAvailablePlayers = async () => {
   try {
@@ -88,6 +102,12 @@ const fetchAvailablePlayers = async () => {
   } finally {
     loadingPlayers.value = false
   }
+}
+
+const handleClose = () => {
+  selectedPlayerId.value = ''
+  addPlayerError.value = ''
+  showAddPlayer.value = false
 }
 
 const addPlayer = async () => {

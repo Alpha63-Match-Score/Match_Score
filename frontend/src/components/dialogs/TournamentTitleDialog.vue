@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     :modelValue="modelValue"
-    @update:modelValue="$emit('update:modelValue', $event)"
+    @update:modelValue="handleDialogUpdate"
     max-width="500px"
     class="title-dialog"
   >
@@ -13,24 +13,24 @@
             v-model="editedTitle"
             label="Tournament Title"
             variant="outlined"
+            :rules="[rules.required, rules.length]"
             :error="!!titleError"
             :error-messages="titleError"
           ></v-text-field>
-
         </v-card-text>
         <v-card-actions class="dialog-actions">
           <v-spacer></v-spacer>
           <v-btn
             class="cancel-btn"
             variant="text"
-            @click="$emit('update:modelValue', false)"
+            @click="handleClose"
           >
             Cancel
           </v-btn>
           <v-btn
             class="submit-btn"
             @click="updateTitle"
-            :disabled="!editedTitle"
+            :disabled="!isValid || !hasChanges"
           >
             Save
           </v-btn>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 interface Props {
   modelValue: boolean
@@ -58,8 +58,35 @@ const emit = defineEmits<{
 const editedTitle = ref(props.currentTitle)
 const titleError = ref('')
 
+const rules = {
+  required: (v: string) => !!v?.trim() || 'Title is required',
+  length: (v: string) => {
+    const length = v?.trim().length || 0
+    return (length >= 3 && length <= 50) || 'Title must be between 3 and 50 characters'
+  }
+}
+
+const isValid = computed(() => {
+  const value = editedTitle.value?.trim() || ''
+  return rules.required(value) === true && rules.length(value) === true
+})
+
+const hasChanges = computed(() => {
+  return editedTitle.value?.trim() !== props.currentTitle?.trim()
+})
+
+// Reset the state when dialog opens
+watch(() => props.modelValue, (newValue) => {
+  if (newValue) {
+    editedTitle.value = props.currentTitle
+    titleError.value = ''
+  }
+})
+
 watch(() => props.currentTitle, (newValue) => {
-  editedTitle.value = newValue
+  if (props.modelValue) {
+    editedTitle.value = newValue
+  }
 })
 
 watch(() => props.error, (newError) => {
@@ -68,12 +95,32 @@ watch(() => props.error, (newError) => {
   }
 })
 
+const resetDialog = () => {
+  editedTitle.value = props.currentTitle
+  titleError.value = ''
+}
+
+const handleClose = () => {
+  resetDialog()
+  emit('update:modelValue', false)
+}
+
+const handleDialogUpdate = (value: boolean) => {
+  if (!value) {
+    resetDialog()
+  }
+  emit('update:modelValue', value)
+}
+
 const updateTitle = () => {
-  if (!editedTitle.value?.trim()) {
-    titleError.value = 'Title cannot be empty'
+  const trimmedTitle = editedTitle.value?.trim()
+
+  if (!isValid.value) {
+    titleError.value = !trimmedTitle ? 'Title is required' : 'Title must be between 3 and 50 characters'
     return
   }
-  emit('save', editedTitle.value)
+
+  emit('save', trimmedTitle)
 }
 </script>
 
@@ -155,6 +202,26 @@ const updateTitle = () => {
 
 :deep(.v-field__outline) {
   color: rgba(66, 221, 242, 0.3) !important;
+}
+
+:deep(.v-messages__message) {
+  color: #fed854 !important;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+:deep(.v-field--error) {
+  --v-field-border-color: #fed854 !important;
+}
+
+:deep(.v-field--error .v-field__outline),
+:deep(.v-field--error .v-label),
+:deep(.v-field--error input::placeholder),
+:deep(.v-field--error .v-field__outline__start),
+:deep(.v-field--error .v-field__outline__end),
+:deep(.v-field--error .v-field__outline__notch) {
+  border-color: #fed854 !important;
+  color: #fed854 !important;
 }
 </style>
 

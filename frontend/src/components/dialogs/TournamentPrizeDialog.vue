@@ -1,7 +1,6 @@
 <template>
   <v-dialog
-    :modelValue="modelValue"
-    @update:modelValue="$emit('update:modelValue', $event)"
+    v-model="isOpen"
     max-width="500px"
     class="prize-dialog"
   >
@@ -14,6 +13,7 @@
             label="Prize Pool (Kitty Kibbles)"
             type="number"
             variant="outlined"
+            :rules="[rules.required, rules.positive]"
             :error="!!prizeError"
             :error-messages="prizeError"
           ></v-text-field>
@@ -23,14 +23,14 @@
           <v-btn
             class="cancel-btn"
             variant="text"
-            @click="$emit('update:modelValue', false)"
+            @click="handleClose"
           >
             Cancel
           </v-btn>
           <v-btn
             class="submit-btn"
             @click="updatePrizePool"
-            :disabled="!editedPrizePool"
+            :disabled="!isValid || !hasChanges"
           >
             Save
           </v-btn>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 interface Props {
   modelValue: boolean
@@ -58,13 +58,33 @@ const emit = defineEmits<{
 const editedPrizePool = ref(props.currentPrizePool)
 const prizeError = ref('')
 
-watch(() => props.currentPrizePool, (newValue) => {
-  editedPrizePool.value = newValue
+const isOpen = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
+
+const rules = {
+  required: (v: string | number) => !!v || 'Prize pool is required',
+  positive: (v: string | number) => {
+    const num = Number(v)
+    return (!!num && num > 0) || 'Prize pool must be greater than 0'
+  }
+}
+
+const isValid = computed(() => {
+  const value = editedPrizePool.value
+  const num = Number(value)
+  return rules.required(value) === true && (!!num && num > 0)
+})
+
+const hasChanges = computed(() => {
+  return Number(editedPrizePool.value) !== props.currentPrizePool
 })
 
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     editedPrizePool.value = props.currentPrizePool
+    prizeError.value = ''
   }
 })
 
@@ -74,15 +94,24 @@ watch(() => props.error, (newError) => {
   }
 })
 
+const handleClose = () => {
+  editedPrizePool.value = props.currentPrizePool
+  prizeError.value = ''
+  isOpen.value = false
+}
+
 const updatePrizePool = () => {
   const prizePool = Number(editedPrizePool.value)
 
   if (!prizePool || prizePool <= 0) {
-    prizeError.value = 'Prize pool must be a positive number'
+    prizeError.value = !editedPrizePool.value
+      ? 'Prize pool is required'
+      : 'Prize pool must be greater than 0'
     return
   }
 
   emit('save', prizePool)
+  handleClose()
 }
 </script>
 
