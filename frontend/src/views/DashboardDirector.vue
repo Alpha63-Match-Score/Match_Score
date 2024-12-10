@@ -6,20 +6,24 @@
       <!-- Director Welcome Section -->
       <DashboardWelcome :userRole="'Director'" />
 
-      <!-- Action Buttons Section -->
-      <AdminActions
-        :openAddTournamentDialog="openAddTournamentDialog"
-        :openAddTeamDialog="openAddTeamDialog"
-        :openAddPlayerDialog="openAddPlayerDialog"
-        :openUpdatePlayerDialog="openUpdatePlayerDialog"
-        @open-tournament="openAddTournamentDialog"
-        @open-team="openAddTeamDialog"
-        @open-player="openAddPlayerDialog"
-        @open-update-player="openUpdatePlayerDialog"
-      />
+      <!-- Actions and Filters Wrapper -->
+      <div class="tournaments-section">
 
-      <!-- Filter section -->
-      <FilterBar @filter-change="handleFiltersChange"/>
+        <!-- Action Buttons Section -->
+        <AdminActions
+          :openAddTournamentDialog="openAddTournamentDialog"
+          :openAddTeamDialog="openAddTeamDialog"
+          :openAddPlayerDialog="openAddPlayerDialog"
+          :openUpdatePlayerDialog="openUpdatePlayerDialog"
+          @open-tournament="openAddTournamentDialog"
+          @open-team="openAddTeamDialog"
+          @open-player="openAddPlayerDialog"
+          @open-update-player="openUpdatePlayerDialog"
+        />
+
+        <!-- Filter section -->
+        <FilterBar @filter-change="handleFiltersChange"/>
+      </div>
 
       <!-- Tournaments Content -->
       <div class="tournaments-section">
@@ -380,4 +384,24 @@ onMounted(() => {
   font-size: 1.1rem;
   text-align: center;
 }
+
+.tournament-column {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.tournament-column:nth-child(even) {
+  justify-content: flex-start;
+}
+
+:deep(.v-container) {
+  padding: 0 !important;
+}
+
+:deep(.v-row) {
+  margin: 0;
+}
+
+
 </style>
