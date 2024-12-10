@@ -10,6 +10,7 @@ import vuetify from 'vite-plugin-vuetify'
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: 'frontend',
   plugins: [
     vue(),
     vueJsx(),
