@@ -127,8 +127,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { API_URL } from '@/config'
-import { initializeFromToken } from '@/utils/auth'
-import Logo from '@/assets/logo.png'
+
 
 const router = useRouter()
 const route = useRoute()

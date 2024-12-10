@@ -155,22 +155,22 @@ const editError = ref('')
 const rules = {
   required: (v: string) => !!v || 'This field is required',
   firstName: [
-    (value) => !!value || 'First name is required',
-    (value) => value.length >= 2 || 'First name must be at least 2 characters',
-    (value) => value.length <= 25 || 'First name must not exceed 25 characters',
-    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid first name format',
+    (value: string) => !!value || 'First name is required',
+    (value: string) => value.length >= 2 || 'First name must be at least 2 characters',
+    (value: string) => value.length <= 25 || 'First name must not exceed 25 characters',
+    (value: string) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid first name format',
   ],
   lastName: [
-    (value) => !!value || 'Last name is required',
-    (value) => value.length >= 2 || 'Last name must be at least 2 characters',
-    (value) => value.length <= 25 || 'Last name must not exceed 25 characters',
-    (value) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid last name format',
+    (value: string) => !!value || 'Last name is required',
+    (value: string) => value.length >= 2 || 'Last name must be at least 2 characters',
+    (value: string) => value.length <= 25 || 'Last name must not exceed 25 characters',
+    (value: string) => /^[a-zA-Z]+(?:[-a-zA-Z]+)?$/.test(value) || 'Invalid last name format',
   ],
   country: [
-    (value) => !!value || 'Country is required',
-    (value) => value.length >= 2 || 'Country must be at least 2 characters',
-    (value) => value.length <= 25 || 'Country must not exceed 25 characters',
-    (value) => /^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/.test(value) || 'Invalid country format',
+    (value: string) => !!value || 'Country is required',
+    (value: string) => value.length >= 2 || 'Country must be at least 2 characters',
+    (value: string) => value.length <= 25 || 'Country must not exceed 25 characters',
+    (value: string) => /^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/.test(value) || 'Invalid country format',
   ],
 }
 
