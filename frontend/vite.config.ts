@@ -10,7 +10,6 @@ import vuetify from 'vite-plugin-vuetify'
 
 // https://vite.dev/config/
 export default defineConfig({
-  root: 'frontend',
   plugins: [
     vue(),
     vueJsx(),
@@ -22,7 +21,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-    build: {
+  build: {
     outDir: 'dist',
     rollupOptions: {
       input: 'frontend/index.html'
