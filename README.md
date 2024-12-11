@@ -9,7 +9,7 @@ gaming platform where tactical kitties clash in epic battles!
 Imagine Counter-Strike, but instead of regular characters, you've got 
 kittens with tactical vests and laser pointers! Get ready to experience 
 esports where precision is as important as the afternoon nap, and strategy 
-is more delicious than a bowl of tuna! 🐟
+is more delicious than a bowl of tuna! 
  
 ## ⚔️ Epic Features
  
