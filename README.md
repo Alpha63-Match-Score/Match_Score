@@ -139,13 +139,41 @@ Our magical messenger cats will keep you informed about:
   - Team-related notifications
  
 ## 📸 Battle Scenes
-[Coming soon: Epic screenshots of our battlegrounds!]
- 
-- Home Base Operations
-- Tournament Battlefields
-- Team Command Center
-- Match Combat Arena
-- Admin War Room
+
+<details>
+<summary> Home Base Operations</summary>
+<p align="center">
+  <img src="https://i.imgur.com/eT7Mnv5.png" width="800" alt="Home Page">
+</p>
+</details>
+
+<details>
+<summary> Tournament Battlefields</summary>
+<p align="center">
+  <img src="https://i.imgur.com/lnfQYqF.png" width="800" alt="Tournament View">
+</p>
+</details>
+
+<details>
+<summary> Team Command Center</summary>
+<p align="center">
+  <img src="https://i.imgur.com/3GAUkTt.png" width="800" alt="Team Management">
+</p>
+</details>
+
+<details>
+<summary> Player Profile Showcase</summary>
+<p align="center">
+  <img src="https://i.imgur.com/ffWj2p5.png" width="800" alt="Match Interface">
+</p>
+</details>
+
+<details>
+<summary> Admin War Room</summary>
+<p align="center">
+  <img src="https://i.imgur.com/oY0CyfA.png" width="800" alt="Admin Dashboard">
+</p>
+</details>
  
 ## ⭐ Hall of Fame
  
