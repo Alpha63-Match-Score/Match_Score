@@ -150,7 +150,7 @@ Our magical messenger cats will keep you informed about:
 <details>
 <summary> Tournament Battlefields</summary>
 <p align="center">
-  <img src="https://i.imgur.com/lnfQYqF.png" width="800" alt="Tournament View">
+  <img src="https://i.imgur.com/q8op0D9.png" width="800" alt="Tournament View">
 </p>
 </details>
 
